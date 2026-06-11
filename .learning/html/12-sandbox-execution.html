@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sandbox与安全执行环境 · DeerFlow 学习系列</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        /* 页面特定样式 - 与深色主题兼容 */
+        
+        .toc {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--accent);
+            padding: 20px;
+            margin-bottom: 40px;
+            border-radius: 8px;
+        }
+        
+        .toc h2 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .toc li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .toc a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .toc a:hover {
+            color: var(--accent-2);
+            text-decoration: underline;
+        }
+        
+        section {
+            margin-bottom: 50px;
+        }
+        
+        /* 代码块样式 */
+        .code-block {
+            background: var(--bg-code);
+            color: var(--text-soft);
+            padding: 18px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 18px 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 13.5px;
+            line-height: 1.65;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+        }
+        
+        .code-block code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--text-soft);
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            white-space: pre;
+            display: block;
+        }
+        
+        .code-block::-webkit-scrollbar {
+            height: 9px;
+        }
+        
+        .code-block::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        /* 提示框样式 */
+        .highlight {
+            background: var(--bg-soft);
+            padding: 15px 18px;
+            border-left: 4px solid var(--orange);
+            margin: 18px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .key-point {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--green);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--green);
+        }
+        
+        .key-point strong {
+            color: var(--green-soft);
+            font-weight: 650;
+        }
+        
+        .example-case {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--orange);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .example-case strong {
+            color: var(--orange);
+            font-weight: 650;
+        }
+        
+        .warning {
+            background: var(--bg-soft);
+            border-left: 4px solid #ff6b6b;
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .warning strong {
+            color: #ff6b6b;
+            font-weight: 650;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+        
+        .comparison-table th {
+            background: var(--bg-soft);
+            color: var(--text);
+            padding: 11px 15px;
+            text-align: left;
+            font-weight: 650;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .comparison-table td {
+            padding: 11px 15px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-soft);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:hover td {
+            background: rgba(88,166,255,0.04);
+        }
+        
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        
+        .flow-step {
+            background: var(--bg-card);
+            border: 1.5px solid var(--accent);
+            color: var(--text);
+            padding: 12px 22px;
+            border-radius: 10px;
+            min-width: 120px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .flow-arrow {
+            font-size: 20px;
+            color: var(--text-dim);
+            line-height: 1.4;
+            padding: 2px 0;
+        }
+    </style>
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+            <h1>Sandbox与安全执行环境</h1>
+            <p class="page-subtitle">DeerFlow 学习系列 - 第 12 章</p>
+            
+            <div class="toc">
+                <h2>📖 目录</h2>
+                <ul>
+                    <li><a href="#introduction">简介</a></li>
+                    <li><a href="#sandbox-importance">为什么需要 Sandbox</a></li>
+                    <li><a href="#sandbox-design">Sandbox 的设计</a></li>
+                    <li><a href="#permission-control">权限控制机制</a></li>
+                    <li><a href="#code-execution">代码执行的安全性</a></li>
+                    <li><a href="#isolation-techniques">隔离技术</a></li>
+                    <li><a href="#monitoring-audit">监控与审计</a></li>
+                    <li><a href="#best-practices">最佳实践</a></li>
+                    <li><a href="#summary">总结</a></li>
+                </ul>
+            </div>
+            
+            <section id="introduction">
+                <h2>简介</h2>
+                <p>
+                    Sandbox 是 Agent 的安全保护子。当 Agent 执行代码、调用外部服务或访问文件系统时，Sandbox 会检查这些操作是否安全、是否符合权限。本章讲解 Sandbox 的设计原理、权限控制機制、代码执行的安全性。
+                </p>
+                <div class="key-point">
+                    <strong>学习目标：</strong>
+                    <ul>
+                        <li>理解 Sandbox 的重要性</li>
+                        <li>掌握 Sandbox 的设计原理</li>
+                        <li>学会实现权限控制</li>
+                        <li>了解代码执行的安全性最佳实践</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section id="sandbox-importance">
+                <h2>为什么需要 Sandbox</h2>
+                <p>
+                    想象一个场景：Agent 接收了一个恶意的用户输入，不幸的是 LLM 不幸中了提示注入攻击，调用了一个应该删除数据的 Skill。没有 Sandbox 的情况下，数据会被立即删除。有了 Sandbox，即使 LLM 中了攻击，也会先检查这个操作是否安全、是否符合权限。
+                </p>
+                
+                <h3>没有 Sandbox 的风险</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>风险类型</th>
+                            <th>描述</th>
+                            <th>后果</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>提示注入</strong></td>
+                            <td>LLM 中了提示注入攻击</td>
+                            <td>执行恶意操作</td>
+                        </tr>
+                        <tr>
+                            <td><strong>权限推溌</strong></td>
+                            <td>Agent 执行超出权限的操作</td>
+                            <td>数据泄露或系统破坡</td>
+                        </tr>
+                        <tr>
+                            <td><strong>资源浪費</strong></td>
+                            <td>Agent 执行超量计算或存储</td>
+                            <td>系统资源耗尽</td>
+                        </tr>
+                        <tr>
+                            <td><strong>侧道攻击</strong></td>
+                            <td>通过时序或其他侧道推溌信息</td>
+                            <td>信息泄露</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="key-point">
+                    <strong>关键点：</strong> Sandbox 是 Agent 系统中不可或缺的一部分。它不是可选的优化，而是必需的安全措施。
+                </div>
+            </section>
+            
+            <section id="sandbox-design">
+                <h2>Sandbox 的设计</h2>
+                <p>
+                    Sandbox 的核心思想是：<strong>不信任任何事物</strong>。每一个操作都需要经过严格的验证。
+                </p>
+                
+                <h3>Sandbox 的分层设计</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">操作请求</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">身份验证</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">权限检查</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">安全上下文</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">执行</div>
+                </div>
+                
+                <h3>Sandbox 的实现</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">Sandbox</span>:
+    <span class="tok-str">"""Sandbox 安全执行环境"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, config: <span class="tok-cls">SandboxConfig</span>):
+        <span class="tok-kw">self</span>.config = config
+        <span class="tok-kw">self</span>.permissions = <span class="tok-cls">PermissionManager</span>(config)
+        <span class="tok-kw">self</span>.audit_log = <span class="tok-cls">AuditLog</span>()
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, operation: <span class="tok-cls">Operation</span>, context: <span class="tok-cls">ExecutionContext</span>):
+        <span class="tok-str">"""\u5728 Sandbox 中执行操作"""</span>
+        <span class="tok-kw">try</span>:
+            <span class="tok-com"># 1. 身份验证</span>
+            <span class="tok-kw">self</span>.<span class="tok-fn">verify_identity</span>(context)
+            
+            <span class="tok-com"># 2. 权限检查</span>
+            <span class="tok-kw">self</span>.permissions.<span class="tok-fn">check</span>(context.user, operation)
+            
+            <span class="tok-com"># 3. 安全上下文检查</span>
+            <span class="tok-kw">self</span>.<span class="tok-fn">verify_context</span>(context, operation)
+            
+            <span class="tok-com"># 4. 执行操作</span>
+            result = operation.<span class="tok-fn">execute</span>()
+            
+            <span class="tok-com"># 5. 记录审计日志</span>
+            <span class="tok-kw">self</span>.audit_log.<span class="tok-fn">log</span>(context, operation, result)
+            
+            <span class="tok-kw">return</span> result
+        
+        <span class="tok-kw">except</span> <span class="tok-cls">PermissionDenied</span> <span class="tok-kw">as</span> e:
+            <span class="tok-kw">self</span>.audit_log.<span class="tok-fn">log_denied</span>(context, operation, e)
+            <span class="tok-kw">raise</span>
+        
+        <span class="tok-kw">except</span> <span class="tok-cls">Exception</span> <span class="tok-kw">as</span> e:
+            <span class="tok-kw">self</span>.audit_log.<span class="tok-fn">log_error</span>(context, operation, e)
+            <span class="tok-kw">raise</span>
+</code></div>
+            </section>
+            
+            <section id="permission-control">
+                <h2>权限控制机制</h2>
+                <p>
+                    权限控制是 Sandbox 的核心。它定义了不同的 Agent 或用户可以执行哪些操作。
+                </p>
+                
+                <h3>权限模型</h3>
+                <p>
+                    DeerFlow 使用基于角色的权限控制 (RBAC) 模型：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">Role</span>:
+    <span class="tok-str">"""\u6743限角色"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, name: <span class="tok-str">str</span>, permissions: List[<span class="tok-str">str</span>]):
+        <span class="tok-kw">self</span>.name = name
+        <span class="tok-kw">self</span>.permissions = <span class="tok-str">set</span>(permissions)
+
+<span class="tok-com"># 预定义的角色</span>
+ROLE_ADMIN = <span class="tok-cls">Role</span>(
+    <span class="tok-str">"admin"</span>,
+    [<span class="tok-str">"read"</span>, <span class="tok-str">"write"</span>, <span class="tok-str">"delete"</span>, <span class="tok-str">"execute_code"</span>]
+)
+
+ROLE_USER = <span class="tok-cls">Role</span>(
+    <span class="tok-str">"user"</span>,
+    [<span class="tok-str">"read"</span>, <span class="tok-str">"write"</span>]
+)
+
+ROLE_GUEST = <span class="tok-cls">Role</span>(
+    <span class="tok-str">"guest"</span>,
+    [<span class="tok-str">"read"</span>]
+)
+</code></div>
+                
+                <h3>权限检查的实现</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">PermissionManager</span>:
+    <span class="tok-kw">def</span> <span class="tok-fn">check</span>(<span class="tok-kw">self</span>, user: <span class="tok-cls">User</span>, operation: <span class="tok-cls">Operation</span>) -> <span class="tok-str">bool</span>:
+        <span class="tok-str">"""\u68c0查用户是否有权限执行操作"""</span>
+        required_permission = operation.required_permission
+        
+        <span class="tok-com"># 检查用户的角色是否有所需权限</span>
+        <span class="tok-kw">if</span> required_permission <span class="tok-kw">not</span> <span class="tok-kw">in</span> user.role.permissions:
+            <span class="tok-kw">raise</span> <span class="tok-cls">PermissionDenied</span>(
+                <span class="tok-str">f"User {user.id} lacks permission: {required_permission}"</span>
+            )
+        
+        <span class="tok-kw">return</span> <span class="tok-num">True</span>
+</code></div>
+                
+                <div class="example-case">
+                    <strong>示例：</strong> 权限检查的实际应用<br>
+                    <div class="code-block"><code>
+<span class="tok-com"># 创建用户</span>
+admin_user = <span class="tok-cls">User</span>(id=<span class="tok-str">"admin1"</span>, role=ROLE_ADMIN)
+guest_user = <span class="tok-cls">User</span>(id=<span class="tok-str">"guest1"</span>, role=ROLE_GUEST)
+
+<span class="tok-com"># 删除操作（需要 delete 权限）</span>
+delete_op = <span class="tok-cls">Operation</span>(
+    type=<span class="tok-str">"delete"</span>,
+    required_permission=<span class="tok-str">"delete"</span>
+)
+
+<span class="tok-com"># Admin 可以执行</span>
+sandbox.<span class="tok-fn">execute</span>(delete_op, <span class="tok-cls">ExecutionContext</span>(user=admin_user))
+
+<span class="tok-com"># Guest 无法执行，会抛出 PermissionDenied 异常</span>
+sandbox.<span class="tok-fn">execute</span>(delete_op, <span class="tok-cls">ExecutionContext</span>(user=guest_user))
+</code></div>
+                </div>
+            </section>
+            
+            <section id="code-execution">
+                <h2>代码执行的安全性</h2>
+                <p>
+                    当 Agent 需要执行代码（比如执行 Python 脚本）时，Sandbox 需要提供一个安全的执行环境。
+                </p>
+                
+                <h3>代码执行的安全需求</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>安全需求</th>
+                            <th>说明</th>
+                            <th>实现方案</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>资源限制</strong></td>
+                            <td>限制 CPU、内存、磁盘使用</td>
+                            <td>使用 cgroups 或 Docker</td>
+                        </tr>
+                        <tr>
+                            <td><strong>文件系统隔离</strong></td>
+                            <td>限制文件访问范围</td>
+                            <td>使用 chroot 或 Docker</td>
+                        </tr>
+                        <tr>
+                            <td><strong>网络隔离</strong></td>
+                            <td>控制网络访问</td>
+                            <td>使用防火墙或网络策略</td>
+                        </tr>
+                        <tr>
+                            <td><strong>时间限制</strong></td>
+                            <td>限制执行时间</td>
+                            <td>使用 timeout 或信号</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>安全代码执行的实现</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">CodeExecutor</span>:
+    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, code: <span class="tok-str">str</span>, timeout: <span class="tok-num">int</span> = <span class="tok-num">30</span>) -> <span class="tok-str">str</span>:
+        <span class="tok-str">"""\u5b89全执行代码"""</span>
+        <span class="tok-kw">try</span>:
+            <span class="tok-com"># 1. 代码静态分析（检查危险的操作）</span>
+            <span class="tok-kw">self</span>.<span class="tok-fn">validate_code</span>(code)
+            
+            <span class="tok-com"># 2. 在隔离的环境中执行</span>
+            <span class="tok-kw">with</span> <span class="tok-cls">IsolatedEnvironment</span>() <span class="tok-kw">as</span> env:
+                result = env.<span class="tok-fn">execute</span>(code, timeout=timeout)
+            
+            <span class="tok-kw">return</span> result
+        
+        <span class="tok-kw">except</span> <span class="tok-cls">DangerousCodeDetected</span> <span class="tok-kw">as</span> e:
+            <span class="tok-kw">raise</span> <span class="tok-cls">SecurityError</span>(<span class="tok-str">f"Dangerous code detected: {e}"</span>)
+        
+        <span class="tok-kw">except</span> <span class="tok-cls">TimeoutError</span>:
+            <span class="tok-kw">raise</span> <span class="tok-cls">ExecutionTimeout</span>(<span class="tok-str">"Code execution timeout"</span>)
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">validate_code</span>(<span class="tok-kw">self</span>, code: <span class="tok-str">str</span>):
+        <span class="tok-str">"""\u68c0查代码是否包含危险操作"""</span>
+        dangerous_patterns = [
+            <span class="tok-str">"os.system"</span>,
+            <span class="tok-str">"subprocess"</span>,
+            <span class="tok-str">"__import__"</span>,
+            <span class="tok-str">"eval"</span>,
+            <span class="tok-str">"exec"</span>
+        ]
+        
+        <span class="tok-kw">for</span> pattern <span class="tok-kw">in</span> dangerous_patterns:
+            <span class="tok-kw">if</span> pattern <span class="tok-kw">in</span> code:
+                <span class="tok-kw">raise</span> <span class="tok-cls">DangerousCodeDetected</span>(
+                    <span class="tok-str">f"Dangerous pattern found: {pattern}"</span>
+                )
+</code></div>
+                
+                <div class="warning">
+                    <strong>警告：</strong> 不要信任任何代码。即使是你自己的代码，也应该经过 Sandbox 执行。不要直接使用 eval() 或 exec() 执行用户提供的代码。
+                </div>
+            </section>
+            
+            <section id="isolation-techniques">
+                <h2>隔离技术</h2>
+                <p>
+                    Sandbox 可以使用多种隔离技术来实现安全执行环境。不同的技术有不同的权衡。
+                </p>
+                
+                <h3>隔离技术对比</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>技术</th>
+                            <th>隔离程度</th>
+                            <th>性能开销</th>
+                            <th>适用场景</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>进程隔离</strong></td>
+                            <td>中等</td>
+                            <td>低</td>
+                            <td>轻量级任务</td>
+                        </tr>
+                        <tr>
+                            <td><strong>容器隔离</strong></td>
+                            <td>高</td>
+                            <td>中等</td>
+                            <td>中等复杂度任务</td>
+                        </tr>
+                        <tr>
+                            <td><strong>虚拟机隔离</strong></td>
+                            <td>非常高</td>
+                            <td>高</td>
+                            <td>高风险任务</td>
+                        </tr>
+                        <tr>
+                            <td><strong>语言级隔离</strong></td>
+                            <td>低</td>
+                            <td>很低</td>
+                            <td>受信任的代码</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Docker 容器隔离示例</h3>
+                <p>
+                    使用 Docker 容器提供强大的隔离：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-kw">import</span> docker
+<span class="tok-kw">from</span> typing <span class="tok-kw">import</span> Dict
+
+<span class="tok-kw">class</span> <span class="tok-cls">DockerSandbox</span>:
+    <span class="tok-str">"""使用 Docker 容器的 Sandbox"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, image: <span class="tok-str">str</span> = <span class="tok-str">"python:3.9"</span>):
+        <span class="tok-kw">self</span>.client = docker.<span class="tok-cls">DockerClient</span>()
+        <span class="tok-kw">self</span>.image = image
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, code: <span class="tok-str">str</span>, timeout: <span class="tok-num">30</span>) -> <span class="tok-str">str</span>:
+        <span class="tok-str">"""在 Docker 容器中执行代码"""</span>
+        <span class="tok-kw">try</span>:
+            <span class="tok-com"># 创建容器</span>
+            container = <span class="tok-kw">self</span>.client.containers.<span class="tok-fn">run</span>(
+                <span class="tok-kw">self</span>.image,
+                <span class="tok-str">f"python -c {code}"</span>,
+                detach=<span class="tok-kw">True</span>,
+                mem_limit=<span class="tok-str">"512m"</span>,  <span class="tok-com"># 限制内存</span>
+                cpus=<span class="tok-str">"1"</span>,  <span class="tok-com"># 限制 CPU</span>
+                network_disabled=<span class="tok-kw">True</span>  <span class="tok-com"># 禁用网络</span>
+            )
+            
+            <span class="tok-com"># 等待执行完成</span>
+            exit_code = container.<span class="tok-fn">wait</span>(timeout=timeout)
+            
+            <span class="tok-com"># 获取输出</span>
+            output = container.<span class="tok-fn">logs</span>().<span class="tok-fn">decode</span>()
+            
+            <span class="tok-com"># 清理容器</span>
+            container.<span class="tok-fn">remove</span>()
+            
+            <span class="tok-kw">return</span> output
+        
+        <span class="tok-kw">except</span> <span class="tok-cls">Exception</span> <span class="tok-kw">as</span> e:
+            <span class="tok-kw">raise</span> <span class="tok-cls">SandboxError</span>(<span class="tok-str">f"Execution failed: {e}"</span>)
+</code></div>
+                
+                <h3>资源限制配置</h3>
+                <p>
+                    Sandbox 应该配置合理的资源限制：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">ResourceLimits</span>:
+    <span class="tok-str">"""资源限制配置"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
+        <span class="tok-kw">self</span>.max_memory = <span class="tok-str">"512m"</span>  <span class="tok-com"># 最大内存</span>
+        <span class="tok-kw">self</span>.max_cpu = <span class="tok-str">"1"</span>  <span class="tok-com"># 最大 CPU 核心数</span>
+        <span class="tok-kw">self</span>.max_timeout = <span class="tok-num">30</span>  <span class="tok-com"># 最大执行时间（秒）</span>
+        <span class="tok-kw">self</span>.max_file_size = <span class="tok-num">10</span> * <span class="tok-num">1024</span> * <span class="tok-num">1024</span>  <span class="tok-com"># 最大文件大小（字节）</span>
+        <span class="tok-kw">self</span>.max_processes = <span class="tok-num">10</span>  <span class="tok-com"># 最大进程数</span>
+</code></div>
+            </section>
+            
+            <section id="monitoring-audit">
+                <h2>监控与审计</h2>
+                <p>
+                    Sandbox 应该提供完整的监控和审计能力，记录所有的操作，便于事后分析和安全审查。
+                </p>
+                
+                <h3>审计日志的内容</h3>
+                <p>
+                    审计日志应该记录以下信息：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">AuditLog</span>:
+    <span class="tok-str">"""审计日志"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">log</span>(<span class="tok-kw">self</span>, event: <span class="tok-cls">AuditEvent</span>):
+        <span class="tok-str">"""记录审计事件"""</span>
+        log_entry = {
+            <span class="tok-str">"timestamp"</span>: <span class="tok-fn">time</span>.<span class="tok-fn">time</span>(),
+            <span class="tok-str">"user_id"</span>: event.user_id,
+            <span class="tok-str">"action"</span>: event.action,
+            <span class="tok-str">"resource"</span>: event.resource,
+            <span class="tok-str">"result"</span>: event.result,  <span class="tok-com"># success / denied / error</span>
+            <span class="tok-str">"reason"</span>: event.reason,
+            <span class="tok-str">"details"</span>: event.details
+        }
+        
+        <span class="tok-com"># 存储到数据库或日志文件</span>
+        <span class="tok-kw">self</span>.<span class="tok-fn">store</span>(log_entry)
+
+<span class="tok-kw">class</span> <span class="tok-cls">AuditEvent</span>:
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(
+        <span class="tok-kw">self</span>,
+        user_id: <span class="tok-str">str</span>,
+        action: <span class="tok-str">str</span>,
+        resource: <span class="tok-str">str</span>,
+        result: <span class="tok-str">str</span>,
+        reason: <span class="tok-str">str</span> = <span class="tok-str">""</span>,
+        details: <span class="tok-cls">Dict</span> = <span class="tok-kw">None</span>
+    ):
+        <span class="tok-kw">self</span>.user_id = user_id
+        <span class="tok-kw">self</span>.action = action
+        <span class="tok-kw">self</span>.resource = resource
+        <span class="tok-kw">self</span>.result = result
+        <span class="tok-kw">self</span>.reason = reason
+        <span class="tok-kw">self</span>.details = details <span class="tok-kw">or</span> {}
+</code></div>
+                
+                <h3>实时监控</h3>
+                <p>
+                    除了审计日志，还应该进行实时监控，检测异常行为：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">SandboxMonitor</span>:
+    <span class="tok-str">"""Sandbox 监控器"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">detect_anomalies</span>(<span class="tok-kw">self</span>, logs: List[<span class="tok-cls">AuditEvent</span>]):
+        <span class="tok-str">"""检测异常行为"""</span>
+        anomalies = []
+        
+        <span class="tok-com"># 检测频繁的权限拒绝</span>
+        denied_count = <span class="tok-fn">sum</span>(<span class="tok-num">1</span> <span class="tok-kw">for</span> log <span class="tok-kw">in</span> logs <span class="tok-kw">if</span> log.result == <span class="tok-str">"denied"</span>)
+        <span class="tok-kw">if</span> denied_count > <span class="tok-num">10</span>:
+            anomalies.<span class="tok-fn">append</span>({
+                <span class="tok-str">"type"</span>: <span class="tok-str">"frequent_denials"</span>,
+                <span class="tok-str">"count"</span>: denied_count
+            })
+        
+        <span class="tok-com"># 检测异常的资源使用</span>
+        <span class="tok-kw">for</span> log <span class="tok-kw">in</span> logs:
+            <span class="tok-kw">if</span> log.details.<span class="tok-fn">get</span>(<span class="tok-str">"memory_usage"</span>, <span class="tok-num">0</span>) > <span class="tok-num">400</span>:  <span class="tok-com"># MB</span>
+                anomalies.<span class="tok-fn">append</span>({
+                    <span class="tok-str">"type"</span>: <span class="tok-str">"high_memory_usage"</span>,
+                    <span class="tok-str">"usage"</span>: log.details[<span class="tok-str">"memory_usage"</span>]
+                })
+        
+        <span class="tok-kw">return</span> anomalies
+</code></div>
+                
+                <div class="key-point">
+                    <strong>监控建议：</strong> 设置告警阈值，当检测到异常行为时立即告警。同时定期分析审计日志，发现潜在的安全问题。
+                </div>
+            </section>
+            
+            <section id="best-practices">
+                <h2>最佳实践</h2>
+                
+                <h3>1. 最小权限原则</h3>
+                <p>
+                    仅给予 Agent 它真正需要的权限。不要给予过广泛的权限。
+                </p>
+                
+                <h3>2. 定期审计</h3>
+                <p>
+                    定期检查 Sandbox 的审计日志，发现不正常的活动。
+                </p>
+                
+                <h3>3. 分层防御</h3>
+                <p>
+                    不要仅依赖一个安全措施。应该使用多个安全层次。
+                </p>
+                
+                <h3>4. 定期更新</h3>
+                <p>
+                    定期更新 Sandbox 的依赖项目和安全补丁。
+                </p>
+            </section>
+            
+            <section id="summary">
+                <h2>总结</h2>
+                <p>
+                    Sandbox 是 Agent 系统中的安全保护层。它确保了 Agent 的操作不会对系统造成危害。本章深入讲解了 Sandbox 的设计、权限控制、代码执行安全、隔离技术和监控审计。
+                </p>
+                <div class="highlight">
+                    <strong>核心要点总结：</strong>
+                    <ul>
+                        <li><strong>安全重要性：</strong> Sandbox 是必需的，不是可选的优化</li>
+                        <li><strong>分层设计：</strong> 身份验证 → 权限检查 → 安全上下文 → 执行 → 审计</li>
+                        <li><strong>权限控制：</strong> 使用 RBAC 模型，遵守最小权限原则</li>
+                        <li><strong>代码执行安全：</strong> 静态分析 + 资源限制 + 时间限制</li>
+                        <li><strong>隔离技术：</strong> 进程隔离、容器隔离、虚拟机隔离等多种选择</li>
+                        <li><strong>监控审计：</strong> 完整的审计日志 + 实时异常检测</li>
+                        <li><strong>最佳实践：</strong> 最小权限、定期审计、分层防御、定期更新</li>
+                    </ul>
+                </div>
+                
+                <div class="key-point">
+                    <strong>安全建议：</strong> Sandbox 的安全性取决于多个因素的综合。不要仅依赖一个安全措施，而应该使用多层防御。同时，要定期审查和更新安全策略，应对新的威胁。
+                </div>
+            </section>
+            
+            <div id="page-nav"></div>
+        </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+</body>
+</html>

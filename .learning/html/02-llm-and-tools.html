@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM调用与工具系统 · DeerFlow 学习系列</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        /* 页面特定样式 - 与深色主题兼容 */
+        
+        .toc {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--accent);
+            padding: 20px;
+            margin-bottom: 40px;
+            border-radius: 8px;
+        }
+        
+        .toc h2 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .toc li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .toc a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .toc a:hover {
+            color: var(--accent-2);
+            text-decoration: underline;
+        }
+        
+        section {
+            margin-bottom: 50px;
+        }
+        
+        /* 代码块样式 */
+        .code-block {
+            background: var(--bg-code);
+            color: var(--text-soft);
+            padding: 18px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 18px 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 13.5px;
+            line-height: 1.65;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+        }
+        
+        .code-block code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--text-soft);
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            white-space: pre;
+            display: block;
+        }
+        
+        .code-block::-webkit-scrollbar {
+            height: 9px;
+        }
+        
+        .code-block::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        /* 提示框样式 */
+        .highlight {
+            background: var(--bg-soft);
+            padding: 15px 18px;
+            border-left: 4px solid var(--orange);
+            margin: 18px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+        
+        .comparison-table th {
+            background: var(--bg-soft);
+            color: var(--text);
+            padding: 11px 15px;
+            text-align: left;
+            font-weight: 650;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .comparison-table td {
+            padding: 11px 15px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-soft);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:hover td {
+            background: rgba(88,166,255,0.04);
+        }
+        
+        .key-point {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--green);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--green);
+        }
+        
+        .key-point strong {
+            color: var(--green-soft);
+            font-weight: 650;
+        }
+        
+        .example-case {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--orange);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .example-case strong {
+            color: var(--orange);
+            font-weight: 650;
+        }
+        
+        .warning {
+            background: var(--bg-soft);
+            border-left: 4px solid #ff6b6b;
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .warning strong {
+            color: #ff6b6b;
+            font-weight: 650;
+        }
+        
+        /* 流程图样式 */
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        
+        .flow-step {
+            background: var(--bg-card);
+            border: 1.5px solid var(--accent);
+            color: var(--text);
+            padding: 12px 22px;
+            border-radius: 10px;
+            min-width: 120px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .flow-arrow {
+            font-size: 20px;
+            color: var(--text-dim);
+            line-height: 1.4;
+            padding: 2px 0;
+        }
+    </style>
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+            <div class="toc">
+                <h2>📖 目录</h2>
+                <ul>
+                    <li><a href="#llm-api-basics">LLM API的基本调用流程</a></li>
+                    <li><a href="#token-context">Token、Context Window、Cost的概念</a></li>
+                    <li><a href="#function-calling">Function Calling / Tool Use 的原理</a></li>
+                    <li><a href="#llm-providers">不同LLM提供商的差异</a></li>
+                    <li><a href="#tool-definition">工具定义、调用、结果处理</a></li>
+                    <li><a href="#tool-calling-loop">工具调用循环的完整流程</a></li>
+                    <li><a href="#best-practices">最佳实践与常见问题</a></li>
+                </ul>
+            </div>
+            
+            <!-- Section 1 -->
+            <section id="llm-api-basics">
+                <h2>1. LLM API的基本调用流程</h2>
+                
+                <p>
+                    理解LLM API的调用方式是构建Agent的基础。
+                    虽然不同的LLM提供商有差异，但基本流程是相同的。
+                </p>
+                
+                <h3>最简单的调用</h3>
+                
+                <div class="code-block"><code><span class="tok-kw">from</span> langchain_openai <span class="tok-kw">import</span> <span class="tok-cls">ChatOpenAI</span>
+
+llm = <span class="tok-cls">ChatOpenAI</span>(model=<span class="tok-str">"gpt-4"</span>, api_key=<span class="tok-str">"your-api-key"</span>)
+
+<span class="tok-com"># 调用LLM</span>
+response = llm.<span class="tok-fn">invoke</span>(<span class="tok-str">"你好，请介绍一下自己"</span>)
+
+<span class="tok-fn">print</span>(response.<span class="tok-attr">content</span>)  <span class="tok-com"># 输出LLM的响应</span>
+                    </code></div>
+                
+                <h3>带有消息历史的调用</h3>
+                
+                <p>
+                    在Agent中，我们通常需要维护对话历史。
+                </p>
+                
+                <div class="code-block"><code><span class="tok-kw">from</span> langchain_core.messages <span class="tok-kw">import</span> <span class="tok-cls">HumanMessage</span>, <span class="tok-cls">AIMessage</span>
+
+messages = [
+    <span class="tok-cls">HumanMessage</span>(content=<span class="tok-str">"你好"</span>),
+    <span class="tok-cls">AIMessage</span>(content=<span class="tok-str">"你好！很高兴认识你。"</span>),
+    <span class="tok-cls">HumanMessage</span>(content=<span class="tok-str">"你叫什么名字？"</span>)
+]
+
+response = llm.<span class="tok-attr">invoke</span>(messages)
+<span class="tok-fn">print</span>(response.<span class="tok-attr">content</span>)
+                    </code></div>
+                
+                <h3>调用流程图</h3>
+                
+                <div class="flow-diagram">
+                    <div class="flow-step">准备消息</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">调用API</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">接收响应</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">处理结果</div>
+                </div>
+                
+                <h3>重要的参数</h3>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>参数</th>
+                        <th>说明</th>
+                        <th>影响</th>
+                    </tr>
+                    <tr>
+                        <td><strong>temperature</strong></td>
+                        <td>控制输出的随机性（0-2）</td>
+                        <td>0=确定性，1=平衡，2=最随机</td>
+                    </tr>
+                    <tr>
+                        <td><strong>max_tokens</strong></td>
+                        <td>限制输出的最大长度</td>
+                        <td>影响成本和响应时间</td>
+                    </tr>
+                    <tr>
+                        <td><strong>top_p</strong></td>
+                        <td>核采样参数</td>
+                        <td>控制词汇多样性</td>
+                    </tr>
+                    <tr>
+                        <td><strong>frequency_penalty</strong></td>
+                        <td>降低重复词汇的概率</td>
+                        <td>0=无惩罚，2=最大惩罚</td>
+                    </tr>
+                </table>
+                
+                <div class="key-point">
+                    <strong>最佳实践：</strong><br>
+                    对于Agent，通常使用较低的temperature（0.3-0.7），
+                    以获得更可靠的决策。
+                </div>
+            </section>
+            
+            <!-- Section 2 -->
+            <section id="token-context">
+                <h2>2. Token、Context Window、Cost的概念</h2>
+                
+                <p>
+                    这三个概念直接影响Agent的性能和成本。
+                </p>
+                
+                <h3>Token是什么？</h3>
+                
+                <p>
+                    <strong>Token</strong>是LLM处理文本的基本单位。
+                    它不是字符，而是更大的单位。
+                </p>
+                
+                <div class="key-point">
+                    <strong>Token的大小：</strong><br>
+                    - 英文：1 Token ≈ 4个字符<br>
+                    - 中文：1 Token ≈ 1.3个字符<br>
+                    - 代码：1 Token ≈ 2-3个字符
+                </div>
+                
+                <div class="example-case">
+                    <strong>Token计算例子：</strong><br>
+                    "Hello, how are you?" ≈ 5 tokens<br>
+                    "你好，你最近怎么样？" ≈ 8 tokens
+                </div>
+                
+                <h3>Context Window（上下文窗口）</h3>
+                
+                <p>
+                    <strong>Context Window</strong>是LLM一次能处理的最大Token数。
+                </p>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>模型</th>
+                        <th>Context Window</th>
+                        <th>说明</th>
+                    </tr>
+                    <tr>
+                        <td><strong>GPT-3.5 Turbo</strong></td>
+                        <td>16K tokens</td>
+                        <td>较小，适合简单任务</td>
+                    </tr>
+                    <tr>
+                        <td><strong>GPT-4</strong></td>
+                        <td>8K / 32K / 128K tokens</td>
+                        <td>多个版本可选</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Claude 3.5 Sonnet</strong></td>
+                        <td>200K tokens</td>
+                        <td>非常大，适合长文档</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gemini 2.0</strong></td>
+                        <td>1M tokens</td>
+                        <td>超大，可处理整个项目</td>
+                    </tr>
+                </table>
+                
+                <div class="highlight">
+                    <strong>重要：</strong> Context Window包括输入和输出。
+                    如果你有10K tokens的输入，最多只能输出6K tokens（对于16K模型）。
+                </div>
+                
+                <h3>成本计算</h3>
+                
+                <p>
+                    LLM的成本通常按Token计费，输入和输出的价格不同。
+                </p>
+                
+                <div class="example-case">
+                    <strong>成本计算例子：</strong><br>
+                    假设GPT-4的价格是：<br>
+                    - 输入：$0.03 / 1K tokens<br>
+                    - 输出：$0.06 / 1K tokens<br>
+                    <br>
+                    一次调用：<br>
+                    - 输入：1000 tokens → $0.03<br>
+                    - 输出：500 tokens → $0.03<br>
+                    - 总成本：$0.06
+                </div>
+                
+                <h3>Context Window的限制</h3>
+                
+                <div class="warning">
+                    <strong>Lost in the Middle问题：</strong><br>
+                    当Context Window很大时，LLM有时会忽略中间的信息，
+                    只关注开头和结尾。这是一个已知的问题。
+                </div>
+                
+                <div class="key-point">
+                    <strong>优化建议：</strong><br>
+                    1. 定期清理不必要的历史记录<br>
+                    2. 使用摘要来压缩长对话<br>
+                    3. 将重要信息放在开头和结尾<br>
+                    4. 选择合适大小的Context Window
+                </div>
+            </section>
+            
+            <!-- Section 3 -->
+            <section id="function-calling">
+                <h2>3. Function Calling / Tool Use 的原理</h2>
+                
+                <p>
+                    Function Calling（或Tool Use）是Agent能够调用工具的关键机制。
+                </p>
+                
+                <h3>什么是Function Calling？</h3>
+                
+                <p>
+                    <strong>Function Calling</strong>是一种让LLM能够请求调用特定函数的机制。
+                    LLM不直接执行函数，而是告诉系统"我想调用这个函数，参数是这些"。
+                </p>
+                
+                <div class="key-point">
+                    <strong>工作原理：</strong><br>
+                    1. 你告诉LLM有哪些函数可用<br>
+                    2. LLM分析用户的请求<br>
+                    3. 如果需要，LLM生成一个函数调用请求<br>
+                    4. 系统执行该函数<br>
+                    5. 将结果返回给LLM<br>
+                    6. LLM继续处理或生成最终答案
+                </div>
+                
+                <h3>定义工具</h3>
+                
+                <p>
+                    首先，你需要定义LLM可以使用的工具。
+                </p>
+                
+                <div class="code-block"><code><span class="tok-kw">from</span> langchain_core.<span class="tok-attr">tools</span> <span class="tok-kw">import</span> tool
+
+<span class="tok-dec">@tool</span>
+<span class="tok-kw">def</span> get_weather(location: str) -> str:
+    <span class="tok-str">"""</span>获取指定位置的天气信息
+    
+    <span class="tok-cls">Args</span>:
+        location: 位置名称，例如<span class="tok-str">"北京"</span>
+    
+    <span class="tok-cls">Returns</span>:
+        天气信息字符串
+    <span class="tok-str">"""</span>
+    <span class="tok-com"># 这里应该调用真实的天气API</span>
+    <span class="tok-kw">return</span> f<span class="tok-str">"{location}的天气：晴天，温度25°<span class="tok-cls">C</span>"</span>
+
+<span class="tok-dec">@tool</span>
+<span class="tok-kw">def</span> calculate(expression: str) -> str:
+    <span class="tok-str">"""</span>计算数学表达式
+    
+    <span class="tok-cls">Args</span>:
+        expression: 数学表达式，例如<span class="tok-str">"2+2"</span>
+    
+    <span class="tok-cls">Returns</span>:
+        计算结果
+    <span class="tok-str">"""</span>
+    <span class="tok-kw">try</span>:
+        result = eval(expression)
+        <span class="tok-kw">return</span> <span class="tok-fn">str</span>(result)
+    <span class="tok-kw">except</span>:
+        <span class="tok-kw">return</span> <span class="tok-str">"计算错误"</span>
+
+<span class="tok-com"># 将工具绑定到LLM</span>
+tools = [get_weather, calculate]
+llm_with_tools = llm.<span class="tok-attr">bind_tools</span>(tools)
+                    </code></div>
+                
+                <h3>LLM生成工具调用</h3>
+                
+                <p>
+                    当LLM需要使用工具时，它会生成一个工具调用请求。
+                </p>
+                
+                <div class="code-block"><code><span class="tok-kw">from</span> langchain_core.<span class="tok-attr">messages</span> <span class="tok-kw">import</span> <span class="tok-cls">HumanMessage</span>
+
+messages = [
+    <span class="tok-cls">HumanMessage</span>(content=<span class="tok-str">"北京现在的天气怎么样？"</span>)
+]
+
+response = llm_with_tools.<span class="tok-attr">invoke</span>(messages)
+
+<span class="tok-com"># 检查是否有工具调用</span>
+<span class="tok-kw">if</span> response.<span class="tok-attr">tool_calls</span>:
+    <span class="tok-kw">for</span> tool_call <span class="tok-kw">in</span> response.<span class="tok-attr">tool_calls</span>:
+        <span class="tok-fn">print</span>(f<span class="tok-str">"工具名称: {tool_call['name']}"</span>)
+        <span class="tok-fn">print</span>(f<span class="tok-str">"参数: {tool_call['args']}"</span>)
+        <span class="tok-com"># 输出:</span>
+        <span class="tok-com"># 工具名称: get_weather</span>
+        <span class="tok-com"># 参数: {<span class="tok-str">'location'</span>: <span class="tok-str">'北京'</span>}</span>
+                    </code></div>
+                
+                <h3>执行工具调用</h3>
+                
+                <p>
+                    系统需要执行LLM请求的工具调用。
+                </p>
+                
+                <div class="code-block"><code><span class="tok-kw">from</span> langchain_core.<span class="tok-attr">messages</span> <span class="tok-kw">import</span> <span class="tok-cls">ToolMessage</span>
+
+<span class="tok-com"># 执行工具</span>
+tool_results = []
+<span class="tok-kw">for</span> tool_call <span class="tok-kw">in</span> response.<span class="tok-attr">tool_calls</span>:
+    tool_name = tool_call[<span class="tok-str">'name'</span>]
+    tool_args = tool_call[<span class="tok-str">'args'</span>]
+    
+    <span class="tok-com"># 根据工具名称调用相应的工具</span>
+    <span class="tok-kw">if</span> tool_name == <span class="tok-str">"get_weather"</span>:
+        result = get_weather.<span class="tok-attr">invoke</span>(tool_args)
+    <span class="tok-kw">elif</span> tool_name == <span class="tok-str">"calculate"</span>:
+        result = calculate.<span class="tok-attr">invoke</span>(tool_args)
+    
+    <span class="tok-com"># 创建工具消息</span>
+    tool_message = <span class="tok-cls">ToolMessage</span>(
+        content=result,
+        tool_call_id=tool_call[<span class="tok-str">'id'</span>]
+    )
+    tool_results.<span class="tok-attr">append</span>(tool_message)
+
+<span class="tok-com"># 将工具结果返回给LLM</span>
+messages.<span class="tok-attr">append</span>(response)
+messages.<span class="tok-attr">extend</span>(tool_results)
+
+<span class="tok-com"># LLM继续处理</span>
+final_response = llm_with_tools.<span class="tok-attr">invoke</span>(messages)
+<span class="tok-fn">print</span>(final_response.<span class="tok-attr">content</span>)
+                    </code></div>
+                
+                <h3>完整的工具调用循环</h3>
+                
+                <div class="flow-diagram">
+                    <div class="flow-step">用户输入</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">LLM分析</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">生成工具调用</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">执行工具</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">返回结果</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">LLM生成答案</div>
+                </div>
+            </section>
+            
+            <!-- Section 4 -->
+            <section id="llm-providers">
+                <h2>4. 不同LLM提供商的差异</h2>
+                
+                <p>
+                    不同的LLM提供商有不同的API、定价和能力。
+                </p>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>提供商</th>
+                        <th>主要模型</th>
+                        <th>特点</th>
+                        <th>成本</th>
+                    </tr>
+                    <tr>
+                        <td><strong>OpenAI</strong></td>
+                        <td>GPT-4, GPT-3.5</td>
+                        <td>功能完整，生态成熟</td>
+                        <td>中等</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Anthropic</strong></td>
+                        <td>Claude 3.5</td>
+                        <td>长Context，安全性好</td>
+                        <td>中等</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Google</strong></td>
+                        <td>Gemini 2.0</td>
+                        <td>超大Context，多模态</td>
+                        <td>便宜</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DeepSeek</strong></td>
+                        <td>DeepSeek v3</td>
+                        <td>推理能力强，成本低</td>
+                        <td>很便宜</td>
+                    </tr>
+                    <tr>
+                        <td><strong>字节跳动</strong></td>
+                        <td>Doubao</td>
+                        <td>中文优化，成本低</td>
+                        <td>便宜</td>
+                    </tr>
+                </table>
+                
+                <h3>API差异</h3>
+                
+                <p>
+                    虽然大多数提供商都支持OpenAI兼容的API，但仍有一些差异。
+                </p>
+                
+                <div class="example-case">
+                    <strong>OpenAI API：</strong><br>
+                    <div class="code-block"><code><span class="tok-kw">from</span> langchain_openai <span class="tok-kw">import</span> <span class="tok-cls">ChatOpenAI</span>
+
+llm = <span class="tok-cls">ChatOpenAI</span>(
+    model=<span class="tok-str">"gpt-4"</span>,
+    api_key=<span class="tok-str">"sk-..."</span>
+)
+                    </code></div>
+                </div>
+                
+                <div class="example-case">
+                    <strong>Anthropic API：</strong><br>
+                    <div class="code-block"><code><span class="tok-kw">from</span> langchain_anthropic <span class="tok-kw">import</span> <span class="tok-cls">ChatAnthropic</span>
+
+llm = <span class="tok-cls">ChatAnthropic</span>(
+    model=<span class="tok-str">"claude-3-5-sonnet-20241022"</span>,
+    api_key=<span class="tok-str">"sk-ant-..."</span>
+)
+                    </code></div>
+                </div>
+                
+                <div class="example-case">
+                    <strong>OpenAI兼容的API（如DeepSeek）：</strong><br>
+                    <div class="code-block"><code><span class="tok-kw">from</span> langchain_openai <span class="tok-kw">import</span> <span class="tok-cls">ChatOpenAI</span>
+
+llm = <span class="tok-cls">ChatOpenAI</span>(
+    model=<span class="tok-str">"deepseek-chat"</span>,
+    api_key=<span class="tok-str">"sk-..."</span>,
+    base_url=<span class="tok-str">"https://api.<span class="tok-attr">deepseek</span>.<span class="tok-attr">com</span>/v1"</span>
+)
+                    </code></div>
+                </div>
+                
+                <h3>选择模型的建议</h3>
+                
+                <div class="key-point">
+                    <strong>对于Agent开发：</strong><br>
+                    - 开发阶段：使用便宜的模型（如GPT-3.5、DeepSeek）<br>
+                    - 生产环境：使用可靠的模型（如GPT-4、Claude 3.5）<br>
+                    - 需要推理：使用推理模型（如o1、DeepSeek R1）<br>
+                    - 需要长Context：使用Claude或Gemini
+                </div>
+            </section>
+            
+            <!-- Section 5 -->
+            <section id="tool-definition">
+                <h2>5. 工具定义、调用、结果处理</h2>
+                
+                <p>
+                    工具是Agent的"手"，让Agent能够与外部世界交互。
+                </p>
+                
+                <h3>工具的类型</h3>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>类型</th>
+                        <th>说明</th>
+                        <th>例子</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Python函数</strong></td>
+                        <td>最简单的工具类型</td>
+                        <td>@tool装饰器定义的函数</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Runnable</strong></td>
+                        <td>LangChain的Runnable接口</td>
+                        <td>任何实现Runnable的对象</td>
+                    </tr>
+                    <tr>
+                        <td><strong>API调用</strong></td>
+                        <td>调用外部API</td>
+                        <td>HTTP请求、数据库查询</td>
+                    </tr>
+                    <tr>
+                        <td><strong>自定义类</strong></td>
+                        <td>实现特定接口的类</td>
+                        <td>Tool基类的子类</td>
+                    </tr>
+                </table>
+                
+                <h3>定义工具的最佳实践</h3>
+                
+                <div class="code-block"><code><span class="tok-kw">from</span> langchain_core.<span class="tok-attr">tools</span> <span class="tok-kw">import</span> tool
+<span class="tok-kw">from</span> typing <span class="tok-kw">import</span> <span class="tok-cls">Optional</span>
+
+<span class="tok-dec">@tool</span>
+<span class="tok-kw">def</span> search_web(query: str, max_results: <span class="tok-cls">Optional</span>[int] = 5) -> str:
+    <span class="tok-str">"""</span>在网络上搜索信息
+    
+    这是一个详细的文档字符串，LLM会使用它来理解工具的功能。
+    
+    <span class="tok-cls">Args</span>:
+        query: 搜索查询，例如<span class="tok-str">"Python教程"</span>
+        max_results: 返回的最大结果数，默认为5
+    
+    <span class="tok-cls">Returns</span>:
+        搜索结果的字符串，包含标题和摘要
+    
+    <span class="tok-cls">Raises</span>:
+        <span class="tok-cls">ValueError</span>: 如果查询为空
+    <span class="tok-str">"""</span>
+    <span class="tok-kw">if</span> <span class="tok-kw">not</span> query:
+        <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"查询不能为空"</span>)
+    
+    <span class="tok-com"># 这里应该调用真实的搜索API</span>
+    <span class="tok-com"># 例如Google <span class="tok-cls">Search</span> <span class="tok-cls">API</span>、<span class="tok-cls">Bing</span> <span class="tok-cls">Search</span> API等</span>
+    
+    results = [
+        f<span class="tok-str">"结果{i+1}: 关于{query}的信息"</span>
+        <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(max_results)
+    ]
+    
+    <span class="tok-kw">return</span> <span class="tok-str">"\n"</span>.<span class="tok-attr">join</span>(results)
+
+<span class="tok-com"># 工具的关键要素：</span>
+<span class="tok-com"># 1. 清晰的函数名称</span>
+<span class="tok-com"># 2. 详细的文档字符串</span>
+<span class="tok-com"># 3. 类型注解</span>
+<span class="tok-com"># 4. 合理的参数</span>
+<span class="tok-com"># 5. 有意义的返回值</span>
+                    </code></div>
+                
+                <h3>处理工具结果</h3>
+                
+                <p>
+                    工具的结果需要被正确处理和返回给LLM。
+                </p>
+                
+                <div class="code-block"><code><span class="tok-kw">from</span> langchain_core.<span class="tok-attr">messages</span> <span class="tok-kw">import</span> <span class="tok-cls">ToolMessage</span>
+
+<span class="tok-kw">def</span> process_tool_result(tool_call, tool_result):
+    <span class="tok-str">""</span><span class="tok-str">"处理工具结果"</span><span class="tok-str">""</span>
+    
+    <span class="tok-com"># 创建工具消息</span>
+    tool_message = <span class="tok-cls">ToolMessage</span>(
+        content=tool_result,
+        tool_call_id=tool_call[<span class="tok-str">'id'</span>],
+        name=tool_call[<span class="tok-str">'name'</span>]
+    )
+    
+    <span class="tok-kw">return</span> tool_message
+
+<span class="tok-com"># 错误处理</span>
+<span class="tok-kw">def</span> execute_tool_safely(tool_call, tools_dict):
+    <span class="tok-str">""</span><span class="tok-str">"安全地执行工具"</span><span class="tok-str">""</span>
+    <span class="tok-kw">try</span>:
+        tool_name = tool_call[<span class="tok-str">'name'</span>]
+        tool_args = tool_call[<span class="tok-str">'args'</span>]
+        
+        <span class="tok-kw">if</span> tool_name <span class="tok-kw">not</span> <span class="tok-kw">in</span> tools_dict:
+            <span class="tok-kw">return</span> f<span class="tok-str">"错误：工具'{tool_name}'不存在"</span>
+        
+        tool = tools_dict[tool_name]
+        result = tool.<span class="tok-attr">invoke</span>(tool_args)
+        
+        <span class="tok-kw">return</span> <span class="tok-fn">str</span>(result)
+    
+    <span class="tok-kw">except</span> <span class="tok-cls">Exception</span> <span class="tok-kw">as</span> e:
+        <span class="tok-kw">return</span> f<span class="tok-str">"执行工具时出错：{<span class="tok-fn">str</span>(e)}"</span>
+                    </code></div>
+                
+                <h3>工具的错误处理</h3>
+                
+                <div class="warning">
+                    <strong>常见错误：</strong><br>
+                    1. 工具不存在<br>
+                    2. 参数类型错误<br>
+                    3. 工具执行超时<br>
+                    4. 外部API不可用<br>
+                    5. 权限不足
+                </div>
+                
+                <div class="key-point">
+                    <strong>最佳实践：</strong><br>
+                    1. 总是使用try-except捕获异常<br>
+                    2. 返回有意义的错误消息<br>
+                    3. 实现重试机制<br>
+                    4. 记录工具调用日志<br>
+                    5. 设置超时限制
+                </div>
+            </section>
+            
+            <!-- Section 6 -->
+            <section id="tool-calling-loop">
+                <h2>6. 工具调用循环的完整流程</h2>
+                
+                <p>
+                    现在让我们看一个完整的工具调用循环。
+                </p>
+                
+                <div class="code-block"><code><span class="tok-kw">from</span> langchain_core.<span class="tok-attr">messages</span> <span class="tok-kw">import</span> <span class="tok-cls">HumanMessage</span>, <span class="tok-cls">AIMessage</span>, <span class="tok-cls">ToolMessage</span>
+
+<span class="tok-kw">def</span> run_agent_loop(user_input: str, llm_with_tools, tools_dict, max_iterations=10):
+    <span class="tok-str">""</span><span class="tok-str">"运行Agent的工具调用循环"</span><span class="tok-str">""</span>
+    
+    messages = [<span class="tok-cls">HumanMessage</span>(content=user_input)]
+    iteration = 0
+    
+    <span class="tok-kw">while</span> iteration < max_iterations:
+        iteration += 1
+        <span class="tok-fn">print</span>(f<span class="tok-str">"\n--- 迭代 {iteration} ---"</span>)
+        
+        <span class="tok-com"># 1. 调用LLM</span>
+        response = llm_with_tools.<span class="tok-attr">invoke</span>(messages)
+        <span class="tok-fn">print</span>(f<span class="tok-str">"LLM响应: {response.<span class="tok-attr">content</span>}"</span>)
+        
+        <span class="tok-com"># 2. 检查是否有工具调用</span>
+        <span class="tok-kw">if</span> <span class="tok-kw">not</span> response.<span class="tok-attr">tool_calls</span>:
+            <span class="tok-com"># 没有工具调用，返回最终答案</span>
+            <span class="tok-fn">print</span>(f<span class="tok-str">"\n最终答案: {response.<span class="tok-attr">content</span>}"</span>)
+            <span class="tok-kw">return</span> response.<span class="tok-attr">content</span>
+        
+        <span class="tok-com"># 3. 添加LLM的响应到消息历史</span>
+        messages.<span class="tok-attr">append</span>(response)
+        
+        <span class="tok-com"># 4. 执行工具调用</span>
+        <span class="tok-kw">for</span> tool_call <span class="tok-kw">in</span> response.<span class="tok-attr">tool_calls</span>:
+            tool_name = tool_call[<span class="tok-str">'name'</span>]
+            tool_args = tool_call[<span class="tok-str">'args'</span>]
+            
+            <span class="tok-fn">print</span>(f<span class="tok-str">"执行工具: {tool_name}({tool_args})"</span>)
+            
+            <span class="tok-com"># 执行工具</span>
+            <span class="tok-kw">if</span> tool_name <span class="tok-kw">in</span> tools_dict:
+                tool_result = tools_dict[tool_name].<span class="tok-attr">invoke</span>(tool_args)
+            <span class="tok-kw">else</span>:
+                tool_result = f<span class="tok-str">"错误：工具'{tool_name}'不存在"</span>
+            
+            <span class="tok-fn">print</span>(f<span class="tok-str">"工具结果: {tool_result}"</span>)
+            
+            <span class="tok-com"># 5. 创建工具消息</span>
+            tool_message = <span class="tok-cls">ToolMessage</span>(
+                content=<span class="tok-fn">str</span>(tool_result),
+                tool_call_id=tool_call[<span class="tok-str">'id'</span>],
+                name=tool_name
+            )
+            
+            <span class="tok-com"># 6. 添加工具消息到历史</span>
+            messages.<span class="tok-attr">append</span>(tool_message)
+    
+    <span class="tok-com"># 超过最大迭代次数</span>
+    <span class="tok-kw">return</span> <span class="tok-str">"错误：超过最大迭代次数"</span>
+
+<span class="tok-com"># 使用示例</span>
+tools_dict = {
+    <span class="tok-str">"get_weather"</span>: get_weather,
+    <span class="tok-str">"calculate"</span>: calculate,
+    <span class="tok-str">"search_web"</span>: search_web
+}
+
+result = run_agent_loop(
+    <span class="tok-str">"北京现在的天气怎么样？明天会下雨吗？"</span>,
+    llm_with_tools,
+    tools_dict
+)
+                    </code></div>
+                
+                <h3>循环的关键点</h3>
+                
+                <ul>
+                    <li><strong>消息历史：</strong> 保持完整的对话历史，包括LLM的响应和工具的结果</li>
+                    <li><strong>迭代限制：</strong> 防止无限循环，设置最大迭代次数</li>
+                    <li><strong>错误处理：</strong> 优雅地处理工具执行失败</li>
+                    <li><strong>终止条件：</strong> 当LLM不再调用工具时，循环结束</li>
+                </ul>
+            </section>
+            
+            <!-- Section 7 -->
+            <section id="best-practices">
+                <h2>7. 最佳实践与常见问题</h2>
+                
+                <h3>最佳实践</h3>
+                
+                <div class="key-point">
+                    <strong>1. 工具设计：</strong><br>
+                    - 保持工具简单和专注<br>
+                    - 提供清晰的文档<br>
+                    - 使用类型注解<br>
+                    - 返回结构化数据
+                </div>
+                
+                <div class="key-point">
+                    <strong>2. 错误处理：</strong><br>
+                    - 总是捕获异常<br>
+                    - 返回有意义的错误消息<br>
+                    - 实现重试机制<br>
+                    - 记录详细的日志
+                </div>
+                
+                <div class="key-point">
+                    <strong>3. 性能优化：</strong><br>
+                    - 缓存工具结果<br>
+                    - 使用异步调用<br>
+                    - 设置超时限制<br>
+                    - 批量处理请求
+                </div>
+                
+                <div class="key-point">
+                    <strong>4. 成本控制：</strong><br>
+                    - 使用较小的模型进行简单任务<br>
+                    - 压缩消息历史<br>
+                    - 限制工具调用次数<br>
+                    - 监控Token使用
+                </div>
+                
+                <h3>常见问题</h3>
+                
+                <div class="example-case">
+                    <strong>Q: LLM经常调用不存在的工具怎么办？</strong><br>
+                    A: 在提示词中明确列出可用的工具，并在工具定义中提供清晰的文档。
+                </div>
+                
+                <div class="example-case">
+                    <strong>Q: 工具调用陷入无限循环怎么办？</strong><br>
+                    A: 设置最大迭代次数，并在LLM的提示词中明确说明何时停止调用工具。
+                </div>
+                
+                <div class="example-case">
+                    <strong>Q: 如何处理工具执行超时？</strong><br>
+                    A: 使用threading或asyncio实现超时机制，返回超时错误消息。
+                </div>
+                
+                <div class="example-case">
+                    <strong>Q: 如何优化成本？</strong><br>
+                    A: 使用更便宜的模型，压缩消息历史，缓存常见查询的结果。
+                </div>
+            </section>
+            
+            <!-- Summary -->
+            <section>
+                <h2>📝 关键要点总结</h2>
+                
+                <div class="key-point">
+                    <strong>1. LLM API调用：</strong> 准备消息 → 调用API → 接收响应 → 处理结果
+                </div>
+                
+                <div class="key-point">
+                    <strong>2. Token和成本：</strong> 理解Token大小和Context Window，优化成本
+                </div>
+                
+                <div class="key-point">
+                    <strong>3. Function Calling：</strong> LLM生成工具调用请求，系统执行工具
+                </div>
+                
+                <div class="key-point">
+                    <strong>4. 工具设计：</strong> 简单、专注、文档清晰、类型注解
+                </div>
+                
+                <div class="key-point">
+                    <strong>5. 工具调用循环：</strong> 迭代调用LLM和工具，直到获得最终答案
+                </div>
+                
+                <div class="key-point">
+                    <strong>6. 错误处理：</strong> 总是捕获异常，返回有意义的错误消息
+                </div>
+            </section>
+            
+            <!-- Next Steps -->
+            <section>
+                <h2>🚀 下一步</h2>
+                
+                <p>
+                    现在你理解了LLM调用和工具系统的基础。
+                    下一步是学习DeerFlow的整体架构。
+                </p>
+                
+                <div class="highlight">
+                    <strong>推荐阅读顺序：</strong><br>
+                    1. 00-agent-fundamentals.html：Agent基础概念 ✓<br>
+                    2. 01-langgraph-basics.html：LangGraph框架基础 ✓<br>
+                    3. 02-llm-and-tools.html：LLM调用与工具系统 ✓<br>
+                    4. 03-deerflow-overview.html：DeerFlow整体架构<br>
+                    5. 10-agent-execution-engine.html：Agent执行引擎深度学习
+                </div>
+            </section>
+      <div id="page-nav"></div>
+    </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+</body>
+</html>

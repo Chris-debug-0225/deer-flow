@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>构建自定义Agent · DeerFlow 学习系列</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        /* 页面特定样式 - 与深色主题兼容 */
+        
+        .toc {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--accent);
+            padding: 20px;
+            margin-bottom: 40px;
+            border-radius: 8px;
+        }
+        
+        .toc h2 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .toc li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .toc a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .toc a:hover {
+            color: var(--accent-2);
+            text-decoration: underline;
+        }
+        
+        section {
+            margin-bottom: 50px;
+        }
+        
+        /* 代码块样式 */
+        .code-block {
+            background: var(--bg-code);
+            color: var(--text-soft);
+            padding: 18px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 18px 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 13.5px;
+            line-height: 1.65;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+        }
+        
+        .code-block code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--text-soft);
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            white-space: pre;
+            display: block;
+        }
+        
+        .code-block::-webkit-scrollbar {
+            height: 9px;
+        }
+        
+        .code-block::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        /* 提示框样式 */
+        .highlight {
+            background: var(--bg-soft);
+            padding: 15px 18px;
+            border-left: 4px solid var(--orange);
+            margin: 18px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .key-point {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--green);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--green);
+        }
+        
+        .key-point strong {
+            color: var(--green-soft);
+            font-weight: 650;
+        }
+        
+        .example-case {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--orange);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .example-case strong {
+            color: var(--orange);
+            font-weight: 650;
+        }
+        
+        .warning {
+            background: var(--bg-soft);
+            border-left: 4px solid #ff6b6b;
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .warning strong {
+            color: #ff6b6b;
+            font-weight: 650;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+        
+        .comparison-table th {
+            background: var(--bg-soft);
+            color: var(--text);
+            padding: 11px 15px;
+            text-align: left;
+            font-weight: 650;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .comparison-table td {
+            padding: 11px 15px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-soft);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:hover td {
+            background: rgba(88,166,255,0.04);
+        }
+        
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        
+        .flow-step {
+            background: var(--bg-card);
+            border: 1.5px solid var(--accent);
+            color: var(--text);
+            padding: 12px 22px;
+            border-radius: 10px;
+            min-width: 120px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .flow-arrow {
+            font-size: 20px;
+            color: var(--text-dim);
+            line-height: 1.4;
+            padding: 2px 0;
+        }
+    </style>
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+            <h1>构建自定义Agent</h1>
+            <p class="page-subtitle">DeerFlow 学习系列 - 第 31 章</p>
+            
+            <div class="toc">
+                <h2>📖 目录</h2>
+                <ul>
+                    <li><a href="#introduction">简介</a></li>
+                    <li><a href="#agent-architecture">Agent 架构</a></li>
+                    <li><a href="#agent-implementation">Agent 实现</a></li>
+                    <li><a href="#configuration">配置管理</a></li>
+                    <li><a href="#optimization">优化和调试</a></li>
+                    <li><a href="#best-practices">最佳实践</a></li>
+                    <li><a href="#summary">总结</a></li>
+                </ul>
+            </div>
+            
+            <section id="introduction">
+                <h2>简介</h2>
+                <p>
+                    构建自定义 Agent 意味着创建一个专门针对特定任务或领域的 Agent。不同的应用场景需要不同的 Agent 设计。本章讲解如何设计、实现和优化自定义 Agent。
+                </p>
+                <div class="key-point">
+                    <strong>学习目标：</strong>
+                    <ul>
+                        <li>理解 Agent 的架构和设计原则</li>
+                        <li>掌握自定义 Agent 的实现方法</li>
+                        <li>学会配置和优化 Agent</li>
+                        <li>了解 Agent 的调试和监控</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section id="agent-architecture">
+                <h2>Agent 架构</h2>
+                <p>
+                    一个完整的 Agent 由多个组件组成。理解这些组件和它们的交互很重要。
+                </p>
+                
+                <h3>Agent 的核心组件</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>组件</th>
+                            <th>职责</th>
+                            <th>示例</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>LLM</strong></td>
+                            <td>决策和推理</td>
+                            <td>GPT-4, Claude</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Memory</strong></td>
+                            <td>存储和检索信息</td>
+                            <td>向量数据库、缓存</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Skills</strong></td>
+                            <td>执行具体操作</td>
+                            <td>数据分析、API 调用</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Executor</strong></td>
+                            <td>协调执行流程</td>
+                            <td>任务调度、错误处理</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gateway</strong></td>
+                            <td>与外部通信</td>
+                            <td>HTTP API、消息队列</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Agent 架构图</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">输入</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">LLM</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">决策</div>
+                </div>
+                <div style="text-align: center; margin: 10px 0;">↓</div>
+                <div class="flow-diagram">
+                    <div class="flow-step">Skills</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">Executor</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">输出</div>
+                </div>
+            </section>
+            
+            <section id="agent-implementation">
+                <h2>Agent 实现</h2>
+                <p>
+                    实现一个自定义 Agent 的完整步骤。
+                </p>
+                
+                <h3>基础 Agent 实现</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">CustomAgent</span>:
+    <span class="tok-str">"""自定义 Agent"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, name: <span class="tok-str">str</span>, llm, skills: <span class="tok-cls">dict</span>):
+        <span class="tok-kw">self</span>.name = name
+        <span class="tok-kw">self</span>.llm = llm
+        <span class="tok-kw">self</span>.skills = skills
+        <span class="tok-kw">self</span>.memory = {}
+        <span class="tok-kw">self</span>.state = <span class="tok-str">"idle"</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, task: <span class="tok-str">str</span>):
+        <span class="tok-str">"""执行任务"""</span>
+        <span class="tok-kw">self</span>.state = <span class="tok-str">"running"</span>
+        
+        <span class="tok-com"># 1. 分析任务</span>
+        analysis = <span class="tok-kw">self</span>.<span class="tok-fn">analyze_task</span>(task)
+        
+        <span class="tok-com"># 2. 制定计划</span>
+        plan = <span class="tok-kw">self</span>.<span class="tok-fn">make_plan</span>(analysis)
+        
+        <span class="tok-com"># 3. 执行计划</span>
+        result = <span class="tok-kw">self</span>.<span class="tok-fn">execute_plan</span>(plan)
+        
+        <span class="tok-kw">self</span>.state = <span class="tok-str">"idle"</span>
+        <span class="tok-kw">return</span> result
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">analyze_task</span>(<span class="tok-kw">self</span>, task: <span class="tok-str">str</span>):
+        <span class="tok-str">"""分析任务"""</span>
+        prompt = <span class="tok-str">f"分析这个任务：{task}"</span>
+        <span class="tok-kw">return</span> <span class="tok-kw">self</span>.llm.<span class="tok-fn">invoke</span>(prompt)
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">make_plan</span>(<span class="tok-kw">self</span>, analysis):
+        <span class="tok-str">"""制定计划"""</span>
+        prompt = <span class="tok-str">f"基于分析制定计划：{analysis}"</span>
+        <span class="tok-kw">return</span> <span class="tok-kw">self</span>.llm.<span class="tok-fn">invoke</span>(prompt)
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">execute_plan</span>(<span class="tok-kw">self</span>, plan):
+        <span class="tok-str">"""执行计划"""</span>
+        <span class="tok-com"># 解析计划并执行相应的 Skill</span>
+        <span class="tok-kw">for</span> step <span class="tok-kw">in</span> plan:
+            <span class="tok-kw">if</span> step <span class="tok-kw">in</span> <span class="tok-kw">self</span>.skills:
+                <span class="tok-kw">self</span>.skills[step].<span class="tok-fn">execute</span>()
+        <span class="tok-kw">return</span> <span class="tok-str">"Plan executed"</span>
+</code></div>
+                
+                <div class="example-case">
+                    <strong>示例：</strong> 数据分析 Agent<br>
+                    <div class="code-block"><code>
+<span class="tok-com"># 创建 Agent</span>
+agent = <span class="tok-cls">CustomAgent</span>(
+    name=<span class="tok-str">"DataAnalystAgent"</span>,
+    llm=llm,
+    skills={
+        <span class="tok-str">"analyze"</span>: <span class="tok-cls">AnalysisSkill</span>(),
+        <span class="tok-str">"visualize"</span>: <span class="tok-cls">VisualizationSkill</span>(),
+        <span class="tok-str">"report"</span>: <span class="tok-cls">ReportSkill</span>()
+    }
+)
+
+<span class="tok-com"># 执行任务</span>
+result = agent.<span class="tok-fn">execute</span>(<span class="tok-str">"分析销售数据并生成报告"</span>)
+</code></div>
+                </div>
+            </section>
+            
+            <section id="configuration">
+                <h2>配置管理</h2>
+                <p>
+                    使用配置文件管理 Agent 的参数，便于调整而不需要修改代码。
+                </p>
+                
+                <h3>Agent 配置示例</h3>
+                <div class="code-block"><code>
+<span class="tok-str">"""agent_config.yaml"""</span>
+agent:
+  name: <span class="tok-str">"DataAnalystAgent"</span>
+  description: <span class="tok-str">"数据分析 Agent"</span>
+  version: <span class="tok-str">"1.0.0"</span>
+
+llm:
+  provider: <span class="tok-str">"openai"</span>
+  model: <span class="tok-str">"gpt-4"</span>
+  temperature: <span class="tok-num">0.7</span>
+  max_tokens: <span class="tok-num">2000</span>
+
+skills:
+  - name: <span class="tok-str">"analyze"</span>
+    module: <span class="tok-str">"skills.analysis"</span>
+  - name: <span class="tok-str">"visualize"</span>
+    module: <span class="tok-str">"skills.visualization"</span>
+
+memory:
+  type: <span class="tok-str">"vector"</span>
+  size: <span class="tok-num">1000</span>
+
+timeout: <span class="tok-num">30</span>
+max_retries: <span class="tok-num">3</span>
+</code></div>
+                
+                <h3>加载配置</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">import</span> yaml
+
+<span class="tok-kw">def</span> <span class="tok-fn">load_agent_config</span>(config_file: <span class="tok-str">str</span>):
+    <span class="tok-str">"""加载 Agent 配置"""</span>
+    <span class="tok-kw">with</span> <span class="tok-fn">open</span>(config_file, <span class="tok-str">"r"</span>) <span class="tok-kw">as</span> f:
+        config = yaml.<span class="tok-fn">safe_load</span>(f)
+    <span class="tok-kw">return</span> config
+
+<span class="tok-com"># 使用配置创建 Agent</span>
+config = <span class="tok-fn">load_agent_config</span>(<span class="tok-str">"agent_config.yaml"</span>)
+agent = <span class="tok-cls">CustomAgent</span>(**config[<span class="tok-str">"agent"</span>])
+</code></div>
+            </section>
+            
+            <section id="optimization">
+                <h2>优化和调试</h2>
+                <p>
+                    优化 Agent 的性能和调试问题是持续的过程。
+                </p>
+                
+                <h3>优化策略</h3>
+                <ul>
+                    <li><strong>缓存：</strong> 缓存常见问题的答案</li>
+                    <li><strong>并行化：</strong> 并行执行独立的 Skill</li>
+                    <li><strong>模型选择：</strong> 为不同任务选择合适的模型</li>
+                    <li><strong>Prompt 优化：</strong> 优化 Prompt 以提高准确性</li>
+                    <li><strong>错误处理：</strong> 实现降级和重试机制</li>
+                </ul>
+                
+                <h3>调试工具</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">AgentDebugger</span>:
+    <span class="tok-str">"""Agent 调试器"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, agent):
+        <span class="tok-kw">self</span>.agent = agent
+        <span class="tok-kw">self</span>.logs = []
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">log</span>(<span class="tok-kw">self</span>, message: <span class="tok-str">str</span>):
+        <span class="tok-str">"""记录日志"""</span>
+        <span class="tok-kw">self</span>.logs.<span class="tok-fn">append</span>(message)
+        <span class="tok-fn">print</span>(<span class="tok-str">f"[DEBUG] {message}"</span>)
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">trace_execution</span>(<span class="tok-kw">self</span>, task: <span class="tok-str">str</span>):
+        <span class="tok-str">"""追踪执行"""</span>
+        <span class="tok-kw">self</span>.<span class="tok-fn">log</span>(<span class="tok-str">f"Starting task: {task}"</span>)
+        result = <span class="tok-kw">self</span>.agent.<span class="tok-fn">execute</span>(task)
+        <span class="tok-kw">self</span>.<span class="tok-fn">log</span>(<span class="tok-str">f"Task completed: {result}"</span>)
+        <span class="tok-kw">return</span> result
+</code></div>
+            </section>
+            
+            <section id="best-practices">
+                <h2>最佳实践</h2>
+                
+                <h3>1. 模块化设计</h3>
+                <p>
+                    将 Agent 分解为独立的模块。每个模块应该有明确的职责。
+                </p>
+                
+                <h3>2. 配置驱动</h3>
+                <p>
+                    使用配置文件管理 Agent 的参数。这样可以轻松调整而不需要修改代码。
+                </p>
+                
+                <h3>3. 充分的日志</h3>
+                <p>
+                    记录 Agent 的执行过程。这对调试和优化很有帮助。
+                </p>
+                
+                <h3>4. 错误处理</h3>
+                <p>
+                    实现完善的错误处理和降级策略。Agent 应该能够优雅地处理失败。
+                </p>
+                
+                <h3>5. 性能监控</h3>
+                <p>
+                    监控 Agent 的性能指标。包括执行时间、成本、准确性等。
+                </p>
+                
+                <div class="key-point">
+                    <strong>关键点：</strong> 好的 Agent 设计应该是灵活、可扩展、易维护的。
+                </div>
+            </section>
+            
+            <section id="summary">
+                <h2>总结</h2>
+                <p>
+                    构建自定义 Agent 需要理解 Agent 的架构、实现方法和优化技巧。通过模块化设计、配置驱动和充分的监控，可以创建高效、可靠的 Agent 系统。本章深入讲解了自定义 Agent 的构建方法。
+                </p>
+                <div class="highlight">
+                    <strong>核心要点总结：</strong>
+                    <ul>
+                        <li><strong>Agent 架构：</strong> LLM、Memory、Skills、Executor、Gateway 等核心组件</li>
+                        <li><strong>Agent 实现：</strong> 任务分析、计划制定、计划执行的完整流程</li>
+                        <li><strong>配置管理：</strong> 使用 YAML 配置文件管理 Agent 参数</li>
+                        <li><strong>优化和调试：</strong> 缓存、并行化、模型选择、Prompt 优化、错误处理</li>
+                        <li><strong>最佳实践：</strong> 模块化设计、配置驱动、日志记录、错误处理、性能监控</li>
+                    </ul>
+                </div>
+                
+                <div class="key-point">
+                    <strong>自定义Agent建议：</strong> 构建自定义 Agent 是一个迭代的过程。从简单的 Agent 开始，逐步添加功能和优化。定期评估 Agent 的性能和成本，根据反馈进行改进。
+                </div>
+            </section>
+            
+            <div id="page-nav"></div>
+        </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+</body>
+</html>

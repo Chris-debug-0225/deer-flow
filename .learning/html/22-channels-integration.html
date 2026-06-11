@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多渠道集成：从IM到API · DeerFlow 学习系列</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        /* 页面特定样式 - 与深色主题兼容 */
+        
+        .toc {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--accent);
+            padding: 20px;
+            margin-bottom: 40px;
+            border-radius: 8px;
+        }
+        
+        .toc h2 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .toc li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .toc a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .toc a:hover {
+            color: var(--accent-2);
+            text-decoration: underline;
+        }
+        
+        section {
+            margin-bottom: 50px;
+        }
+        
+        /* 代码块样式 */
+        .code-block {
+            background: var(--bg-code);
+            color: var(--text-soft);
+            padding: 18px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 18px 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 13.5px;
+            line-height: 1.65;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+        }
+        
+        .code-block code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--text-soft);
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            white-space: pre;
+            display: block;
+        }
+        
+        .code-block::-webkit-scrollbar {
+            height: 9px;
+        }
+        
+        .code-block::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        /* 提示框样式 */
+        .highlight {
+            background: var(--bg-soft);
+            padding: 15px 18px;
+            border-left: 4px solid var(--orange);
+            margin: 18px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .key-point {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--green);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--green);
+        }
+        
+        .key-point strong {
+            color: var(--green-soft);
+            font-weight: 650;
+        }
+        
+        .example-case {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--orange);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .example-case strong {
+            color: var(--orange);
+            font-weight: 650;
+        }
+        
+        .warning {
+            background: var(--bg-soft);
+            border-left: 4px solid #ff6b6b;
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .warning strong {
+            color: #ff6b6b;
+            font-weight: 650;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+        
+        .comparison-table th {
+            background: var(--bg-soft);
+            color: var(--text);
+            padding: 11px 15px;
+            text-align: left;
+            font-weight: 650;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .comparison-table td {
+            padding: 11px 15px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-soft);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:hover td {
+            background: rgba(88,166,255,0.04);
+        }
+        
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        
+        .flow-step {
+            background: var(--bg-card);
+            border: 1.5px solid var(--accent);
+            color: var(--text);
+            padding: 12px 22px;
+            border-radius: 10px;
+            min-width: 120px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .flow-arrow {
+            font-size: 20px;
+            color: var(--text-dim);
+            line-height: 1.4;
+            padding: 2px 0;
+        }
+    </style>
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+            <h1>多渠道集成：从IM到API</h1>
+            <p class="page-subtitle">DeerFlow 学习系列 - 第 22 章</p>
+            
+            <div class="toc">
+                <h2>📖 目录</h2>
+                <ul>
+                    <li><a href="#introduction">简介</a></li>
+                    <li><a href="#channel-types">渠道类型</a></li>
+                    <li><a href="#channel-abstraction">渠道抽象层</a></li>
+                    <li><a href="#message-handling">消息处理</a></li>
+                    <li><a href="#state-management">状态管理</a></li>
+                    <li><a href="#webhook-integration">Webhook集成</a></li>
+                    <li><a href="#best-practices">最佳实践</a></li>
+                    <li><a href="#summary">总结</a></li>
+                </ul>
+            </div>
+            
+            <section id="introduction">
+                <h2>简介</h2>
+                <p>
+                    Agent 需要与用户通过多种渠道交互。从即时通讯应用到 Web API，每个渠道都有不同的特点和要求。本章讲解如何设计和实现多渠道集成，包括渠道抽象、消息处理、状态管理等内容。
+                </p>
+                <div class="key-point">
+                    <strong>学习目标：</strong>
+                    <ul>
+                        <li>理解不同渠道的特点和差异</li>
+                        <li>掌握渠道抽象层的设计</li>
+                        <li>学会处理各种消息格式</li>
+                        <li>了解跨渠道状态管理</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section id="channel-types">
+                <h2>渠道类型</h2>
+                <p>
+                    不同的渠道适合不同的使用场景。了解各种渠道的特点很重要。
+                </p>
+                
+                <h3>主流渠道对比</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>渠道</th>
+                            <th>特点</th>
+                            <th>优势</th>
+                            <th>劣势</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>WeChat</strong></td>
+                            <td>即时通讯</td>
+                            <td>用户量大、实时性强</td>
+                            <td>API 限制多</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DingTalk</strong></td>
+                            <td>企业通讯</td>
+                            <td>企业场景、功能完整</td>
+                            <td>用户群体有限</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Slack</strong></td>
+                            <td>团队协作</td>
+                            <td>开发友好、集成丰富</td>
+                            <td>国内使用少</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Web API</strong></td>
+                            <td>HTTP 接口</td>
+                            <td>通用、灵活</td>
+                            <td>需要自建前端</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Telegram</strong></td>
+                            <td>即时通讯</td>
+                            <td>API 开放、开发友好</td>
+                            <td>国内使用受限</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>渠道架构</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">WeChat</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">渠道适配器</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">Agent</div>
+                </div>
+                <div style="text-align: center; margin: 10px 0;">↓</div>
+                <div class="flow-diagram">
+                    <div class="flow-step">DingTalk</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">消息处理</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">响应</div>
+                </div>
+            </section>
+            
+            <section id="channel-abstraction">
+                <h2>渠道抽象层</h2>
+                <p>
+                    设计一个抽象层可以隐藏不同渠道的差异，提供统一的接口。
+                </p>
+                
+                <h3>渠道接口设计</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">from</span> abc <span class="tok-kw">import</span> <span class="tok-cls">ABC</span>, abstractmethod
+
+<span class="tok-kw">class</span> <span class="tok-cls">Channel</span>(<span class="tok-cls">ABC</span>):
+    <span class="tok-str">"""渠道抽象基类"""</span>
+    
+    @abstractmethod
+    <span class="tok-kw">def</span> <span class="tok-fn">receive_message</span>(<span class="tok-kw">self</span>) -> <span class="tok-cls">Message</span>:
+        <span class="tok-str">"""接收消息"""</span>
+        <span class="tok-kw">pass</span>
+    
+    @abstractmethod
+    <span class="tok-kw">def</span> <span class="tok-fn">send_message</span>(<span class="tok-kw">self</span>, message: <span class="tok-cls">Message</span>) -> <span class="tok-str">bool</span>:
+        <span class="tok-str">"""发送消息"""</span>
+        <span class="tok-kw">pass</span>
+    
+    @abstractmethod
+    <span class="tok-kw">def</span> <span class="tok-fn">get_user_info</span>(<span class="tok-kw">self</span>, user_id: <span class="tok-str">str</span>) -> <span class="tok-cls">UserInfo</span>:
+        <span class="tok-str">"""获取用户信息"""</span>
+        <span class="tok-kw">pass</span>
+
+<span class="tok-com"># 具体实现</span>
+<span class="tok-kw">class</span> <span class="tok-cls">WeChatChannel</span>(<span class="tok-cls">Channel</span>):
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, app_id: <span class="tok-str">str</span>, app_secret: <span class="tok-str">str</span>):
+        <span class="tok-kw">self</span>.app_id = app_id
+        <span class="tok-kw">self</span>.app_secret = app_secret
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">receive_message</span>(<span class="tok-kw">self</span>) -> <span class="tok-cls">Message</span>:
+        <span class="tok-com"># 从 WeChat 接收消息</span>
+        <span class="tok-kw">pass</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">send_message</span>(<span class="tok-kw">self</span>, message: <span class="tok-cls">Message</span>) -> <span class="tok-str">bool</span>:
+        <span class="tok-com"># 发送到 WeChat</span>
+        <span class="tok-kw">pass</span>
+
+<span class="tok-kw">class</span> <span class="tok-cls">WebAPIChannel</span>(<span class="tok-cls">Channel</span>):
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, base_url: <span class="tok-str">str</span>):
+        <span class="tok-kw">self</span>.base_url = base_url
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">receive_message</span>(<span class="tok-kw">self</span>) -> <span class="tok-cls">Message</span>:
+        <span class="tok-com"># 从 HTTP 请求接收消息</span>
+        <span class="tok-kw">pass</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">send_message</span>(<span class="tok-kw">self</span>, message: <span class="tok-cls">Message</span>) -> <span class="tok-str">bool</span>:
+        <span class="tok-com"># 返回 HTTP 响应</span>
+        <span class="tok-kw">pass</span>
+</code></div>
+            </section>
+            
+            <section id="message-handling">
+                <h2>消息处理</h2>
+                <p>
+                    不同渠道的消息格式不同，需要进行转换和处理。
+                </p>
+                
+                <h3>消息转换流程</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">Message</span>:
+    <span class="tok-str">"""统一消息格式"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, user_id: <span class="tok-str">str</span>, content: <span class="tok-str">str</span>, channel: <span class="tok-str">str</span>):
+        <span class="tok-kw">self</span>.user_id = user_id
+        <span class="tok-kw">self</span>.content = content
+        <span class="tok-kw">self</span>.channel = channel
+        <span class="tok-kw">self</span>.timestamp = <span class="tok-fn">time</span>.<span class="tok-fn">time</span>()
+
+<span class="tok-kw">class</span> <span class="tok-cls">MessageConverter</span>:
+    <span class="tok-str">"""消息转换器"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">from_wechat</span>(<span class="tok-kw">self</span>, wechat_msg: <span class="tok-cls">dict</span>) -> <span class="tok-cls">Message</span>:
+        <span class="tok-str">"""从 WeChat 消息转换"""</span>
+        <span class="tok-kw">return</span> <span class="tok-cls">Message</span>(
+            user_id=wechat_msg[<span class="tok-str">"FromUserName"</span>],
+            content=wechat_msg[<span class="tok-str">"Content"</span>],
+            channel=<span class="tok-str">"wechat"</span>
+        )
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">to_wechat</span>(<span class="tok-kw">self</span>, message: <span class="tok-cls">Message</span>) -> <span class="tok-cls">dict</span>:
+        <span class="tok-str">"""转换为 WeChat 消息"""</span>
+        <span class="tok-kw">return</span> {
+            <span class="tok-str">"ToUserName"</span>: message.user_id,
+            <span class="tok-str">"MsgType"</span>: <span class="tok-str">"text"</span>,
+            <span class="tok-str">"Content"</span>: message.content
+        }
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">from_api</span>(<span class="tok-kw">self</span>, api_msg: <span class="tok-cls">dict</span>) -> <span class="tok-cls">Message</span>:
+        <span class="tok-str">"""从 API 消息转换"""</span>
+        <span class="tok-kw">return</span> <span class="tok-cls">Message</span>(
+            user_id=api_msg[<span class="tok-str">"user_id"</span>],
+            content=api_msg[<span class="tok-str">"text"</span>],
+            channel=<span class="tok-str">"api"</span>
+        )
+</code></div>
+                
+                <div class="example-case">
+                    <strong>示例：</strong> 多渠道消息处理<br>
+                    <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">MultiChannelAgent</span>:
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
+        <span class="tok-kw">self</span>.channels = {
+            <span class="tok-str">"wechat"</span>: <span class="tok-cls">WeChatChannel</span>(),
+            <span class="tok-str">"api"</span>: <span class="tok-cls">WebAPIChannel</span>()
+        }
+        <span class="tok-kw">self</span>.converter = <span class="tok-cls">MessageConverter</span>()
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">handle_message</span>(<span class="tok-kw">self</span>, channel_name: <span class="tok-str">str</span>, raw_msg: <span class="tok-cls">dict</span>):
+        <span class="tok-str">"""处理来自任何渠道的消息"""</span>
+        <span class="tok-com"># 1. 转换为统一格式</span>
+        <span class="tok-kw">if</span> channel_name == <span class="tok-str">"wechat"</span>:
+            message = <span class="tok-kw">self</span>.converter.<span class="tok-fn">from_wechat</span>(raw_msg)
+        <span class="tok-kw">elif</span> channel_name == <span class="tok-str">"api"</span>:
+            message = <span class="tok-kw">self</span>.converter.<span class="tok-fn">from_api</span>(raw_msg)
+        
+        <span class="tok-com"># 2. 处理消息</span>
+        response = <span class="tok-kw">self</span>.<span class="tok-fn">process</span>(message)
+        
+        <span class="tok-com"># 3. 转换回原渠道格式</span>
+        <span class="tok-kw">if</span> channel_name == <span class="tok-str">"wechat"</span>:
+            wechat_response = <span class="tok-kw">self</span>.converter.<span class="tok-fn">to_wechat</span>(response)
+        
+        <span class="tok-com"># 4. 发送响应</span>
+        <span class="tok-kw">self</span>.channels[channel_name].<span class="tok-fn">send_message</span>(response)
+</code></div>
+                </div>
+            </section>
+            
+            <section id="state-management">
+                <h2>状态管理</h2>
+                <p>
+                    在多渠道环境中，需要跨渠道维护用户状态和会话。
+                </p>
+                
+                <h3>会话管理</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">Session</span>:
+    <span class="tok-str">"""用户会话"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, user_id: <span class="tok-str">str</span>):
+        <span class="tok-kw">self</span>.user_id = user_id
+        <span class="tok-kw">self</span>.channels = set()
+        <span class="tok-kw">self</span>.context = {}
+        <span class="tok-kw">self</span>.created_at = <span class="tok-fn">time</span>.<span class="tok-fn">time</span>()
+
+<span class="tok-kw">class</span> <span class="tok-cls">SessionManager</span>:
+    <span class="tok-str">"""会话管理器"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
+        <span class="tok-kw">self</span>.sessions = {}
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">get_or_create_session</span>(<span class="tok-kw">self</span>, user_id: <span class="tok-str">str</span>) -> <span class="tok-cls">Session</span>:
+        <span class="tok-str">"""获取或创建会话"""</span>
+        <span class="tok-kw">if</span> user_id <span class="tok-kw">not</span> <span class="tok-kw">in</span> <span class="tok-kw">self</span>.sessions:
+            <span class="tok-kw">self</span>.sessions[user_id] = <span class="tok-cls">Session</span>(user_id)
+        <span class="tok-kw">return</span> <span class="tok-kw">self</span>.sessions[user_id]
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">add_channel</span>(<span class="tok-kw">self</span>, user_id: <span class="tok-str">str</span>, channel: <span class="tok-str">str</span>):
+        <span class="tok-str">"""添加渠道"""</span>
+        session = <span class="tok-kw">self</span>.<span class="tok-fn">get_or_create_session</span>(user_id)
+        session.channels.<span class="tok-fn">add</span>(channel)
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">get_context</span>(<span class="tok-kw">self</span>, user_id: <span class="tok-str">str</span>) -> <span class="tok-cls">dict</span>:
+        <span class="tok-str">"""获取用户上下文"""</span>
+        session = <span class="tok-kw">self</span>.<span class="tok-fn">get_or_create_session</span>(user_id)
+        <span class="tok-kw">return</span> session.context
+</code></div>
+                
+                <div class="key-point">
+                    <strong>关键点：</strong> 跨渠道状态管理很重要。用户在 WeChat 上的对话应该能在 Web 上继续。
+                </div>
+            </section>
+            
+            <section id="webhook-integration">
+                <h2>Webhook集成</h2>
+                <p>
+                    Webhook 是实现实时消息推送的关键。通过 Webhook，外部系统可以主动推送事件到 Agent。
+                </p>
+                
+                <h3>Webhook 处理流程</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">from</span> flask <span class="tok-kw">import</span> <span class="tok-cls">Flask</span>, request
+
+app = <span class="tok-cls">Flask</span>(__name__)
+
+<span class="tok-kw">class</span> <span class="tok-cls">WebhookHandler</span>:
+    <span class="tok-str">"""Webhook 处理器"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
+        <span class="tok-kw">self</span>.handlers = {}
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">register</span>(<span class="tok-kw">self</span>, event_type: <span class="tok-str">str</span>, handler):
+        <span class="tok-str">"""注册事件处理器"""</span>
+        <span class="tok-kw">self</span>.handlers[event_type] = handler
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">handle_webhook</span>(<span class="tok-kw">self</span>, payload: <span class="tok-cls">dict</span>):
+        <span class="tok-str">"""处理 Webhook 请求"""</span>
+        event_type = payload.<span class="tok-fn">get</span>(<span class="tok-str">"event"</span>)
+        <span class="tok-kw">if</span> event_type <span class="tok-kw">in</span> <span class="tok-kw">self</span>.handlers:
+            <span class="tok-kw">return</span> <span class="tok-kw">self</span>.handlers[event_type](payload)
+        <span class="tok-kw">else</span>:
+            <span class="tok-kw">return</span> {<span class="tok-str">"error"</span>: <span class="tok-str">"Unknown event type"</span>}
+
+webhook_handler = <span class="tok-cls">WebhookHandler</span>()
+
+@app.<span class="tok-fn">route</span>(<span class="tok-str">"/webhook/wechat"</span>, methods=[<span class="tok-str">"POST"</span>])
+<span class="tok-kw">def</span> <span class="tok-fn">wechat_webhook</span>():
+    <span class="tok-str">"""WeChat Webhook 端点"""</span>
+    payload = request.<span class="tok-fn">get_json</span>()
+    result = webhook_handler.<span class="tok-fn">handle_webhook</span>(payload)
+    <span class="tok-kw">return</span> result
+
+@app.<span class="tok-fn">route</span>(<span class="tok-str">"/webhook/dingtalk"</span>, methods=[<span class="tok-str">"POST"</span>])
+<span class="tok-kw">def</span> <span class="tok-fn">dingtalk_webhook</span>():
+    <span class="tok-str">"""DingTalk Webhook 端点"""</span>
+    payload = request.<span class="tok-fn">get_json</span>()
+    result = webhook_handler.<span class="tok-fn">handle_webhook</span>(payload)
+    <span class="tok-kw">return</span> result
+</code></div>
+                
+                <h3>Webhook 安全性</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>安全措施</th>
+                            <th>说明</th>
+                            <th>实现方式</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>签名验证</strong></td>
+                            <td>验证请求来自可信源</td>
+                            <td>HMAC-SHA256 签名</td>
+                        </tr>
+                        <tr>
+                            <td><strong>时间戳检查</strong></td>
+                            <td>防止重放攻击</td>
+                            <td>检查请求时间戳</td>
+                        </tr>
+                        <tr>
+                            <td><strong>IP 白名单</strong></td>
+                            <td>限制请求来源</td>
+                            <td>检查请求 IP</td>
+                        </tr>
+                        <tr>
+                            <td><strong>速率限制</strong></td>
+                            <td>防止 DDoS 攻击</td>
+                            <td>限制请求频率</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="code-block"><code>
+<span class="tok-kw">import</span> hmac
+<span class="tok-kw">import</span> hashlib
+
+<span class="tok-kw">class</span> <span class="tok-cls">SecureWebhookHandler</span>:
+    <span class="tok-str">"""安全的 Webhook 处理器"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, secret: <span class="tok-str">str</span>):
+        <span class="tok-kw">self</span>.secret = secret
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">verify_signature</span>(<span class="tok-kw">self</span>, payload: <span class="tok-str">str</span>, signature: <span class="tok-str">str</span>) -> <span class="tok-str">bool</span>:
+        <span class="tok-str">"""验证签名"""</span>
+        expected = hmac.<span class="tok-fn">new</span>(
+            <span class="tok-kw">self</span>.secret.<span class="tok-fn">encode</span>(),
+            payload.<span class="tok-fn">encode</span>(),
+            hashlib.sha256
+        ).<span class="tok-fn">hexdigest</span>()
+        <span class="tok-kw">return</span> hmac.<span class="tok-fn">compare_digest</span>(expected, signature)
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">verify_timestamp</span>(<span class="tok-kw">self</span>, timestamp: <span class="tok-num">0</span>, max_age: <span class="tok-num">300</span>) -> <span class="tok-str">bool</span>:
+        <span class="tok-str">"""验证时间戳"""</span>
+        <span class="tok-kw">import</span> time
+        current_time = <span class="tok-fn">int</span>(<span class="tok-fn">time</span>.<span class="tok-fn">time</span>())
+        <span class="tok-kw">return</span> <span class="tok-fn">abs</span>(current_time - timestamp) < max_age
+</code></div>
+            </section>
+            
+            <section id="best-practices">
+                <h2>最佳实践</h2>
+                
+                <h3>1. 统一消息格式</h3>
+                <p>
+                    定义统一的内部消息格式，所有渠道都转换为这个格式处理。
+                </p>
+                
+                <h3>2. 渠道隔离</h3>
+                <p>
+                    每个渠道的实现应该独立，不应该相互影响。
+                </p>
+                
+                <h3>3. 错误处理</h3>
+                <p>
+                    不同渠道的错误处理方式不同，需要分别处理。
+                </p>
+                
+                <h3>4. 速率限制</h3>
+                <p>
+                    不同渠道有不同的速率限制，需要分别控制。
+                </p>
+                
+                <h3>5. 监控和日志</h3>
+                <p>
+                    记录每个渠道的消息流量和错误，便于调试和优化。
+                </p>
+                
+                <div class="warning">
+                    <strong>警告：</strong> 不同渠道的 API 限制和特性差异很大。不要假设一个渠道的实现能直接用于另一个渠道。
+                </div>
+            </section>
+            
+            <section id="summary">
+                <h2>总结</h2>
+                <p>
+                    多渠道集成让 Agent 能够通过多种方式与用户交互。通过设计好的抽象层、统一的消息格式、跨渠道状态管理和 Webhook 集成，可以构建灵活、可扩展的多渠道系统。本章深入讲解了多渠道集成的各个方面。
+                </p>
+                <div class="highlight">
+                    <strong>核心要点总结：</strong>
+                    <ul>
+                        <li><strong>渠道类型：</strong> WeChat、DingTalk、Slack、Web API、Telegram 等各有特点</li>
+                        <li><strong>渠道抽象层：</strong> 为所有渠道提供统一接口</li>
+                        <li><strong>消息处理：</strong> 转换不同渠道的消息格式为统一格式</li>
+                        <li><strong>状态管理：</strong> 跨渠道维护用户会话和上下文</li>
+                        <li><strong>Webhook集成：</strong> 实时消息推送、签名验证、时间戳检查</li>
+                        <li><strong>最佳实践：</strong> 统一格式、渠道隔离、错误处理、速率限制、监控日志</li>
+                    </ul>
+                </div>
+                
+                <div class="key-point">
+                    <strong>多渠道集成建议：</strong> 多渠道集成的关键是设计好的抽象层和统一的消息格式。同时要充分考虑不同渠道的特性和限制，实现相应的适配器。定期测试和监控各个渠道的性能。
+                </div>
+            </section>
+            
+            <div id="page-nav"></div>
+        </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+</body>
+</html>

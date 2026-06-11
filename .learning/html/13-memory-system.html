@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长期记忆系统 · DeerFlow 学习系列</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        /* 页面特定样式 - 与深色主题兼容 */
+        
+        .toc {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--accent);
+            padding: 20px;
+            margin-bottom: 40px;
+            border-radius: 8px;
+        }
+        
+        .toc h2 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .toc li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .toc a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .toc a:hover {
+            color: var(--accent-2);
+            text-decoration: underline;
+        }
+        
+        section {
+            margin-bottom: 50px;
+        }
+        
+        /* 代码块样式 */
+        .code-block {
+            background: var(--bg-code);
+            color: var(--text-soft);
+            padding: 18px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 18px 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 13.5px;
+            line-height: 1.65;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+        }
+        
+        .code-block code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--text-soft);
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            white-space: pre;
+            display: block;
+        }
+        
+        .code-block::-webkit-scrollbar {
+            height: 9px;
+        }
+        
+        .code-block::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        /* 提示框样式 */
+        .highlight {
+            background: var(--bg-soft);
+            padding: 15px 18px;
+            border-left: 4px solid var(--orange);
+            margin: 18px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .key-point {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--green);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--green);
+        }
+        
+        .key-point strong {
+            color: var(--green-soft);
+            font-weight: 650;
+        }
+        
+        .example-case {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--orange);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .example-case strong {
+            color: var(--orange);
+            font-weight: 650;
+        }
+        
+        .warning {
+            background: var(--bg-soft);
+            border-left: 4px solid #ff6b6b;
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .warning strong {
+            color: #ff6b6b;
+            font-weight: 650;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+        
+        .comparison-table th {
+            background: var(--bg-soft);
+            color: var(--text);
+            padding: 11px 15px;
+            text-align: left;
+            font-weight: 650;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .comparison-table td {
+            padding: 11px 15px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-soft);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:hover td {
+            background: rgba(88,166,255,0.04);
+        }
+        
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        
+        .flow-step {
+            background: var(--bg-card);
+            border: 1.5px solid var(--accent);
+            color: var(--text);
+            padding: 12px 22px;
+            border-radius: 10px;
+            min-width: 120px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .flow-arrow {
+            font-size: 20px;
+            color: var(--text-dim);
+            line-height: 1.4;
+            padding: 2px 0;
+        }
+    </style>
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+            <h1>长期记忆系统</h1>
+            <p class="page-subtitle">DeerFlow 学习系列 - 第 13 章</p>
+            
+            <div class="toc">
+                <h2>📖 目录</h2>
+                <ul>
+                    <li><a href="#introduction">简介</a></li>
+                    <li><a href="#memory-importance">记忆的重要性</a></li>
+                    <li><a href="#memory-storage">记忆的存储</a></li>
+                    <li><a href="#memory-retrieval">记忆的检索</a></li>
+                    <li><a href="#memory-update">记忆的更新与维护</a></li>
+                    <li><a href="#memory-types">记忆的类型</a></li>
+                    <li><a href="#memory-performance">性能优化</a></li>
+                    <li><a href="#best-practices">最佳实践</a></li>
+                    <li><a href="#summary">总结</a></li>
+                </ul>
+            </div>
+            
+            <section id="introduction">
+                <h2>简介</h2>
+                <p>
+                    长期记忆是 Agent 的知识库。没有记忆，Agent 每次都要从零开始；有了记忆，Agent 可以学习、积累经验、改进决策。本章讲解记忆的存储方式、检索机制、更新策略，以及记忆对 Agent 性能的影响。
+                </p>
+                <div class="key-point">
+                    <strong>学习目标：</strong>
+                    <ul>
+                        <li>理解记忆系统的重要性</li>
+                        <li>掌握记忆的存储和检索机制</li>
+                        <li>学会实现记忆的更新和维护</li>
+                        <li>了解记忆对 Agent 性能的影响</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section id="memory-importance">
+                <h2>记忆的重要性</h2>
+                <p>
+                    想象一个没有记忆的人：每次醒来都不知道自己是谁，不记得昨天发生了什么，不能从过去的错误中学习。这就是没有记忆的 Agent。有了记忆，Agent 可以：
+                </p>
+                <ul>
+                    <li><strong>学习历史</strong>：记住过去的对话和决策</li>
+                    <li><strong>改进决策</strong>：基于历史经验做出更好的选择</li>
+                    <li><strong>个性化服务</strong>：记住用户的偏好和需求</li>
+                    <li><strong>上下文理解</strong>：理解当前对话与历史的关系</li>
+                </ul>
+                
+                <h3>有记忆 vs 无记忆</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>方面</th>
+                            <th>无记忆 Agent</th>
+                            <th>有记忆 Agent</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>用户体验</strong></td>
+                            <td>每次都要重复说明</td>
+                            <td>记住用户信息，提供个性化服务</td>
+                        </tr>
+                        <tr>
+                            <td><strong>学习能力</strong></td>
+                            <td>无法学习和改进</td>
+                            <td>从交互中学习，不断改进</td>
+                        </tr>
+                        <tr>
+                            <td><strong>上下文理解</strong></td>
+                            <td>只能理解当前对话</td>
+                            <td>理解完整的对话历史</td>
+                        </tr>
+                        <tr>
+                            <td><strong>成本</strong></td>
+                            <td>每次都要重新推理</td>
+                            <td>可以重用之前的结果</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            
+            <section id="memory-storage">
+                <h2>记忆的存储</h2>
+                <p>
+                    记忆需要被存储在某个地方。DeerFlow 支持多种存储后端，从简单的内存存储到复杂的向量数据库。
+                </p>
+                
+                <h3>存储层次</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">短期记忆</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">工作记忆</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">长期记忆</div>
+                </div>
+                
+                <h3>记忆存储的实现</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">MemoryStore</span>:
+    <span class="tok-str">"""记忆存储接口"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">save</span>(<span class="tok-kw">self</span>, memory: <span class="tok-cls">Memory</span>) -> <span class="tok-str">str</span>:
+        <span class="tok-str">"""保存记忆，返回记忆 ID"""</span>
+        <span class="tok-kw">pass</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">load</span>(<span class="tok-kw">self</span>, memory_id: <span class="tok-str">str</span>) -> <span class="tok-cls">Memory</span>:
+        <span class="tok-str">"""加载指定 ID 的记忆"""</span>
+        <span class="tok-kw">pass</span>
+
+<span class="tok-com"># 具体实现：内存存储</span>
+<span class="tok-kw">class</span> <span class="tok-cls">InMemoryStore</span>(<span class="tok-cls">MemoryStore</span>):
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
+        <span class="tok-kw">self</span>.memories = {}
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">save</span>(<span class="tok-kw">self</span>, memory: <span class="tok-cls">Memory</span>) -> <span class="tok-str">str</span>:
+        memory_id = <span class="tok-str">str</span>(<span class="tok-fn">uuid</span>.<span class="tok-fn">uuid4</span>())
+        <span class="tok-kw">self</span>.memories[memory_id] = memory
+        <span class="tok-kw">return</span> memory_id
+
+<span class="tok-com"># 具体实现：数据库存储</span>
+<span class="tok-kw">class</span> <span class="tok-cls">DatabaseStore</span>(<span class="tok-cls">MemoryStore</span>):
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, db_connection):
+        <span class="tok-kw">self</span>.db = db_connection
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">save</span>(<span class="tok-kw">self</span>, memory: <span class="tok-cls">Memory</span>) -> <span class="tok-str">str</span>:
+        <span class="tok-kw">self</span>.db.<span class="tok-fn">insert</span>(<span class="tok-str">"memories"</span>, memory.<span class="tok-fn">to_dict</span>())
+        <span class="tok-kw">return</span> memory.id
+</code></div>
+                
+                <div class="key-point">
+                    <strong>关键点：</strong> 选择合适的存储后端很重要。内存存储快但容量有限，数据库存储容量大但速度较慢。可以使用混合方案：热数据在内存，冷数据在数据库。
+                </div>
+            </section>
+            
+            <section id="memory-retrieval">
+                <h2>记忆的检索</h2>
+                <p>
+                    存储记忆只是第一步，关键是如何高效地检索相关的记忆。检索算法的好坏直接影响 Agent 的决策质量。
+                </p>
+                
+                <h3>检索方法</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>检索方法</th>
+                            <th>说明</th>
+                            <th>适用场景</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>精确匹配</strong></td>
+                            <td>根据 ID 或关键字精确查找</td>
+                            <td>查找特定的记忆</td>
+                        </tr>
+                        <tr>
+                            <td><strong>相似度检索</strong></td>
+                            <td>根据语义相似度查找相关记忆</td>
+                            <td>找到相关的历史对话</td>
+                        </tr>
+                        <tr>
+                            <td><strong>时间范围</strong></td>
+                            <td>根据时间范围检索记忆</td>
+                            <td>查找最近的对话</td>
+                        </tr>
+                        <tr>
+                            <td><strong>混合检索</strong></td>
+                            <td>结合多种检索方法</td>
+                            <td>复杂的查询需求</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>向量检索的实现</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">VectorMemoryRetriever</span>:
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, embedding_model, vector_db):
+        <span class="tok-kw">self</span>.embedding = embedding_model
+        <span class="tok-kw">self</span>.db = vector_db
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">retrieve</span>(<span class="tok-kw">self</span>, query: <span class="tok-str">str</span>, top_k: <span class="tok-num">5</span>) -> List[<span class="tok-cls">Memory</span>]:
+        <span class="tok-str">"""根据查询检索相关的记忆"""</span>
+        <span class="tok-com"># 1. 将查询转换为向量</span>
+        query_vector = <span class="tok-kw">self</span>.embedding.<span class="tok-fn">encode</span>(query)
+        
+        <span class="tok-com"># 2. 在向量数据库中搜索相似向量</span>
+        results = <span class="tok-kw">self</span>.db.<span class="tok-fn">search</span>(query_vector, top_k=top_k)
+        
+        <span class="tok-com"># 3. 返回相关的记忆</span>
+        <span class="tok-kw">return</span> [<span class="tok-cls">Memory</span>.<span class="tok-fn">from_dict</span>(r) <span class="tok-kw">for</span> r <span class="tok-kw">in</span> results]
+</code></div>
+                
+                <div class="example-case">
+                    <strong>示例：</strong> 记忆检索的实际应用<br>
+                    <div class="code-block"><code>
+<span class="tok-com"># 用户问："我上次说的那个项目怎么样了？"</span>
+query = <span class="tok-str">"项目进展"</span>
+
+<span class="tok-com"># Agent 检索相关的记忆</span>
+related_memories = retriever.<span class="tok-fn">retrieve</span>(query, top_k=<span class="tok-num">3</span>)
+
+<span class="tok-com"># 返回最相关的 3 条记忆</span>
+<span class="tok-kw">for</span> memory <span class="tok-kw">in</span> related_memories:
+    <span class="tok-fn">print</span>(memory.content)
+</code></div>
+                </div>
+            </section>
+            
+            <section id="memory-update">
+                <h2>记忆的更新与维护</h2>
+                <p>
+                    记忆不是一成不变的。随着时间推移，Agent 需要更新、整合、清理记忆，以保持记忆系统的健康。
+                </p>
+                
+                <h3>记忆生命周期</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">创建</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">使用</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">更新</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">归档/删除</div>
+                </div>
+                
+                <h3>记忆更新的实现</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">MemoryManager</span>:
+    <span class="tok-kw">def</span> <span class="tok-fn">update_memory</span>(<span class="tok-kw">self</span>, memory_id: <span class="tok-str">str</span>, updates: Dict):
+        <span class="tok-str">"""更新记忆"""</span>
+        memory = <span class="tok-kw">self</span>.store.<span class="tok-fn">load</span>(memory_id)
+        memory.<span class="tok-fn">update</span>(updates)
+        <span class="tok-kw">self</span>.store.<span class="tok-fn">save</span>(memory)
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">consolidate_memories</span>(<span class="tok-kw">self</span>, memories: List[<span class="tok-cls">Memory</span>]) -> <span class="tok-cls">Memory</span>:
+        <span class="tok-str">"""整合多条记忆为一条"""</span>
+        <span class="tok-com"># 将相似的记忆合并，减少存储空间</span>
+        consolidated = <span class="tok-cls">Memory</span>(
+            content=<span class="tok-str">" ".join</span>([m.content <span class="tok-kw">for</span> m <span class="tok-kw">in</span> memories]),
+            timestamp=<span class="tok-fn">max</span>([m.timestamp <span class="tok-kw">for</span> m <span class="tok-kw">in</span> memories])
+        )
+        <span class="tok-kw">return</span> consolidated
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">cleanup_old_memories</span>(<span class="tok-kw">self</span>, days: <span class="tok-num">30</span>):
+        <span class="tok-str">"""清理旧记忆"""</span>
+        cutoff_date = <span class="tok-fn">datetime</span>.<span class="tok-fn">now</span>() - <span class="tok-cls">timedelta</span>(days=days)
+        <span class="tok-kw">self</span>.store.<span class="tok-fn">delete_before</span>(cutoff_date)
+</code></div>
+                
+                <div class="warning">
+                    <strong>警告：</strong> 不要随意删除记忆。应该先进行备份或归档，然后再删除。记忆可能包含重要的历史信息。
+                </div>
+            </section>
+            
+            <section id="memory-types">
+                <h2>记忆的类型</h2>
+                <p>
+                    不同类型的记忆有不同的特点和用途。理解这些类型有助于设计更有效的记忆系统。
+                </p>
+                
+                <h3>记忆类型分类</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>记忆类型</th>
+                            <th>特点</th>
+                            <th>存储时间</th>
+                            <th>用途</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>事实记忆</strong></td>
+                            <td>客观的事实和知识</td>
+                            <td>长期</td>
+                            <td>知识库、常识</td>
+                        </tr>
+                        <tr>
+                            <td><strong>事件记忆</strong></td>
+                            <td>发生过的事件和对话</td>
+                            <td>中期</td>
+                            <td>历史记录、上下文</td>
+                        </tr>
+                        <tr>
+                            <td><strong>语义记忆</strong></td>
+                            <td>概念和关系</td>
+                            <td>长期</td>
+                            <td>知识图谱、关系</td>
+                        </tr>
+                        <tr>
+                            <td><strong>程序记忆</strong></td>
+                            <td>技能和过程</td>
+                            <td>长期</td>
+                            <td>工作流、最佳实践</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>记忆类型的实现</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">Memory</span>:
+    <span class="tok-str">"""基础记忆类"""</span>
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, content: <span class="tok-str">str</span>, memory_type: <span class="tok-str">str</span>):
+        <span class="tok-kw">self</span>.content = content
+        <span class="tok-kw">self</span>.memory_type = memory_type
+        <span class="tok-kw">self</span>.timestamp = <span class="tok-fn">datetime</span>.<span class="tok-fn">now</span>()
+        <span class="tok-kw">self</span>.access_count = <span class="tok-num">0</span>
+
+<span class="tok-kw">class</span> <span class="tok-cls">FactMemory</span>(<span class="tok-cls">Memory</span>):
+    <span class="tok-str">"""事实记忆"""</span>
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, content: <span class="tok-str">str</span>, source: <span class="tok-str">str</span>):
+        <span class="tok-kw">super</span>().<span class="tok-fn">__init__</span>(content, <span class="tok-str">"fact"</span>)
+        <span class="tok-kw">self</span>.source = source
+
+<span class="tok-kw">class</span> <span class="tok-cls">EventMemory</span>(<span class="tok-cls">Memory</span>):
+    <span class="tok-str">"""事件记忆"""</span>
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, content: <span class="tok-str">str</span>, participants: List[<span class="tok-str">str</span>]):
+        <span class="tok-kw">super</span>().<span class="tok-fn">__init__</span>(content, <span class="tok-str">"event"</span>)
+        <span class="tok-kw">self</span>.participants = participants
+
+<span class="tok-kw">class</span> <span class="tok-cls">SemanticMemory</span>(<span class="tok-cls">Memory</span>):
+    <span class="tok-str">"""语义记忆"""</span>
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, content: <span class="tok-str">str</span>, entities: Dict, relations: List):
+        <span class="tok-kw">super</span>().<span class="tok-fn">__init__</span>(content, <span class="tok-str">"semantic"</span>)
+        <span class="tok-kw">self</span>.entities = entities
+        <span class="tok-kw">self</span>.relations = relations
+</code></div>
+            </section>
+            
+            <section id="memory-performance">
+                <h2>性能优化</h2>
+                <p>
+                    随着记忆数量的增加，检索和更新的性能会下降。需要采用多种优化技术来保持系统的高效。
+                </p>
+                
+                <h3>缓存策略</h3>
+                <p>
+                    使用缓存可以显著提高频繁访问的记忆的检索速度：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">CachedMemoryStore</span>:
+    <span class="tok-str">"""带缓存的记忆存储"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, backend_store, cache_size: <span class="tok-num">1000</span>):
+        <span class="tok-kw">self</span>.backend = backend_store
+        <span class="tok-kw">self</span>.cache = <span class="tok-cls">OrderedDict</span>()
+        <span class="tok-kw">self</span>.cache_size = cache_size
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">get</span>(<span class="tok-kw">self</span>, memory_id: <span class="tok-str">str</span>) -> <span class="tok-cls">Memory</span>:
+        <span class="tok-com"># 先查缓存</span>
+        <span class="tok-kw">if</span> memory_id <span class="tok-kw">in</span> <span class="tok-kw">self</span>.cache:
+            <span class="tok-kw">self</span>.cache.<span class="tok-fn">move_to_end</span>(memory_id)
+            <span class="tok-kw">return</span> <span class="tok-kw">self</span>.cache[memory_id]
+        
+        <span class="tok-com"># 从后端存储加载</span>
+        memory = <span class="tok-kw">self</span>.backend.<span class="tok-fn">load</span>(memory_id)
+        
+        <span class="tok-com"># 加入缓存</span>
+        <span class="tok-kw">self</span>.cache[memory_id] = memory
+        <span class="tok-kw">if</span> <span class="tok-fn">len</span>(<span class="tok-kw">self</span>.cache) > <span class="tok-kw">self</span>.cache_size:
+            <span class="tok-kw">self</span>.cache.<span class="tok-fn">popitem</span>(last=<span class="tok-kw">False</span>)
+        
+        <span class="tok-kw">return</span> memory
+</code></div>
+                
+                <h3>索引优化</h3>
+                <p>
+                    为常用的查询字段建立索引，加快查询速度：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">IndexedMemoryStore</span>:
+    <span class="tok-str">"""带索引的记忆存储"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
+        <span class="tok-kw">self</span>.memories = {}
+        <span class="tok-kw">self</span>.type_index = {}  <span class="tok-com"># 按类型索引</span>
+        <span class="tok-kw">self</span>.time_index = {}  <span class="tok-com"># 按时间索引</span>
+        <span class="tok-kw">self</span>.tag_index = {}  <span class="tok-com"># 按标签索引</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">query_by_type</span>(<span class="tok-kw">self</span>, memory_type: <span class="tok-str">str</span>) -> List[<span class="tok-cls">Memory</span>]:
+        <span class="tok-str">"""快速查询指定类型的记忆"""</span>
+        <span class="tok-kw">return</span> [<span class="tok-kw">self</span>.memories[mid] <span class="tok-kw">for</span> mid <span class="tok-kw">in</span> <span class="tok-kw">self</span>.type_index.<span class="tok-fn">get</span>(memory_type, [])]
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">query_by_time_range</span>(<span class="tok-kw">self</span>, start: <span class="tok-cls">datetime</span>, end: <span class="tok-cls">datetime</span>) -> List[<span class="tok-cls">Memory</span>]:
+        <span class="tok-str">"""快速查询时间范围内的记忆"""</span>
+        results = []
+        <span class="tok-kw">for</span> mid, memory <span class="tok-kw">in</span> <span class="tok-kw">self</span>.memories.<span class="tok-fn">items</span>():
+            <span class="tok-kw">if</span> start <= memory.timestamp <= end:
+                results.<span class="tok-fn">append</span>(memory)
+        <span class="tok-kw">return</span> results
+</code></div>
+                
+                <div class="key-point">
+                    <strong>优化建议：</strong> 根据实际使用情况选择合适的优化策略。热数据使用缓存，常用查询建立索引，定期清理过期数据。
+                </div>
+            </section>
+            
+            <section id="best-practices">
+                <h2>最佳实践</h2>
+                
+                <h3>1. 记忆大小控制</h3>
+                <p>
+                    记忆太多会导致检索变慢，成本增加。应该定期清理过期的记忆，整合相似的记忆。
+                </p>
+                
+                <h3>2. 隐私保护</h3>
+                <p>
+                    记忆可能包含敏感信息。应该对敏感数据进行加密存储，限制访问权限。
+                </p>
+                
+                <h3>3. 检索优化</h3>
+                <p>
+                    使用合适的索引和缓存，提高检索速度。对于频繁访问的记忆，可以使用缓存。
+                </p>
+                
+                <h3>4. 记忆质量</h3>
+                <p>
+                    定期审查记忆的质量，删除错误或过时的信息。记忆的质量直接影响 Agent 的决策质量。
+                </p>
+            </section>
+            
+            <section id="summary">
+                <h2>总结</h2>
+                <p>
+                    长期记忆是 Agent 的知识库和学习能力的基础。通过合理的存储、检索和维护，Agent 可以不断积累经验、改进决策。本章深入讲解了记忆的重要性、存储方式、检索机制、更新策略、记忆类型和性能优化。
+                </p>
+                <div class="highlight">
+                    <strong>核心要点总结：</strong>
+                    <ul>
+                        <li><strong>记忆的重要性：</strong> 使 Agent 能够学习、改进、提供个性化服务</li>
+                        <li><strong>存储层次：</strong> 短期记忆 → 工作记忆 → 长期记忆，选择合适的存储后端</li>
+                        <li><strong>检索机制：</strong> 精确匹配、相似度检索、时间范围等多种方法</li>
+                        <li><strong>记忆类型：</strong> 事实记忆、事件记忆、语义记忆、程序记忆各有用途</li>
+                        <li><strong>更新维护：</strong> 定期更新、整合、清理记忆，保持系统健康</li>
+                        <li><strong>性能优化：</strong> 缓存策略、索引优化、定期清理</li>
+                        <li><strong>最佳实践：</strong> 控制大小、保护隐私、优化检索、保证质量</li>
+                    </ul>
+                </div>
+                
+                <div class="key-point">
+                    <strong>记忆系统建议：</strong> 记忆系统的设计应该平衡存储成本、检索速度和准确性。根据实际应用场景选择合适的存储后端和检索算法。同时要定期维护和优化记忆系统，确保其持续高效运行。
+                </div>
+            </section>
+            
+            <div id="page-nav"></div>
+        </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+</body>
+</html>

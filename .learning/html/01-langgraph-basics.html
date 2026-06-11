@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LangGraph 框架基础 · DeerFlow 学习系列</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        /* 页面特定样式 - 与深色主题兼容 */
+        
+        .toc {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--accent);
+            padding: 20px;
+            margin-bottom: 40px;
+            border-radius: 8px;
+        }
+        
+        .toc h2 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .toc li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .toc a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .toc a:hover {
+            color: var(--accent-2);
+            text-decoration: underline;
+        }
+        
+        section {
+            margin-bottom: 50px;
+        }
+        
+        /* 代码块样式 */
+        .code-block {
+            background: var(--bg-code);
+            color: var(--text-soft);
+            padding: 18px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 18px 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 13.5px;
+            line-height: 1.65;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+        }
+        
+        .code-block code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--text-soft);
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            white-space: pre;
+            display: block;
+        }
+        
+        .code-block::-webkit-scrollbar {
+            height: 9px;
+        }
+        
+        .code-block::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        /* 提示框样式 */
+        .highlight {
+            background: var(--bg-soft);
+            padding: 15px 18px;
+            border-left: 4px solid var(--orange);
+            margin: 18px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+        
+        .comparison-table th {
+            background: var(--bg-soft);
+            color: var(--text);
+            padding: 11px 15px;
+            text-align: left;
+            font-weight: 650;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .comparison-table td {
+            padding: 11px 15px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-soft);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:hover td {
+            background: rgba(88,166,255,0.04);
+        }
+        
+        .key-point {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--green);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--green);
+        }
+        
+        .key-point strong {
+            color: var(--green-soft);
+            font-weight: 650;
+        }
+        
+        .example-case {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--orange);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .example-case strong {
+            color: var(--orange);
+            font-weight: 650;
+        }
+        
+        .warning {
+            background: var(--bg-soft);
+            border-left: 4px solid #ff6b6b;
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .warning strong {
+            color: #ff6b6b;
+            font-weight: 650;
+        }
+        
+        /* 流程图样式 */
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        
+        .flow-step {
+            background: var(--bg-card);
+            border: 1.5px solid var(--accent);
+            color: var(--text);
+            padding: 12px 22px;
+            border-radius: 10px;
+            min-width: 120px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .flow-arrow {
+            font-size: 20px;
+            color: var(--text-dim);
+            line-height: 1.4;
+            padding: 2px 0;
+        }
+        
+        .diagram {
+            background: var(--bg-soft);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            margin: 24px 0;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+            color: var(--text-dim);
+        }
+    </style>
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+            <div class="toc">
+                <h2>📖 目录</h2>
+                <ul>
+                    <li><a href="#what-is-langgraph">什么是LangGraph？</a></li>
+                    <li><a href="#why-langgraph">为什么DeerFlow选择LangGraph？</a></li>
+                    <li><a href="#core-concepts">核心概念：Graph、Node、Edge、State</a></li>
+                    <li><a href="#workflow">工作流程：从定义到执行</a></li>
+                    <li><a href="#langgraph-vs-langchain">LangGraph vs LangChain</a></li>
+                    <li><a href="#simple-example">简单示例：Hello World Graph</a></li>
+                    <li><a href="#complex-example">复杂示例：多Agent Graph</a></li>
+                </ul>
+            </div>
+            
+            <!-- Section 1 -->
+            <section id="what-is-langgraph">
+                <h2>1. 什么是LangGraph？</h2>
+                
+                <p>
+                    <strong>LangGraph</strong>是由LangChain团队开发的一个框架，
+                    用于构建具有明确控制流的Agent应用。
+                    它提供了一种声明式的方式来定义Agent的执行逻辑。
+                </p>
+                
+                <div class="key-point">
+                    <strong>LangGraph的核心目标：</strong><br>
+                    提供一个清晰、可控、可扩展的方式来构建复杂的Agent系统，
+                    特别是那些需要多步骤推理和决策的系统。
+                </div>
+                
+                <h3>LangGraph的主要特点</h3>
+                
+                <ul>
+                    <li><strong>显式控制流：</strong> 你可以清晰地定义Agent在不同状态下的行为</li>
+                    <li><strong>状态管理：</strong> 系统自动管理Agent的状态变化</li>
+                    <li><strong>可视化：</strong> 可以生成Graph的可视化表示，便于理解和调试</li>
+                    <li><strong>持久化：</strong> 支持检查点（Checkpoint），可以保存和恢复执行状态</li>
+                    <li><strong>可扩展性：</strong> 易于添加新的节点和边，扩展功能</li>
+                    <li><strong>LangSmith集成：</strong> 与LangSmith无缝集成，便于监控和调试</li>
+                </ul>
+                
+                <h3>LangGraph解决的问题</h3>
+                
+                <div class="example-case">
+                    <strong>问题1：控制流不清晰</strong><br>
+                    在没有LangGraph的情况下，Agent的执行逻辑散落在各个函数中，
+                    很难理解整个流程。
+                </div>
+                
+                <div class="example-case">
+                    <strong>问题2：状态管理复杂</strong><br>
+                    需要手动管理Agent的各种状态，容易出错。
+                </div>
+                
+                <div class="example-case">
+                    <strong>问题3：难以调试</strong><br>
+                    当Agent出现问题时，很难追踪执行过程。
+                </div>
+                
+                <div class="example-case">
+                    <strong>问题4：难以扩展</strong><br>
+                    添加新的功能需要修改核心代码。
+                </div>
+            </section>
+            
+            <!-- Section 2 -->
+            <section id="why-langgraph">
+                <h2>2. 为什么DeerFlow选择LangGraph？</h2>
+                
+                <p>
+                    DeerFlow 2.0是一个完全的重写，选择LangGraph作为核心框架有几个重要原因。
+                </p>
+                
+                <h3>1. 成熟的生态</h3>
+                <p>
+                    LangGraph由LangChain团队维护，有完整的文档、活跃的社区和持续的更新。
+                    这确保了框架的稳定性和可靠性。
+                </p>
+                
+                <h3>2. 强大的抽象能力</h3>
+                <p>
+                    LangGraph提供了Graph、Node、Edge等抽象，
+                    这些抽象非常适合表示Agent的执行流程。
+                </p>
+                
+                <h3>3. 天然支持多Agent</h3>
+                <p>
+                    LangGraph的设计天然支持多Agent系统。
+                    DeerFlow中的Sub-Agents就是基于LangGraph的Graph嵌套实现的。
+                </p>
+                
+                <h3>4. 优秀的可观测性</h3>
+                <p>
+                    LangGraph与LangSmith和Langfuse的集成，
+                    使得Agent的执行过程可以被完整地追踪和监控。
+                </p>
+                
+                <h3>5. 灵活的状态管理</h3>
+                <p>
+                    LangGraph的状态管理机制非常灵活，
+                    可以轻松处理复杂的状态转移。
+                </p>
+                
+                <div class="key-point">
+                    <strong>总结：</strong> LangGraph不仅提供了技术上的优势，
+                    更重要的是它的设计哲学与DeerFlow的目标完全一致：
+                    构建清晰、可控、可扩展的Agent系统。
+                </div>
+            </section>
+            
+            <!-- Section 3 -->
+            <section id="core-concepts">
+                <h2>3. 核心概念：Graph、Node、Edge、State</h2>
+                
+                <p>
+                    理解这四个核心概念是掌握LangGraph的基础。
+                </p>
+                
+                <h3>概念1：Graph（图）</h3>
+                
+                <p>
+                    <strong>Graph</strong>是LangGraph的最基本单位，
+                    它代表了Agent的整个执行流程。
+                </p>
+                
+                <div class="key-point">
+                    <strong>Graph = 节点 + 边 + 状态</strong><br>
+                    一个Graph由多个Node组成，Node之间通过Edge连接，
+                    整个Graph共享一个State。
+                </div>
+                
+                <p><strong>Graph的特点：</strong></p>
+                <ul>
+                    <li>有明确的入口点（START）和出口点（END）</li>
+                    <li>可以有条件分支（conditional edges）</li>
+                    <li>可以有循环（cycles）</li>
+                    <li>可以嵌套（一个Graph可以包含另一个Graph）</li>
+                </ul>
+                
+                <h3>概念2：Node（节点）</h3>
+                
+                <p>
+                    <strong>Node</strong>代表执行流程中的一个步骤。
+                    每个Node是一个可调用的函数或对象。
+                </p>
+                
+                <div class="example-case">
+                    <strong>Node的例子：</strong><br>
+                    - 调用LLM的Node<br>
+                    - 执行工具的Node<br>
+                    - 处理结果的Node<br>
+                    - 做出决策的Node
+                </div>
+                
+                <p><strong>Node的特点：</strong></p>
+                <ul>
+                    <li>接收当前的State作为输入</li>
+                    <li>执行某些操作</li>
+                    <li>返回更新后的State</li>
+                    <li>可以是同步的或异步的</li>
+                </ul>
+                
+                <h3>概念3：Edge（边）</h3>
+                
+                <p>
+                    <strong>Edge</strong>定义了Node之间的连接关系。
+                    它指定了从一个Node到另一个Node的转移。
+                </p>
+                
+                <p><strong>Edge的类型：</strong></p>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>类型</th>
+                        <th>说明</th>
+                        <th>例子</th>
+                    </tr>
+                    <tr>
+                        <td><strong>普通Edge</strong></td>
+                        <td>无条件转移，总是执行</td>
+                        <td>从Node A到Node B</td>
+                    </tr>
+                    <tr>
+                        <td><strong>条件Edge</strong></td>
+                        <td>根据条件决定转移</td>
+                        <td>如果结果为"continue"，转到Node B；否则转到Node C</td>
+                    </tr>
+                    <tr>
+                        <td><strong>循环Edge</strong></td>
+                        <td>可以返回到之前的Node</td>
+                        <td>如果需要重试，返回到"调用LLM"的Node</td>
+                    </tr>
+                </table>
+                
+                <h3>概念4：State（状态）</h3>
+                
+                <p>
+                    <strong>State</strong>是Graph中所有Node共享的数据结构。
+                    它记录了Agent执行过程中的所有信息。
+                </p>
+                
+                <div class="key-point">
+                    <strong>State的作用：</strong><br>
+                    1. 存储Agent的输入和输出<br>
+                    2. 记录中间结果<br>
+                    3. 追踪Agent的执行历史<br>
+                    4. 在Node之间传递数据
+                </div>
+                
+                <p><strong>State的特点：</strong></p>
+                <ul>
+                    <li>通常是一个字典或TypedDict</li>
+                    <li>所有Node都可以读写State</li>
+                    <li>State的变化被自动追踪</li>
+                    <li>可以被持久化（保存和恢复）</li>
+                </ul>
+                
+                <div class="example-case">
+                    <strong>State的例子：</strong><br>
+                    <div class="code-block"><code>
+{
+    <span class="tok-str">"messages"</span>: [...],           <span class="tok-com"># 对话历史</span>
+    <span class="tok-str">"current_step"</span>: <span class="tok-str">"thinking"</span>,  <span class="tok-com"># 当前步骤</span>
+    <span class="tok-str">"tools_used"</span>: [...],         <span class="tok-com"># 已使用的工具</span>
+    <span class="tok-str">"intermediate_results"</span>: {...},  <span class="tok-com"># 中间结果</span>
+    <span class="tok-str">"final_output"</span>: <span class="tok-kw">None</span>         <span class="tok-com"># 最终输出</span>
+}
+                    </code></div>
+                </div>
+            </section>
+            
+            <!-- Section 4 -->
+            <section id="workflow">
+                <h2>4. 工作流程：从定义到执行</h2>
+                
+                <p>
+                    让我们看看一个LangGraph应用的完整生命周期。
+                </p>
+                
+                <h3>步骤1：定义State</h3>
+                
+                <p>
+                    首先，定义Graph将使用的State结构。
+                </p>
+                
+                <div class="code-block"><code><span class="tok-kw">from</span> typing <span class="tok-kw">import</span> <span class="tok-cls">TypedDict</span>, <span class="tok-cls">List</span>
+
+<span class="tok-kw">class</span> <span class="tok-cls">AgentState</span>(<span class="tok-cls">TypedDict</span>):
+    messages: <span class="tok-cls">List</span>[str]
+    current_step: str
+    tools_used: <span class="tok-cls">List</span>[str]
+    final_output: str
+                    </code></div>
+                
+                <h3>步骤2：定义Node</h3>
+                
+                <p>
+                    然后，定义Graph中的各个Node。
+                </p>
+                
+                <div class="code-block"><code><span class="tok-kw">def</span> call_llm(state: <span class="tok-cls">AgentState</span>) -> <span class="tok-cls">AgentState</span>:
+    <span class="tok-str">""</span><span class="tok-str">"调用LLM的Node"</span><span class="tok-str">""</span>
+    <span class="tok-com"># 处理当前消息</span>
+    response = llm.<span class="tok-attr">invoke</span>(state[<span class="tok-str">"messages"</span>])
+    
+    <span class="tok-com"># 更新State</span>
+    state[<span class="tok-str">"messages"</span>].<span class="tok-attr">append</span>(response)
+    state[<span class="tok-str">"current_step"</span>] = <span class="tok-str">"tool_calling"</span>
+    
+    <span class="tok-kw">return</span> state
+
+<span class="tok-kw">def</span> execute_tool(state: <span class="tok-cls">AgentState</span>) -> <span class="tok-cls">AgentState</span>:
+    <span class="tok-str">""</span><span class="tok-str">"执行工具的Node"</span><span class="tok-str">""</span>
+    <span class="tok-com"># 从最后一条消息中提取工具调用</span>
+    tool_call = extract_tool_call(state[<span class="tok-str">"messages"</span>][-1])
+    
+    <span class="tok-com"># 执行工具</span>
+    result = execute(tool_call)
+    
+    <span class="tok-com"># 更新State</span>
+    state[<span class="tok-str">"messages"</span>].<span class="tok-attr">append</span>(result)
+    state[<span class="tok-str">"tools_used"</span>].<span class="tok-attr">append</span>(tool_call[<span class="tok-str">"tool_name"</span>])
+    
+    <span class="tok-kw">return</span> state
+                    </code></div>
+                
+                <h3>步骤3：定义Edge</h3>
+                
+                <p>
+                    定义Node之间的连接关系。
+                </p>
+                
+                <div class="code-block"><code><span class="tok-kw">def</span> should_continue(state: <span class="tok-cls">AgentState</span>) -> str:
+    <span class="tok-str">""</span><span class="tok-str">"决定是否继续执行"</span><span class="tok-str">""</span>
+    last_message = state[<span class="tok-str">"messages"</span>][-1]
+    
+    <span class="tok-kw">if</span> <span class="tok-str">"tool_call"</span> <span class="tok-kw">in</span> last_message:
+        <span class="tok-kw">return</span> <span class="tok-str">"execute_tool"</span>
+    <span class="tok-kw">else</span>:
+        <span class="tok-kw">return</span> <span class="tok-str">"end"</span>
+
+<span class="tok-com"># 添加Edge</span>
+graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"start"</span>, <span class="tok-str">"call_llm"</span>)
+graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"call_llm"</span>, <span class="tok-str">"route"</span>)
+graph.<span class="tok-attr">add_conditional_edges</span>(
+    <span class="tok-str">"route"</span>,
+    should_continue,
+    {
+        <span class="tok-str">"execute_tool"</span>: <span class="tok-str">"execute_tool"</span>,
+        <span class="tok-str">"end"</span>: <span class="tok-str">"end"</span>
+    }
+)
+graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"execute_tool"</span>, <span class="tok-str">"call_llm"</span>)
+                    </code></div>
+                
+                <h3>步骤4：编译Graph</h3>
+                
+                <p>
+                    编译Graph以生成可执行的应用。
+                </p>
+                
+                <div class="code-block"><code>app = graph.<span class="tok-attr">compile</span>()
+                    </code></div>
+                
+                <h3>步骤5：执行Graph</h3>
+                
+                <p>
+                    执行Graph来处理输入。
+                </p>
+                
+                <div class="code-block"><code>initial_state = {
+    <span class="tok-str">"messages"</span>: [<span class="tok-str">"用户问题"</span>],
+    <span class="tok-str">"current_step"</span>: <span class="tok-str">"start"</span>,
+    <span class="tok-str">"tools_used"</span>: [],
+    <span class="tok-str">"final_output"</span>: <span class="tok-kw">None</span>
+}
+
+result = app.<span class="tok-attr">invoke</span>(initial_state)
+<span class="tok-fn">print</span>(result[<span class="tok-str">"final_output"</span>])
+                    </code></div>
+                
+                <h3>执行流程图</h3>
+                
+                <div class="flow-diagram">
+                    <div class="flow-step">定义State</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">定义Node</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">定义Edge</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">编译Graph</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">执行Graph</div>
+                </div>
+            </section>
+            
+            <!-- Section 5 -->
+            <section id="langgraph-vs-langchain">
+                <h2>5. LangGraph vs LangChain</h2>
+                
+                <p>
+                    LangGraph和LangChain都是LangChain生态的一部分，
+                    但它们的用途不同。
+                </p>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>方面</th>
+                        <th>LangChain</th>
+                        <th>LangGraph</th>
+                    </tr>
+                    <tr>
+                        <td><strong>主要用途</strong></td>
+                        <td>构建LLM应用的通用框架</td>
+                        <td>构建具有明确控制流的Agent</td>
+                    </tr>
+                    <tr>
+                        <td><strong>抽象层级</strong></td>
+                        <td>高层抽象（Chain、Runnable等）</td>
+                        <td>低层抽象（Graph、Node、Edge）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>控制流</strong></td>
+                        <td>隐式的，通过Chain的组合</td>
+                        <td>显式的，通过Graph定义</td>
+                    </tr>
+                    <tr>
+                        <td><strong>适用场景</strong></td>
+                        <td>简单的顺序流程</td>
+                        <td>复杂的多步骤推理</td>
+                    </tr>
+                    <tr>
+                        <td><strong>可视化</strong></td>
+                        <td>有限的可视化支持</td>
+                        <td>完整的Graph可视化</td>
+                    </tr>
+                    <tr>
+                        <td><strong>状态管理</strong></td>
+                        <td>隐式的</td>
+                        <td>显式的</td>
+                    </tr>
+                </table>
+                
+                <h3>何时使用LangChain，何时使用LangGraph</h3>
+                
+                <div class="key-point">
+                    <strong>使用LangChain的场景：</strong><br>
+                    ✓ 简单的顺序流程<br>
+                    ✓ 快速原型开发<br>
+                    ✓ 不需要复杂的控制流<br>
+                    ✓ 需要使用LangChain的其他组件（如RAG）
+                </div>
+                
+                <div class="key-point">
+                    <strong>使用LangGraph的场景：</strong><br>
+                    ✓ 复杂的多步骤推理<br>
+                    ✓ 需要明确的控制流<br>
+                    ✓ 需要循环和条件分支<br>
+                    ✓ 需要完整的可观测性<br>
+                    ✓ 构建生产级应用
+                </div>
+                
+                <div class="highlight">
+                    <strong>重要：</strong> LangGraph和LangChain不是竞争关系，
+                    而是互补关系。LangGraph通常会使用LangChain的组件（如Runnable）。
+                </div>
+            </section>
+            
+            <!-- Section 6 -->
+            <section id="simple-example">
+                <h2>6. 简单示例：Hello World Graph</h2>
+                
+                <p>
+                    让我们看一个最简单的LangGraph应用。
+                </p>
+                
+                <div class="code-block"><code><span class="tok-kw">from</span> langgraph.<span class="tok-attr">graph</span> <span class="tok-kw">import</span> <span class="tok-cls">StateGraph</span>, <span class="tok-cls">START</span>, <span class="tok-cls">END</span>
+<span class="tok-kw">from</span> typing <span class="tok-kw">import</span> <span class="tok-cls">TypedDict</span>
+
+<span class="tok-com"># 定义State</span>
+<span class="tok-kw">class</span> <span class="tok-cls">SimpleState</span>(<span class="tok-cls">TypedDict</span>):
+    message: str
+
+<span class="tok-com"># 定义Node</span>
+<span class="tok-kw">def</span> node_a(state: <span class="tok-cls">SimpleState</span>) -> <span class="tok-cls">SimpleState</span>:
+    <span class="tok-fn">print</span>(f<span class="tok-str">"<span class="tok-cls">Node</span> <span class="tok-cls">A</span>: {state['message']}"</span>)
+    state[<span class="tok-str">'message'</span>] += <span class="tok-str">" -> <span class="tok-cls">A</span>"</span>
+    <span class="tok-kw">return</span> state
+
+<span class="tok-kw">def</span> node_b(state: <span class="tok-cls">SimpleState</span>) -> <span class="tok-cls">SimpleState</span>:
+    <span class="tok-fn">print</span>(f<span class="tok-str">"<span class="tok-cls">Node</span> <span class="tok-cls">B</span>: {state['message']}"</span>)
+    state[<span class="tok-str">'message'</span>] += <span class="tok-str">" -> <span class="tok-cls">B</span>"</span>
+    <span class="tok-kw">return</span> state
+
+<span class="tok-com"># 构建Graph</span>
+graph = <span class="tok-cls">StateGraph</span>(<span class="tok-cls">SimpleState</span>)
+graph.<span class="tok-attr">add_node</span>(<span class="tok-str">"node_a"</span>, node_a)
+graph.<span class="tok-attr">add_node</span>(<span class="tok-str">"node_b"</span>, node_b)
+
+<span class="tok-com"># 添加Edge</span>
+graph.<span class="tok-attr">add_edge</span>(<span class="tok-cls">START</span>, <span class="tok-str">"node_a"</span>)
+graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"node_a"</span>, <span class="tok-str">"node_b"</span>)
+graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"node_b"</span>, <span class="tok-cls">END</span>)
+
+<span class="tok-com"># 编译</span>
+app = graph.<span class="tok-attr">compile</span>()
+
+<span class="tok-com"># 执行</span>
+result = app.<span class="tok-attr">invoke</span>({<span class="tok-str">"message"</span>: <span class="tok-str">"<span class="tok-cls">Hello</span>"</span>})
+<span class="tok-fn">print</span>(result[<span class="tok-str">'message'</span>])  <span class="tok-com"># 输出: <span class="tok-cls">Hello</span> -> <span class="tok-cls">A</span> -> <span class="tok-cls">B</span></span>
+                    </code></div>
+                
+                <h3>代码解析</h3>
+                
+                <p><strong>1. 定义State：</strong></p>
+                <p>
+                    SimpleState是一个TypedDict，包含一个message字段。
+                    这就是Graph中所有Node共享的数据。
+                </p>
+                
+                <p><strong>2. 定义Node：</strong></p>
+                <p>
+                    node_a和node_b都是简单的函数，
+                    接收State作为输入，返回更新后的State。
+                </p>
+                
+                <p><strong>3. 构建Graph：</strong></p>
+                <p>
+                    使用StateGraph创建一个Graph，
+                    然后添加Node和Edge。
+                </p>
+                
+                <p><strong>4. 执行：</strong></p>
+                <p>
+                    调用app.invoke()来执行Graph。
+                </p>
+            </section>
+            
+            <!-- Section 7 -->
+            <section id="complex-example">
+                <h2>7. 复杂示例：Agent Graph</h2>
+                
+                <p>
+                    现在让我们看一个更复杂的例子，
+                    展示一个简单的Agent如何使用LangGraph实现。
+                </p>
+                
+                <div class="code-block"><code><span class="tok-kw">from</span> langgraph.<span class="tok-attr">graph</span> <span class="tok-kw">import</span> <span class="tok-cls">StateGraph</span>, <span class="tok-cls">START</span>, <span class="tok-cls">END</span>
+<span class="tok-kw">from</span> typing <span class="tok-kw">import</span> <span class="tok-cls">TypedDict</span>, <span class="tok-cls">List</span>
+<span class="tok-kw">from</span> langchain_openai <span class="tok-kw">import</span> <span class="tok-cls">ChatOpenAI</span>
+
+<span class="tok-kw">class</span> <span class="tok-cls">AgentState</span>(<span class="tok-cls">TypedDict</span>):
+    messages: <span class="tok-cls">List</span>[dict]
+    current_step: str
+    final_answer: str
+
+<span class="tok-kw">def</span> call_llm(state: <span class="tok-cls">AgentState</span>) -> <span class="tok-cls">AgentState</span>:
+    <span class="tok-str">""</span><span class="tok-str">"调用LLM"</span><span class="tok-str">""</span>
+    llm = <span class="tok-cls">ChatOpenAI</span>(model=<span class="tok-str">"gpt-4"</span>)
+    response = llm.<span class="tok-attr">invoke</span>(state[<span class="tok-str">"messages"</span>])
+    
+    state[<span class="tok-str">"messages"</span>].<span class="tok-attr">append</span>({
+        <span class="tok-str">"role"</span>: <span class="tok-str">"assistant"</span>,
+        <span class="tok-str">"content"</span>: response.<span class="tok-attr">content</span>
+    })
+    state[<span class="tok-str">"current_step"</span>] = <span class="tok-str">"check_response"</span>
+    
+    <span class="tok-kw">return</span> state
+
+<span class="tok-kw">def</span> check_response(state: <span class="tok-cls">AgentState</span>) -> <span class="tok-cls">AgentState</span>:
+    <span class="tok-str">""</span><span class="tok-str">"检查LLM的响应"</span><span class="tok-str">""</span>
+    last_message = state[<span class="tok-str">"messages"</span>][-1][<span class="tok-str">"content"</span>]
+    
+    <span class="tok-kw">if</span> <span class="tok-str">"<span class="tok-cls">I</span> need to search"</span> <span class="tok-kw">in</span> last_message:
+        state[<span class="tok-str">"current_step"</span>] = <span class="tok-str">"search"</span>
+    <span class="tok-kw">else</span>:
+        state[<span class="tok-str">"current_step"</span>] = <span class="tok-str">"end"</span>
+    
+    <span class="tok-kw">return</span> state
+
+<span class="tok-kw">def</span> search(state: <span class="tok-cls">AgentState</span>) -> <span class="tok-cls">AgentState</span>:
+    <span class="tok-str">""</span><span class="tok-str">"执行搜索"</span><span class="tok-str">""</span>
+    <span class="tok-com"># 这里应该调用搜索工具</span>
+    state[<span class="tok-str">"messages"</span>].<span class="tok-attr">append</span>({
+        <span class="tok-str">"role"</span>: <span class="tok-str">"system"</span>,
+        <span class="tok-str">"content"</span>: <span class="tok-str">"搜索结果..."</span>
+    })
+    state[<span class="tok-str">"current_step"</span>] = <span class="tok-str">"call_llm"</span>
+    
+    <span class="tok-kw">return</span> state
+
+<span class="tok-kw">def</span> finalize(state: <span class="tok-cls">AgentState</span>) -> <span class="tok-cls">AgentState</span>:
+    <span class="tok-str">""</span><span class="tok-str">"最终化结果"</span><span class="tok-str">""</span>
+    state[<span class="tok-str">"final_answer"</span>] = state[<span class="tok-str">"messages"</span>][-1][<span class="tok-str">"content"</span>]
+    <span class="tok-kw">return</span> state
+
+<span class="tok-com"># 构建Graph</span>
+graph = <span class="tok-cls">StateGraph</span>(<span class="tok-cls">AgentState</span>)
+graph.<span class="tok-attr">add_node</span>(<span class="tok-str">"call_llm"</span>, call_llm)
+graph.<span class="tok-attr">add_node</span>(<span class="tok-str">"check_response"</span>, check_response)
+graph.<span class="tok-attr">add_node</span>(<span class="tok-str">"search"</span>, search)
+graph.<span class="tok-attr">add_node</span>(<span class="tok-str">"finalize"</span>, finalize)
+
+<span class="tok-com"># 添加Edge</span>
+graph.<span class="tok-attr">add_edge</span>(<span class="tok-cls">START</span>, <span class="tok-str">"call_llm"</span>)
+graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"call_llm"</span>, <span class="tok-str">"check_response"</span>)
+
+<span class="tok-com"># 条件Edge</span>
+<span class="tok-kw">def</span> route(state: <span class="tok-cls">AgentState</span>) -> str:
+    <span class="tok-kw">if</span> state[<span class="tok-str">"current_step"</span>] == <span class="tok-str">"search"</span>:
+        <span class="tok-kw">return</span> <span class="tok-str">"search"</span>
+    <span class="tok-kw">else</span>:
+        <span class="tok-kw">return</span> <span class="tok-str">"finalize"</span>
+
+graph.<span class="tok-attr">add_conditional_edges</span>(<span class="tok-str">"check_response"</span>, route)
+graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"search"</span>, <span class="tok-str">"call_llm"</span>)
+graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"finalize"</span>, <span class="tok-cls">END</span>)
+
+<span class="tok-com"># 编译和执行</span>
+app = graph.<span class="tok-attr">compile</span>()
+
+initial_state = {
+    <span class="tok-str">"messages"</span>: [{<span class="tok-str">"role"</span>: <span class="tok-str">"user"</span>, <span class="tok-str">"content"</span>: <span class="tok-str">"什么是Agent？"</span>}],
+    <span class="tok-str">"current_step"</span>: <span class="tok-str">"start"</span>,
+    <span class="tok-str">"final_answer"</span>: <span class="tok-str">""</span>
+}
+
+result = app.<span class="tok-attr">invoke</span>(initial_state)
+<span class="tok-fn">print</span>(result[<span class="tok-str">"final_answer"</span>])
+                    </code></div>
+                
+                <h3>这个例子展示了什么</h3>
+                
+                <ul>
+                    <li><strong>多个Node：</strong> call_llm、check_response、search、finalize</li>
+                    <li><strong>条件分支：</strong> 根据LLM的响应决定是否执行搜索</li>
+                    <li><strong>循环：</strong> 搜索后可以回到call_llm</li>
+                    <li><strong>状态管理：</strong> State在各个Node之间传递和更新</li>
+                </ul>
+            </section>
+            
+            <!-- Summary -->
+            <section>
+                <h2>📝 关键要点总结</h2>
+                
+                <div class="key-point">
+                    <strong>1. LangGraph是什么：</strong> 一个用于构建具有明确控制流的Agent框架
+                </div>
+                
+                <div class="key-point">
+                    <strong>2. 核心概念：</strong> Graph、Node、Edge、State
+                </div>
+                
+                <div class="key-point">
+                    <strong>3. Graph = 节点 + 边 + 状态</strong>
+                </div>
+                
+                <div class="key-point">
+                    <strong>4. Node是执行单位，Edge定义连接，State存储数据</strong>
+                </div>
+                
+                <div class="key-point">
+                    <strong>5. LangGraph vs LangChain：</strong> 前者用于复杂Agent，后者用于简单应用
+                </div>
+                
+                <div class="key-point">
+                    <strong>6. 开发流程：</strong> 定义State → 定义Node → 定义Edge → 编译 → 执行
+                </div>
+            </section>
+            
+            <!-- Next Steps -->
+            <section>
+                <h2>🚀 下一步</h2>
+                
+                <p>
+                    现在你理解了LangGraph的基础。下一步是学习如何在LangGraph中使用LLM和工具。
+                </p>
+                
+                <div class="highlight">
+                    <strong>推荐阅读顺序：</strong><br>
+                    1. 00-agent-fundamentals.html：Agent基础概念 ✓<br>
+                    2. 01-langgraph-basics.html：LangGraph框架基础 ✓<br>
+                    3. 02-llm-and-tools.html：LLM调用与工具系统<br>
+                    4. 03-deerflow-overview.html：DeerFlow整体架构<br>
+                    5. 10-agent-execution-engine.html：Agent执行引擎深度学习
+                </div>
+            </section>
+      <div id="page-nav"></div>
+    </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+</body>
+</html>

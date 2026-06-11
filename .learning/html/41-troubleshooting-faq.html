@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>常见问题与故障排除 · DeerFlow 学习系列</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        /* 页面特定样式 - 与深色主题兼容 */
+        
+        .toc {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--accent);
+            padding: 20px;
+            margin-bottom: 40px;
+            border-radius: 8px;
+        }
+        
+        .toc h2 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .toc li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .toc a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .toc a:hover {
+            color: var(--accent-2);
+            text-decoration: underline;
+        }
+        
+        section {
+            margin-bottom: 50px;
+        }
+        
+        /* 代码块样式 */
+        .code-block {
+            background: var(--bg-code);
+            color: var(--text-soft);
+            padding: 18px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 18px 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 13.5px;
+            line-height: 1.65;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+        }
+        
+        .code-block code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--text-soft);
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            white-space: pre;
+            display: block;
+        }
+        
+        .code-block::-webkit-scrollbar {
+            height: 9px;
+        }
+        
+        .code-block::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        /* 提示框样式 */
+        .highlight {
+            background: var(--bg-soft);
+            padding: 15px 18px;
+            border-left: 4px solid var(--orange);
+            margin: 18px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .key-point {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--green);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--green);
+        }
+        
+        .key-point strong {
+            color: var(--green-soft);
+            font-weight: 650;
+        }
+        
+        .example-case {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--orange);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .example-case strong {
+            color: var(--orange);
+            font-weight: 650;
+        }
+        
+        .warning {
+            background: var(--bg-soft);
+            border-left: 4px solid #ff6b6b;
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .warning strong {
+            color: #ff6b6b;
+            font-weight: 650;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+        
+        .comparison-table th {
+            background: var(--bg-soft);
+            color: var(--text);
+            padding: 11px 15px;
+            text-align: left;
+            font-weight: 650;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .comparison-table td {
+            padding: 11px 15px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-soft);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:hover td {
+            background: rgba(88,166,255,0.04);
+        }
+        
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        
+        .flow-step {
+            background: var(--bg-card);
+            border: 1.5px solid var(--accent);
+            color: var(--text);
+            padding: 12px 22px;
+            border-radius: 10px;
+            min-width: 120px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .flow-arrow {
+            font-size: 20px;
+            color: var(--text-dim);
+            line-height: 1.4;
+            padding: 2px 0;
+        }
+    </style>
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+            <h1>常见问题与故障排除</h1>
+            <p class="page-subtitle">DeerFlow 学习系列 - 第 41 章</p>
+            
+            <div class="toc">
+                <h2>📖 目录</h2>
+                <ul>
+                    <li><a href="#introduction">简介</a></li>
+                    <li><a href="#common-issues">常见问题</a></li>
+                    <li><a href="#debugging-methods">调试方法</a></li>
+                    <li><a href="#performance-issues">性能问题</a></li>
+                    <li><a href="#error-solutions">错误解决方案</a></li>
+                    <li><a href="#summary">总结</a></li>
+                </ul>
+            </div>
+            
+            <section id="introduction">
+                <h2>简介</h2>
+                <p>
+                    在使用 DeerFlow 的过程中，可能会遇到各种问题。本章总结了常见问题、调试方法和解决方案，帮助你快速定位和解决问题。
+                </p>
+                <div class="key-point">
+                    <strong>学习目标：</strong>
+                    <ul>
+                        <li>了解常见的问题和错误</li>
+                        <li>掌握有效的调试方法</li>
+                        <li>学会解决性能问题</li>
+                        <li>快速定位和修复错误</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section id="common-issues">
+                <h2>常见问题</h2>
+                <p>
+                    DeerFlow 使用中最常见的问题和解决方案。
+                </p>
+                
+                <h3>问题 1：Agent 无法加载 Skill</h3>
+                <p>
+                    <strong>症状：</strong> Agent 启动时报错，找不到 Skill。
+                </p>
+                <p>
+                    <strong>原因：</strong> Skill 未正确注册或路径错误。
+                </p>
+                <p>
+                    <strong>解决方案：</strong>
+                </p>
+                <ol>
+                    <li>检查 Skill 文件是否存在</li>
+                    <li>验证 Skill 注册代码</li>
+                    <li>检查 Python 路径配置</li>
+                    <li>查看日志获取详细错误信息</li>
+                </ol>
+                
+                <h3>问题 2：LLM API 调用失败</h3>
+                <p>
+                    <strong>症状：</strong> Agent 执行任务时 LLM 调用失败。
+                </p>
+                <p>
+                    <strong>原因：</strong> API 密钥错误、网络问题或 API 配额不足。
+                </p>
+                <p>
+                    <strong>解决方案：</strong>
+                </p>
+                <ol>
+                    <li>验证 API 密钥是否正确</li>
+                    <li>检查网络连接</li>
+                    <li>检查 API 配额和使用情况</li>
+                    <li>实现重试机制</li>
+                </ol>
+                
+                <h3>问题 3：内存占用过高</h3>
+                <p>
+                    <strong>症状：</strong> Agent 运行一段时间后内存占用不断增加。
+                </p>
+                <p>
+                    <strong>原因：</strong> 内存泄漏或缓存未清理。
+                </p>
+                <p>
+                    <strong>解决方案：</strong>
+                </p>
+                <ol>
+                    <li>检查是否有循环引用</li>
+                    <li>实现缓存清理机制</li>
+                    <li>使用内存分析工具定位泄漏</li>
+                    <li>定期重启 Agent</li>
+                </ol>
+            </section>
+            
+            <section id="debugging-methods">
+                <h2>调试方法</h2>
+                <p>
+                    有效的调试和问题诊断方法。
+                </p>
+                
+                <h3>使用日志调试</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">import</span> logging
+
+<span class="tok-com"># 配置日志</span>
+logging.<span class="tok-fn">basicConfig</span>(
+    level=logging.DEBUG,
+    format=<span class="tok-str">'%(asctime)s - %(name)s - %(levelname)s - %(message)s'</span>
+)
+
+logger = logging.<span class="tok-fn">getLogger</span>(__name__)
+
+<span class="tok-com"># 在关键位置添加日志</span>
+logger.<span class="tok-fn">debug</span>(<span class="tok-str">f"Starting task: {task}"</span>)
+logger.<span class="tok-fn">info</span>(<span class="tok-str">f"Task completed: {result}"</span>)
+logger.<span class="tok-fn">error</span>(<span class="tok-str">f"Error: {error}"</span>, exc_info=<span class="tok-str">True</span>)
+</code></div>
+                
+                <h3>使用 Python 调试器</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">import</span> pdb
+
+<span class="tok-com"># 在需要调试的位置添加断点</span>
+pdb.<span class="tok-fn">set_trace</span>()
+
+<span class="tok-com"># 常用命令：</span>
+<span class="tok-com"># n - 下一行</span>
+<span class="tok-com"># s - 进入函数</span>
+<span class="tok-com"># c - 继续执行</span>
+<span class="tok-com"># p 变量名 - 打印变量</span>
+<span class="tok-com"># l - 列出代码</span>
+</code></div>
+                
+                <h3>性能分析</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">import</span> cProfile
+<span class="tok-kw">import</span> pstats
+
+<span class="tok-com"># 分析函数性能</span>
+profiler = cProfile.<span class="tok-cls">Profile</span>()
+profiler.<span class="tok-fn">enable</span>()
+
+<span class="tok-com"># 执行代码</span>
+<span class="tok-fn">execute_task</span>()
+
+profiler.<span class="tok-fn">disable</span>()
+stats = pstats.<span class="tok-cls">Stats</span>(profiler)
+stats.<span class="tok-fn">sort_stats</span>(<span class="tok-str">'cumulative'</span>)
+stats.<span class="tok-fn">print_stats</span>(<span class="tok-num">10</span>)
+</code></div>
+            </section>
+            
+            <section id="performance-issues">
+                <h2>性能问题</h2>
+                <p>
+                    常见的性能问题和优化方法。
+                </p>
+                
+                <h3>性能问题对比</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>问题</th>
+                            <th>症状</th>
+                            <th>解决方案</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>响应慢</strong></td>
+                            <td>API 响应时间长</td>
+                            <td>缓存、异步处理、模型优化</td>
+                        </tr>
+                        <tr>
+                            <td><strong>高 CPU 占用</strong></td>
+                            <td>CPU 使用率高</td>
+                            <td>优化算法、并行化、减少计算</td>
+                        </tr>
+                        <tr>
+                            <td><strong>高内存占用</strong></td>
+                            <td>内存使用量大</td>
+                            <td>清理缓存、流式处理、分批处理</td>
+                        </tr>
+                        <tr>
+                            <td><strong>高成本</strong></td>
+                            <td>API 调用费用高</td>
+                            <td>缓存、模型选择、请求合并</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>优化建议</h3>
+                <ul>
+                    <li><strong>缓存：</strong> 缓存常见问题的答案，避免重复计算</li>
+                    <li><strong>异步处理：</strong> 使用异步 I/O 提高吞吐量</li>
+                    <li><strong>批处理：</strong> 合并多个请求减少开销</li>
+                    <li><strong>模型选择：</strong> 为不同任务选择合适的模型</li>
+                    <li><strong>监控：</strong> 持续监控性能指标</li>
+                </ul>
+            </section>
+            
+            <section id="error-solutions">
+                <h2>错误解决方案</h2>
+                <p>
+                    常见错误的快速解决方案。
+                </p>
+                
+                <h3>ImportError: 找不到模块</h3>
+                <div class="code-block"><code>
+<span class="tok-com"># 问题：ImportError: No module named 'xxx'</span>
+<span class="tok-com"># 解决方案：</span>
+<span class="tok-com"># 1. 检查模块是否安装</span>
+pip install xxx
+
+<span class="tok-com"># 2. 检查 Python 路径</span>
+<span class="tok-kw">import</span> sys
+<span class="tok-fn">print</span>(sys.path)
+
+<span class="tok-com"># 3. 检查虚拟环境</span>
+source venv/bin/activate
+</code></div>
+                
+                <h3>AttributeError: 对象没有属性</h3>
+                <div class="code-block"><code>
+<span class="tok-com"># 问题：AttributeError: 'xxx' object has no attribute 'yyy'</span>
+<span class="tok-com"># 解决方案：</span>
+<span class="tok-com"># 1. 检查对象类型</span>
+<span class="tok-fn">print</span>(<span class="tok-fn">type</span>(obj))
+
+<span class="tok-com"># 2. 检查属性是否存在</span>
+<span class="tok-fn">print</span>(<span class="tok-fn">dir</span>(obj))
+
+<span class="tok-com"># 3. 检查初始化</span>
+<span class="tok-fn">print</span>(obj.__dict__)
+</code></div>
+                
+                <div class="warning">
+                    <strong>警告：</strong> 遇到错误时，先查看完整的错误堆栈，从最后一行开始分析。
+                </div>
+            </section>
+            
+            <section id="summary">
+                <h2>总结</h2>
+                <p>
+                    掌握常见问题的解决方法和有效的调试技巧能大大提高开发效率。通过理解问题原因、学习调试方法、优化性能，可以快速定位和解决问题。本章提供了常见问题和故障排除的完整指南。
+                </p>
+                <div class="highlight">
+                    <strong>核心要点总结：</strong>
+                    <ul>
+                        <li><strong>常见问题：</strong> Skill 加载失败、LLM API 调用失败、内存占用过高等</li>
+                        <li><strong>调试方法：</strong> 日志、Python 调试器、性能分析工具</li>
+                        <li><strong>性能问题：</strong> 响应慢、高 CPU/内存占用、高成本等</li>
+                        <li><strong>优化方案：</strong> 缓存、异步处理、批处理、模型选择、监控</li>
+                        <li><strong>错误解决：</strong> ImportError、AttributeError 等常见错误的快速解决方案</li>
+                        <li><strong>最佳实践：</strong> 充分的日志、有效的监控、定期的性能审查</li>
+                    </ul>
+                </div>
+                
+                <div class="key-point">
+                    <strong>故障排除建议：</strong> 遇到问题时，不要急于求成。先仔细阅读错误信息，理解问题的根本原因。利用日志和调试工具逐步追踪问题。同时要建立良好的监控和告警机制，及时发现和解决问题。
+                </div>
+            </section>
+            
+            <div id="page-nav"></div>
+        </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+</body>
+</html>

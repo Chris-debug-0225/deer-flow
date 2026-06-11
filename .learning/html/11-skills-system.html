@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skills系统：Agent的能力扩展 · DeerFlow 学习系列</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        /* 页面特定样式 - 与深色主题兼容 */
+        
+        .toc {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--accent);
+            padding: 20px;
+            margin-bottom: 40px;
+            border-radius: 8px;
+        }
+        
+        .toc h2 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .toc li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .toc a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .toc a:hover {
+            color: var(--accent-2);
+            text-decoration: underline;
+        }
+        
+        section {
+            margin-bottom: 50px;
+        }
+        
+        /* 代码块样式 */
+        .code-block {
+            background: var(--bg-code);
+            color: var(--text-soft);
+            padding: 18px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 18px 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 13.5px;
+            line-height: 1.65;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+        }
+        
+        .code-block code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--text-soft);
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            white-space: pre;
+            display: block;
+        }
+        
+        .code-block::-webkit-scrollbar {
+            height: 9px;
+        }
+        
+        .code-block::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        /* 提示框样式 */
+        .highlight {
+            background: var(--bg-soft);
+            padding: 15px 18px;
+            border-left: 4px solid var(--orange);
+            margin: 18px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .key-point {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--green);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--green);
+        }
+        
+        .key-point strong {
+            color: var(--green-soft);
+            font-weight: 650;
+        }
+        
+        .example-case {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--orange);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .example-case strong {
+            color: var(--orange);
+            font-weight: 650;
+        }
+        
+        .warning {
+            background: var(--bg-soft);
+            border-left: 4px solid #ff6b6b;
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .warning strong {
+            color: #ff6b6b;
+            font-weight: 650;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+        
+        .comparison-table th {
+            background: var(--bg-soft);
+            color: var(--text);
+            padding: 11px 15px;
+            text-align: left;
+            font-weight: 650;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .comparison-table td {
+            padding: 11px 15px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-soft);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:hover td {
+            background: rgba(88,166,255,0.04);
+        }
+        
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        
+        .flow-step {
+            background: var(--bg-card);
+            border: 1.5px solid var(--accent);
+            color: var(--text);
+            padding: 12px 22px;
+            border-radius: 10px;
+            min-width: 120px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .flow-arrow {
+            font-size: 20px;
+            color: var(--text-dim);
+            line-height: 1.4;
+            padding: 2px 0;
+        }
+    </style>
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+            <h1>Skills系统：Agent的能力扩展</h1>
+            <p class="page-subtitle">DeerFlow 学习系列 - 第 11 章</p>
+            
+            <div class="toc">
+                <h2>📖 目录</h2>
+                <ul>
+                    <li><a href="#introduction">简介</a></li>
+                    <li><a href="#skill-concept">Skill 的概念</a></li>
+                    <li><a href="#skill-definition">Skill 的定义与注册</a></li>
+                    <li><a href="#skill-invocation">Skill 的调用机制</a></li>
+                    <li><a href="#skill-types">Skill 的类型与分类</a></li>
+                    <li><a href="#skill-lifecycle">Skill 的生命周期</a></li>
+                    <li><a href="#skill-testing">Skill 的测试与调试</a></li>
+                    <li><a href="#skill-best-practices">Skill 设计的最佳实践</a></li>
+                    <li><a href="#summary">总结</a></li>
+                </ul>
+            </div>
+            
+            <section id="introduction">
+                <h2>简介</h2>
+                <p>
+                    Skills 是 Agent 的能力库。一个 Agent 本身什么都做不了，只有通过 Skills 才能调用外部工具、查询数据库、发送邮件等。本章讲解 Skills 的定义、注册、调用机制，以及如何扩展 Agent 的能力。
+                </p>
+                <div class="key-point">
+                    <strong>学习目标：</strong>
+                    <ul>
+                        <li>理解 Skill 的概念和作用</li>
+                        <li>学会定义和注册 Skill</li>
+                        <li>掌握 Skill 的调用机制</li>
+                        <li>了解能力扩展的最佳实践</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section id="skill-concept">
+                <h2>Skill 的概念</h2>
+                <p>
+                    <strong>Skill</strong> 是 Agent 可以调用的一个能力或工具。它包装了一个具体的功能（如查询天气、发送邮件、查询数据库等），并提供了统一的接口供 Agent 调用。
+                </p>
+                
+                <h3>Skill 的核心要素</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>要素</th>
+                            <th>说明</th>
+                            <th>示例</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>名称</strong></td>
+                            <td>Skill 的唯一标识</td>
+                            <td>get_weather, send_email</td>
+                        </tr>
+                        <tr>
+                            <td><strong>描述</strong></td>
+                            <td>Skill 的功能说明，供 LLM 理解</td>
+                            <td>"查询指定城市的天气信息"</td>
+                        </tr>
+                        <tr>
+                            <td><strong>参数</strong></td>
+                            <td>Skill 需要的输入参数及其类型</td>
+                            <td>city: str, date: str</td>
+                        </tr>
+                        <tr>
+                            <td><strong>返回值</strong></td>
+                            <td>Skill 执行后的输出</td>
+                            <td>天气信息 JSON</td>
+                        </tr>
+                        <tr>
+                            <td><strong>实现函数</strong></td>
+                            <td>实际执行的 Python 函数</td>
+                            <td>def get_weather(...)</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Skill 的分类</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">Skill</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">内置 Skill</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">自定义 Skill</div>
+                </div>
+                
+                <p>
+                    <strong>内置 Skill</strong> 是 DeerFlow 提供的常用能力，如 HTTP 请求、数据库查询等。<strong>自定义 Skill</strong> 是开发者根据业务需求编写的特定能力。
+                </p>
+            </section>
+            
+            <section id="skill-definition">
+                <h2>Skill 的定义与注册</h2>
+                <p>
+                    定义一个 Skill 需要指定其名称、描述、参数和实现函数。DeerFlow 提供了装饰器简化这个过程。
+                </p>
+                
+                <h3>使用装饰器定义 Skill</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">from</span> deerflow <span class="tok-kw">import</span> <span class="tok-cls">Skill</span>, skill
+
+<span class="tok-dec">@skill</span>(
+    name=<span class="tok-str">"get_weather"</span>,
+    description=<span class="tok-str">"查询指定城市的天气信息"</span>
+)
+<span class="tok-kw">def</span> <span class="tok-fn">get_weather</span>(city: <span class="tok-str">str</span>, date: <span class="tok-str">str</span> = <span class="tok-str">"today"</span>) -> <span class="tok-str">str</span>:
+    <span class="tok-str">"""查询天气的具体实现
+    
+    Args:
+        city: 城市名称
+        date: 日期，默认为今天
+    
+    Returns:
+        天气信息字符串
+    """</span>
+    <span class="tok-com"># 这里是实际的实现逻辑</span>
+    <span class="tok-kw">return</span> <span class="tok-str">f"{city} 今天天气晴朗，温度 25°C"</span>
+</code></div>
+                
+                <h3>手动创建 Skill 对象</h3>
+                <p>
+                    如果不想使用装饰器，也可以手动创建 Skill 对象：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-kw">from</span> deerflow <span class="tok-kw">import</span> <span class="tok-cls">Skill</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">send_email</span>(to: <span class="tok-str">str</span>, subject: <span class="tok-str">str</span>, body: <span class="tok-str">str</span>) -> <span class="tok-str">bool</span>:
+    <span class="tok-str">"""发送邮件的实现"""</span>
+    <span class="tok-com"># 邮件发送逻辑</span>
+    <span class="tok-kw">return</span> <span class="tok-num">True</span>
+
+<span class="tok-com"># 创建 Skill 对象</span>
+email_skill = <span class="tok-cls">Skill</span>(
+    name=<span class="tok-str">"send_email"</span>,
+    description=<span class="tok-str">"发送电子邮件"</span>,
+    func=send_email,
+    parameters={
+        <span class="tok-str">"to"</span>: {<span class="tok-str">"type"</span>: <span class="tok-str">"string"</span>, <span class="tok-str">"description"</span>: <span class="tok-str">"收件人邮箱"</span>},
+        <span class="tok-str">"subject"</span>: {<span class="tok-str">"type"</span>: <span class="tok-str">"string"</span>, <span class="tok-str">"description"</span>: <span class="tok-str">"邮件主题"</span>},
+        <span class="tok-str">"body"</span>: {<span class="tok-str">"type"</span>: <span class="tok-str">"string"</span>, <span class="tok-str">"description"</span>: <span class="tok-str">"邮件内容"</span>}
+    }
+)
+</code></div>
+                
+                <h3>向 Agent 注册 Skill</h3>
+                <p>
+                    定义好 Skill 后，需要将其注册到 Agent，这样 Agent 才能调用它：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-kw">from</span> deerflow <span class="tok-kw">import</span> <span class="tok-cls">Agent</span>
+
+<span class="tok-com"># 创建 Agent</span>
+agent = <span class="tok-cls">Agent</span>(
+    name=<span class="tok-str">"weather_assistant"</span>,
+    llm=llm,
+    system_prompt=<span class="tok-str">"你是一个天气助手"</span>
+)
+
+<span class="tok-com"># 注册 Skill</span>
+agent.<span class="tok-fn">add_skill</span>(get_weather)
+agent.<span class="tok-fn">add_skill</span>(send_email)
+
+<span class="tok-com"># 或者一次性注册多个 Skill</span>
+agent.<span class="tok-fn">add_skills</span>([get_weather, send_email])
+</code></div>
+                
+                <div class="key-point">
+                    <strong>关键点：</strong> Skill 的描述非常重要，因为 LLM 会根据描述来判断是否需要调用这个 Skill。好的描述应该清晰、简洁、准确。
+                </div>
+            </section>
+            
+            <section id="skill-invocation">
+                <h2>Skill 的调用机制</h2>
+                <p>
+                    当 Agent 执行时，LLM 会根据用户输入和 Skill 的描述，决定是否调用某个 Skill。执行引擎负责解析 LLM 的决策，调用相应的 Skill，并将结果返回给 LLM。
+                </p>
+                
+                <h3>调用流程</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">LLM 推理</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">解析 Skill 调用</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">验证参数</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">执行 Skill</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">返回结果</div>
+                </div>
+                
+                <h3>Skill 调用的实现</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">SkillExecutor</span>:
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, skills: Dict[<span class="tok-str">str</span>, <span class="tok-cls">Skill</span>]):
+        <span class="tok-kw">self</span>.skills = skills
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, skill_name: <span class="tok-str">str</span>, **kwargs) -> <span class="tok-str">str</span>:
+        <span class="tok-str">"""执行指定的 Skill"""</span>
+        <span class="tok-kw">if</span> skill_name <span class="tok-kw">not</span> <span class="tok-kw">in</span> <span class="tok-kw">self</span>.skills:
+            <span class="tok-kw">raise</span> <span class="tok-cls">SkillNotFoundError</span>(
+                <span class="tok-str">f"Skill '{skill_name}' not found"</span>
+            )
+        
+        skill = <span class="tok-kw">self</span>.skills[skill_name]
+        
+        <span class="tok-com"># 验证参数</span>
+        <span class="tok-kw">self</span>.<span class="tok-fn">validate_parameters</span>(skill, kwargs)
+        
+        <span class="tok-com"># 执行 Skill</span>
+        <span class="tok-kw">try</span>:
+            result = skill.func(**kwargs)
+            <span class="tok-kw">return</span> <span class="tok-str">str</span>(result)
+        <span class="tok-kw">except</span> <span class="tok-cls">Exception</span> <span class="tok-kw">as</span> e:
+            <span class="tok-kw">return</span> <span class="tok-str">f"Error: {str(e)}"</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">validate_parameters</span>(<span class="tok-kw">self</span>, skill: <span class="tok-cls">Skill</span>, params: Dict):
+        <span class="tok-str">"""验证参数是否符合 Skill 的要求"""</span>
+        required_params = skill.required_parameters
+        <span class="tok-kw">for</span> param <span class="tok-kw">in</span> required_params:
+            <span class="tok-kw">if</span> param <span class="tok-kw">not</span> <span class="tok-kw">in</span> params:
+                <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(
+                    <span class="tok-str">f"Missing required parameter: {param}"</span>
+                )
+</code></div>
+                
+                <div class="example-case">
+                    <strong>示例：</strong> 完整的 Skill 调用过程<br>
+                    <div class="code-block"><code>
+<span class="tok-com"># 1. 定义 Skill</span>
+<span class="tok-dec">@skill</span>(name=<span class="tok-str">"calculate"</span>, description=<span class="tok-str">"计算两个数的和"</span>)
+<span class="tok-kw">def</span> <span class="tok-fn">calculate</span>(a: <span class="tok-num">int</span>, b: <span class="tok-num">int</span>) -> <span class="tok-num">int</span>:
+    <span class="tok-kw">return</span> a + b
+
+<span class="tok-com"># 2. 创建 Agent 并注册 Skill</span>
+agent = <span class="tok-cls">Agent</span>(llm=llm)
+agent.<span class="tok-fn">add_skill</span>(calculate)
+
+<span class="tok-com"># 3. 用户输入</span>
+user_input = <span class="tok-str">"5 加 3 等于多少？"</span>
+
+<span class="tok-com"># 4. Agent 执行</span>
+result = agent.<span class="tok-fn">run</span>(user_input)
+<span class="tok-com"># LLM 会识别需要调用 calculate Skill</span>
+<span class="tok-com"># 执行引擎调用 calculate(5, 3)</span>
+<span class="tok-com"># 返回结果 "8"</span>
+</code></div>
+                </div>
+            </section>
+            
+            <section id="skill-types">
+                <h2>Skill 的类型与分类</h2>
+                <p>
+                    根据不同的维度，Skill 可以分为多种类型。了解这些类型有助于更好地设计和使用 Skill。
+                </p>
+                
+                <h3>按功能分类</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>说明</th>
+                            <th>示例</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>数据查询</strong></td>
+                            <td>从外部系统查询数据</td>
+                            <td>查询天气、查询数据库、搜索网页</td>
+                        </tr>
+                        <tr>
+                            <td><strong>数据修改</strong></td>
+                            <td>修改或创建数据</td>
+                            <td>创建订单、更新用户信息、删除记录</td>
+                        </tr>
+                        <tr>
+                            <td><strong>外部服务</strong></td>
+                            <td>调用第三方服务</td>
+                            <td>发送邮件、发送短信、支付处理</td>
+                        </tr>
+                        <tr>
+                            <td><strong>计算处理</strong></td>
+                            <td>本地计算和数据处理</td>
+                            <td>数据分析、文本处理、格式转换</td>
+                        </tr>
+                        <tr>
+                            <td><strong>系统操作</strong></td>
+                            <td>系统级别的操作</td>
+                            <td>文件操作、进程管理、系统监控</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>按执行方式分类</h3>
+                <p>
+                    Skill 可以是同步的也可以是异步的：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-com"># 同步 Skill</span>
+<span class="tok-dec">@skill</span>(name=<span class="tok-str">"sync_query"</span>, description=<span class="tok-str">"同步查询"</span>)
+<span class="tok-kw">def</span> <span class="tok-fn">sync_query</span>(query: <span class="tok-str">str</span>) -> <span class="tok-str">str</span>:
+    <span class="tok-com"># 直接返回结果</span>
+    <span class="tok-kw">return</span> <span class="tok-str">"query result"</span>
+
+<span class="tok-com"># 异步 Skill</span>
+<span class="tok-dec">@skill</span>(name=<span class="tok-str">"async_query"</span>, description=<span class="tok-str">"异步查询"</span>)
+<span class="tok-kw">async</span> <span class="tok-kw">def</span> <span class="tok-fn">async_query</span>(query: <span class="tok-str">str</span>) -> <span class="tok-str">str</span>:
+    <span class="tok-com"># 使用 await 等待异步操作</span>
+    result = <span class="tok-kw">await</span> <span class="tok-fn">fetch_data</span>(query)
+    <span class="tok-kw">return</span> result
+</code></div>
+                
+                <h3>按权限级别分类</h3>
+                <p>
+                    不同的 Skill 可能需要不同的权限级别：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-dec">@skill</span>(
+    name=<span class="tok-str">"read_file"</span>,
+    description=<span class="tok-str">"读取文件"</span>,
+    permission_level=<span class="tok-str">"read"</span>
+)
+<span class="tok-kw">def</span> <span class="tok-fn">read_file</span>(path: <span class="tok-str">str</span>) -> <span class="tok-str">str</span>:
+    <span class="tok-kw">with</span> <span class="tok-fn">open</span>(path) <span class="tok-kw">as</span> f:
+        <span class="tok-kw">return</span> f.<span class="tok-fn">read</span>()
+
+<span class="tok-dec">@skill</span>(
+    name=<span class="tok-str">"delete_file"</span>,
+    description=<span class="tok-str">"删除文件"</span>,
+    permission_level=<span class="tok-str">"write"</span>
+)
+<span class="tok-kw">def</span> <span class="tok-fn">delete_file</span>(path: <span class="tok-str">str</span>) -> <span class="tok-str">bool</span>:
+    <span class="tok-kw">import</span> os
+    os.<span class="tok-fn">remove</span>(path)
+    <span class="tok-kw">return</span> <span class="tok-kw">True</span>
+</code></div>
+            </section>
+            
+            <section id="skill-lifecycle">
+                <h2>Skill 的生命周期</h2>
+                <p>
+                    Skill 从定义到执行再到清理，经历了一个完整的生命周期。理解这个生命周期有助于正确地管理 Skill 的资源。
+                </p>
+                
+                <h3>生命周期阶段</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">定义</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">注册</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">初始化</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">执行</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">清理</div>
+                </div>
+                
+                <h3>生命周期钩子</h3>
+                <p>
+                    DeerFlow 提供了生命周期钩子，允许在不同阶段执行自定义逻辑：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">DatabaseSkill</span>:
+    <span class="tok-str">"""数据库操作 Skill，演示生命周期钩子"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
+        <span class="tok-kw">self</span>.connection = <span class="tok-kw">None</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">on_init</span>(<span class="tok-kw">self</span>):
+        <span class="tok-str">"""初始化时调用，建立数据库连接"""</span>
+        <span class="tok-kw">self</span>.connection = <span class="tok-fn">connect_to_database</span>()
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">on_execute</span>(<span class="tok-kw">self</span>, query: <span class="tok-str">str</span>) -> <span class="tok-str">str</span>:
+        <span class="tok-str">"""执行查询"""</span>
+        result = <span class="tok-kw">self</span>.connection.<span class="tok-fn">execute</span>(query)
+        <span class="tok-kw">return</span> <span class="tok-str">str</span>(result)
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">on_cleanup</span>(<span class="tok-kw">self</span>):
+        <span class="tok-str">"""清理时调用，关闭数据库连接"""</span>
+        <span class="tok-kw">if</span> <span class="tok-kw">self</span>.connection:
+            <span class="tok-kw">self</span>.connection.<span class="tok-fn">close</span>()
+</code></div>
+            </section>
+            
+            <section id="skill-testing">
+                <h2>Skill 的测试与调试</h2>
+                <p>
+                    在将 Skill 部署到生产环境之前，应该进行充分的测试和调试。DeerFlow 提供了测试工具和调试功能。
+                </p>
+                
+                <h3>单元测试</h3>
+                <p>
+                    为 Skill 编写单元测试，确保其功能正确：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-kw">import</span> unittest
+<span class="tok-kw">from</span> deerflow <span class="tok-kw">import</span> <span class="tok-cls">Skill</span>
+
+<span class="tok-kw">class</span> <span class="tok-cls">TestWeatherSkill</span>(unittest.<span class="tok-cls">TestCase</span>):
+    <span class="tok-kw">def</span> <span class="tok-fn">setUp</span>(<span class="tok-kw">self</span>):
+        <span class="tok-kw">self</span>.skill = get_weather
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">test_valid_city</span>(<span class="tok-kw">self</span>):
+        <span class="tok-str">"""测试有效的城市"""</span>
+        result = <span class="tok-kw">self</span>.skill.<span class="tok-fn">execute</span>(city=<span class="tok-str">"北京"</span>)
+        <span class="tok-kw">self</span>.<span class="tok-fn">assertIsNotNone</span>(result)
+        <span class="tok-kw">self</span>.<span class="tok-fn">assertIn</span>(<span class="tok-str">"北京"</span>, result)
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">test_invalid_city</span>(<span class="tok-kw">self</span>):
+        <span class="tok-str">"""测试无效的城市"""</span>
+        <span class="tok-kw">with</span> <span class="tok-kw">self</span>.<span class="tok-fn">assertRaises</span>(<span class="tok-cls">ValueError</span>):
+            <span class="tok-kw">self</span>.skill.<span class="tok-fn">execute</span>(city=<span class="tok-str">"不存在的城市"</span>)
+</code></div>
+                
+                <h3>集成测试</h3>
+                <p>
+                    测试 Skill 与 Agent 的集成：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-kw">def</span> <span class="tok-fn">test_skill_with_agent</span>():
+    <span class="tok-str">"""测试 Skill 与 Agent 的集成"""</span>
+    <span class="tok-com"># 创建 Agent</span>
+    agent = <span class="tok-cls">Agent</span>(llm=llm)
+    agent.<span class="tok-fn">add_skill</span>(get_weather)
+    
+    <span class="tok-com"># 测试 Agent 是否能正确调用 Skill</span>
+    result = agent.<span class="tok-fn">run</span>(<span class="tok-str">"北京今天天气怎么样？"</span>)
+    
+    <span class="tok-com"># 验证结果</span>
+    <span class="tok-kw">assert</span> <span class="tok-str">"北京"</span> <span class="tok-kw">in</span> result
+    <span class="tok-kw">assert</span> <span class="tok-str">"天气"</span> <span class="tok-kw">in</span> result
+</code></div>
+                
+                <h3>调试技巧</h3>
+                <p>
+                    使用以下技巧调试 Skill 的问题：
+                </p>
+                <div class="key-point">
+                    <strong>启用日志：</strong> 在 Skill 执行前后添加日志，记录输入和输出。
+                </div>
+                <div class="key-point">
+                    <strong>参数验证：</strong> 在 Skill 开始执行前验证所有参数，提供清晰的错误信息。
+                </div>
+                <div class="key-point">
+                    <strong>模拟测试：</strong> 使用 Mock 对象模拟外部依赖，进行隔离测试。
+                </div>
+                <div class="key-point">
+                    <strong>性能分析：</strong> 使用性能分析工具识别 Skill 执行的瓶颈。
+                </div>
+            </section>
+            
+            <section id="skill-best-practices">
+                <h2>Skill 设计的最佳实践</h2>
+                
+                <h3>1. 清晰的命名和描述</h3>
+                <p>
+                    Skill 的名称应该简洁明了，描述应该准确表达功能。好的描述能帮助 LLM 更准确地判断何时调用。
+                </p>
+                
+                <h3>2. 参数设计</h3>
+                <p>
+                    参数应该尽可能简单，避免复杂的嵌套结构。每个参数都应该有清晰的类型和说明。
+                </p>
+                
+                <h3>3. 错误处理</h3>
+                <p>
+                    Skill 应该妥善处理错误，返回有意义的错误信息，而不是让异常传播。
+                </p>
+                
+                <h3>4. 返回值格式</h3>
+                <p>
+                    Skill 的返回值应该是字符串或可以转换为字符串的对象。如果返回复杂的数据结构，应该转换为 JSON 字符串。
+                </p>
+                
+                <h3>5. 性能考虑</h3>
+                <p>
+                    Skill 的执行时间应该在合理范围内。对于耗时操作，考虑添加超时机制。
+                </p>
+                
+                <div class="warning">
+                    <strong>警告：</strong> 不要在 Skill 中执行危险操作（如删除数据库、修改系统文件等）而不进行充分的验证和确认。应该实现权限检查和审计日志。
+                </div>
+            </section>
+            
+            <section id="summary">
+                <h2>总结</h2>
+                <p>
+                    Skills 是 Agent 的能力库，通过 Skills，Agent 可以调用各种外部工具和服务。本章深入讲解了 Skill 的定义、注册、调用、分类、生命周期、测试和最佳实践。
+                </p>
+                <div class="highlight">
+                    <strong>核心要点总结：</strong>
+                    <ul>
+                        <li><strong>Skill 的概念：</strong> 包装了具体功能的能力单元，有名称、描述、参数和实现函数</li>
+                        <li><strong>定义和注册：</strong> 使用装饰器或手动创建 Skill 对象，然后注册到 Agent</li>
+                        <li><strong>调用机制：</strong> LLM 根据描述决定调用，执行引擎负责参数验证和执行</li>
+                        <li><strong>Skill 分类：</strong> 按功能、执行方式、权限级别等多个维度分类</li>
+                        <li><strong>生命周期管理：</strong> 理解定义、注册、初始化、执行、清理各阶段，使用生命周期钩子</li>
+                        <li><strong>测试与调试：</strong> 编写单元测试和集成测试，使用日志和模拟工具进行调试</li>
+                        <li><strong>最佳实践：</strong> 清晰的命名、简单的参数、完善的错误处理、合理的性能、充分的安全验证</li>
+                    </ul>
+                </div>
+                
+                <div class="key-point">
+                    <strong>实践建议：</strong> 在设计 Skill 时，始终考虑 LLM 的理解能力。好的 Skill 描述应该让 LLM 能够准确判断何时调用。同时，要实现完善的错误处理和安全验证，确保 Skill 的可靠性和安全性。
+                </div>
+            </section>
+            
+            <div id="page-nav"></div>
+        </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上下文工程：提升Agent智能 · DeerFlow 学习系列</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        /* 页面特定样式 - 与深色主题兼容 */
+        
+        .toc {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--accent);
+            padding: 20px;
+            margin-bottom: 40px;
+            border-radius: 8px;
+        }
+        
+        .toc h2 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .toc li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .toc a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .toc a:hover {
+            color: var(--accent-2);
+            text-decoration: underline;
+        }
+        
+        section {
+            margin-bottom: 50px;
+        }
+        
+        /* 代码块样式 */
+        .code-block {
+            background: var(--bg-code);
+            color: var(--text-soft);
+            padding: 18px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 18px 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 13.5px;
+            line-height: 1.65;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+        }
+        
+        .code-block code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--text-soft);
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            white-space: pre;
+            display: block;
+        }
+        
+        .code-block::-webkit-scrollbar {
+            height: 9px;
+        }
+        
+        .code-block::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        /* 提示框样式 */
+        .highlight {
+            background: var(--bg-soft);
+            padding: 15px 18px;
+            border-left: 4px solid var(--orange);
+            margin: 18px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .key-point {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--green);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--green);
+        }
+        
+        .key-point strong {
+            color: var(--green-soft);
+            font-weight: 650;
+        }
+        
+        .example-case {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--orange);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .example-case strong {
+            color: var(--orange);
+            font-weight: 650;
+        }
+        
+        .warning {
+            background: var(--bg-soft);
+            border-left: 4px solid #ff6b6b;
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .warning strong {
+            color: #ff6b6b;
+            font-weight: 650;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+        
+        .comparison-table th {
+            background: var(--bg-soft);
+            color: var(--text);
+            padding: 11px 15px;
+            text-align: left;
+            font-weight: 650;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .comparison-table td {
+            padding: 11px 15px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-soft);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:hover td {
+            background: rgba(88,166,255,0.04);
+        }
+        
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        
+        .flow-step {
+            background: var(--bg-card);
+            border: 1.5px solid var(--accent);
+            color: var(--text);
+            padding: 12px 22px;
+            border-radius: 10px;
+            min-width: 120px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .flow-arrow {
+            font-size: 20px;
+            color: var(--text-dim);
+            line-height: 1.4;
+            padding: 2px 0;
+        }
+    </style>
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+            <h1>上下文工程：提升Agent智能</h1>
+            <p class="page-subtitle">DeerFlow 学习系列 - 第 20 章</p>
+            
+            <div class="toc">
+                <h2>📖 目录</h2>
+                <ul>
+                    <li><a href="#introduction">简介</a></li>
+                    <li><a href="#context-importance">上下文的重要性</a></li>
+                    <li><a href="#prompt-engineering">Prompt工程</a></li>
+                    <li><a href="#context-management">上下文管理</a></li>
+                    <li><a href="#advanced-techniques">高级技巧</a></li>
+                    <li><a href="#optimization">性能优化</a></li>
+                    <li><a href="#best-practices">最佳实践</a></li>
+                    <li><a href="#summary">总结</a></li>
+                </ul>
+            </div>
+            
+            <section id="introduction">
+                <h2>简介</h2>
+                <p>
+                    上下文工程是提升 Agent 智能的关键。通过精心设计 Prompt、管理上下文窗口、优化信息流，可以显著提高 Agent 的理解能力和决策质量。本章讲解上下文工程的核心概念、Prompt 设计、上下文管理和性能优化等内容。
+                </p>
+                <div class="key-point">
+                    <strong>学习目标：</strong>
+                    <ul>
+                        <li>理解上下文对 Agent 性能的影响</li>
+                        <li>掌握 Prompt 工程的最佳实践</li>
+                        <li>学会管理和优化上下文</li>
+                        <li>提升 Agent 的智能水平</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section id="context-importance">
+                <h2>上下文的重要性</h2>
+                <p>
+                    上下文是 Agent 理解和决策的基础。好的上下文能让 Agent 更准确地理解问题，做出更好的决策。
+                </p>
+                
+                <h3>上下文的作用</h3>
+                <ul>
+                    <li><strong>背景信息</strong>：提供问题的背景和相关信息</li>
+                    <li><strong>指导方向</strong>：引导 Agent 朝着正确的方向思考</li>
+                    <li><strong>约束条件</strong>：限制 Agent 的行为范围</li>
+                    <li><strong>示例学习</strong>：通过示例帮助 Agent 学习模式</li>
+                    <li><strong>角色定位</strong>：定义 Agent 的角色和职责</li>
+                </ul>
+                
+                <h3>上下文窗口</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>模型</th>
+                            <th>上下文窗口</th>
+                            <th>优势</th>
+                            <th>劣势</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>GPT-3.5</strong></td>
+                            <td>4K tokens</td>
+                            <td>成本低</td>
+                            <td>上下文有限</td>
+                        </tr>
+                        <tr>
+                            <td><strong>GPT-4</strong></td>
+                            <td>8K/32K tokens</td>
+                            <td>上下文较大</td>
+                            <td>成本高</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Claude 3</strong></td>
+                            <td>200K tokens</td>
+                            <td>超大上下文</td>
+                            <td>成本更高</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="key-point">
+                    <strong>关键点：</strong> 上下文窗口大小直接影响 Agent 能处理的信息量。选择合适的模型很重要。
+                </div>
+            </section>
+            
+            <section id="prompt-engineering">
+                <h2>Prompt工程</h2>
+                <p>
+                    Prompt 是与 Agent 沟通的语言。好的 Prompt 能让 Agent 更好地理解需求。
+                </p>
+                
+                <h3>Prompt 设计原则</h3>
+                <div class="code-block"><code>
+<span class="tok-com"># 原则 1: 清晰明确</span>
+<span class="tok-str">"请分析这个数据"</span>  <span class="tok-com"># 不好：模糊</span>
+<span class="tok-str">"请分析这个销售数据，找出增长最快的产品类别"</span>  <span class="tok-com"># 好：清晰</span>
+
+<span class="tok-com"># 原则 2: 提供上下文</span>
+<span class="tok-str">"你是一个数据分析师。请分析2024年的销售数据..."</span>
+
+<span class="tok-com"># 原则 3: 指定输出格式</span>
+<span class="tok-str">"请返回 JSON 格式的结果，包含 'product', 'growth_rate', 'rank' 字段"</span>
+
+<span class="tok-com"># 原则 4: 使用示例</span>
+<span class="tok-str">"示例输入: {...}, 示例输出: {...}"</span>
+</code></div>
+                
+                <h3>Prompt 模板</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">PromptTemplate</span>:
+    <span class="tok-str">"""Prompt 模板"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
+        <span class="tok-kw">self</span>.system_prompt = <span class="tok-str">"""你是一个专业的数据分析师。
+你的职责是：
+1. 分析数据
+2. 识别趋势
+3. 提供建议
+"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">build_prompt</span>(<span class="tok-kw">self</span>, task: <span class="tok-str">str</span>, data: <span class="tok-str">str</span>) -> <span class="tok-str">str</span>:
+        <span class="tok-str">"""构建完整的 Prompt"""</span>
+        <span class="tok-kw">return</span> <span class="tok-str">f</span><span class="tok-str\">"""</span>{<span class="tok-kw">self</span>.system_prompt}
+
+任务：{task}
+
+数据：
+{data}
+
+请提供详细的分析结果。
+"""</span>
+</code></div>
+                
+                <div class="example-case">
+                    <strong>示例：</strong> 好的 Prompt 设计<br>
+                    <div class="code-block"><code>
+<span class="tok-str">"""你是一个专业的代码审查专家。
+
+任务：审查以下 Python 代码，找出潜在的问题。
+
+代码：
+```python
+def calculate_total(items):
+    total = 0
+    for item in items:
+        total = total + item['price'] * item['quantity']
+    return total
+```
+
+请提供：
+1. 代码质量评分（1-10）
+2. 发现的问题列表
+3. 改进建议
+4. 改进后的代码示例
+
+输出格式：JSON
+"""</span>
+</code></div>
+                </div>
+            </section>
+            
+            <section id="context-management">
+                <h2>上下文管理</h2>
+                <p>
+                    管理上下文意味着有效地组织和利用有限的上下文窗口。
+                </p>
+                
+                <h3>上下文管理策略</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">收集信息</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">优先级排序</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">选择关键信息</div>
+                </div>
+                <div style="text-align: center; margin: 10px 0;">↓</div>
+                <div class="flow-diagram">
+                    <div class="flow-step">构建 Prompt</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">发送请求</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">获取结果</div>
+                </div>
+                
+                <h3>上下文管理的实现</h3>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">ContextManager</span>:
+    <span class="tok-str">"""上下文管理器"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, max_tokens: <span class="tok-num\">4000</span>):
+        <span class="tok-kw">self</span>.max_tokens = max_tokens
+        <span class="tok-kw">self</span>.context = []
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">add_context</span>(<span class="tok-kw">self</span>, text: <span class="tok-str\">str</span>, priority: <span class="tok-num\">1</span>):
+        <span class="tok-str\">"""添加上下文"""</span>
+        tokens = <span class="tok-fn">len</span>(text.<span class="tok-fn">split</span>())
+        <span class="tok-kw">self</span>.context.<span class="tok-fn">append</span>({
+            <span class="tok-str\">"text\"</span>: text,
+            <span class="tok-str\">"tokens\"</span>: tokens,
+            <span class="tok-str\">"priority\"</span>: priority
+        })
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">get_context</span>(<span class="tok-kw">self</span>) -> <span class="tok-str\">str</span>:
+        <span class="tok-str\">"""获取优化后的上下文"""</span>
+        <span class="tok-com"># 按优先级排序</span>
+        sorted_context = <span class="tok-fn">sorted</span>(
+            <span class="tok-kw">self</span>.context,
+            key=<span class="tok-kw\">lambda</span> x: x[<span class="tok-str\">"priority\"</span>],
+            reverse=<span class="tok-kw\">True</span>
+        )
+        
+        <span class="tok-com"># 选择不超过 max_tokens 的内容</span>
+        total_tokens = <span class="tok-num\">0</span>
+        selected = []
+        <span class="tok-kw">for</span> item <span class="tok-kw\">in</span> sorted_context:
+            <span class="tok-kw">if</span> total_tokens + item[<span class="tok-str\">"tokens\"</span>] <= <span class="tok-kw\">self</span>.max_tokens:
+                selected.<span class="tok-fn">append</span>(item[<span class="tok-str\">"text\"</span>])
+                total_tokens += item[<span class="tok-str\">"tokens\"</span>]
+        
+        <span class="tok-kw">return</span> <span class="tok-str\">"\n"</span>.<span class="tok-fn">join</span>(selected)
+</code></div>
+            </section>
+            
+            <section id="advanced-techniques">
+                <h2>高级技巧</h2>
+                <p>
+                    除了基础的上下文管理，还有一些高级技巧可以进一步提升 Agent 的性能。
+                </p>
+                
+                <h3>思维链（Chain of Thought）</h3>
+                <p>
+                    要求 Agent 逐步思考和推理，而不是直接给出答案：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-str">"""请按以下步骤解决这个问题：
+1. 首先，理解问题的核心
+2. 其次，列出可能的解决方案
+3. 然后，分析每个方案的优缺点
+4. 最后，给出最优方案和理由
+
+问题：如何优化数据库查询性能？
+"""</span>
+</code></div>
+                
+                <h3>角色扮演（Role Playing）</h3>
+                <p>
+                    定义 Agent 的角色，让它在特定的角色背景下工作：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">RoleBasedPrompt</span>:
+    <span class="tok-str">"""基于角色的 Prompt"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, role: <span class="tok-str">str</span>):
+        <span class="tok-kw">self</span>.role = role
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">build</span>(<span class="tok-kw">self</span>, task: <span class="tok-str">str</span>) -> <span class="tok-str">str</span>:
+        <span class="tok-str">"""构建角色 Prompt"""</span>
+        <span class="tok-kw">return</span> <span class="tok-str">f</span><span class="tok-str\">"""你是一个{self.role}。
+根据你的专业知识和经验，完成以下任务：
+
+{task}
+
+请用{self.role}的角度和方式来回答。
+"""</span>
+</code></div>
+                
+                <h3>检索增强生成（RAG）</h3>
+                <p>
+                    结合外部知识库，提供更准确的上下文：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">RAGSystem</span>:
+    <span class="tok-str">"""检索增强生成系统"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, knowledge_base):
+        <span class="tok-kw">self</span>.kb = knowledge_base
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">retrieve_context</span>(<span class="tok-kw">self</span>, query: <span class="tok-str">str</span>, top_k: <span class="tok-num">5</span>) -> List[<span class="tok-str">str</span>]:
+        <span class="tok-str">"""从知识库检索相关上下文"""</span>
+        <span class="tok-com"># 使用向量相似度搜索</span>
+        results = <span class="tok-kw">self</span>.kb.<span class="tok-fn">search</span>(query, top_k=top_k)
+        <span class="tok-kw">return</span> [r[<span class="tok-str">'content'</span>] <span class="tok-kw">for</span> r <span class="tok-kw">in</span> results]
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">augment_prompt</span>(<span class="tok-kw">self</span>, query: <span class="tok-str">str</span>) -> <span class="tok-str">str</span>:
+        <span class="tok-str">"""用检索到的上下文增强 Prompt"""</span>
+        context = <span class="tok-kw">self</span>.<span class="tok-fn">retrieve_context</span>(query)
+        <span class="tok-kw">return</span> <span class="tok-str">f</span><span class="tok-str\">"""根据以下背景信息回答问题：
+
+背景信息：
+{chr(10).join(context)}
+
+问题：{query}
+"""</span>
+</code></div>
+                
+                <h3>动态上下文调整</h3>
+                <p>
+                    根据 Agent 的反馈动态调整上下文：
+                </p>
+                <div class="code-block"><code>
+<span class="tok-kw">class</span> <span class="tok-cls">DynamicContextAdjuster</span>:
+    <span class="tok-str">"""动态上下文调整器"""</span>
+    
+    <span class="tok-kw">def</span> <span class="tok-fn">adjust</span>(<span class="tok-kw">self</span>, response: <span class="tok-str">str</span>, confidence: <span class="tok-num">0.5</span>) -> <span class="tok-str">str</span>:
+        <span class="tok-str">"""根据置信度调整上下文"""</span>
+        <span class="tok-kw">if</span> confidence < <span class="tok-num">0.5</span>:
+            <span class="tok-com"># 置信度低，添加更多上下文</span>
+            <span class="tok-kw">return</span> <span class="tok-str">"增加详细信息和示例"</span>
+        <span class="tok-kw">elif</span> confidence > <span class="tok-num">0.9</span>:
+            <span class="tok-com"># 置信度高，简化上下文</span>
+            <span class="tok-kw">return</span> <span class="tok-str">"简化上下文，提高效率"</span>
+        <span class="tok-kw">else</span>:
+            <span class="tok-com"># 置信度中等，保持当前上下文</span>
+            <span class="tok-kw">return</span> <span class="tok-str">"保持当前上下文"</span>
+</code></div>
+            </section>
+            
+            <section id="optimization">
+                <h2>性能优化</h2>
+                <p>
+                    优化上下文可以提高 Agent 的性能和降低成本。
+                </p>
+                
+                <h3>优化技巧</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>优化方法</th>
+                            <th>说明</th>
+                            <th>效果</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>摘要</strong></td>
+                            <td>将长文本摘要为关键信息</td>
+                            <td>减少 50-70% tokens</td>
+                        </tr>
+                        <tr>
+                            <td><strong>分块</strong></td>
+                            <td>将大任务分成小任务</td>
+                            <td>提高准确性</td>
+                        </tr>
+                        <tr>
+                            <td><strong>缓存</strong></td>
+                            <td>缓存常用的上下文</td>
+                            <td>减少 API 调用</td>
+                        </tr>
+                        <tr>
+                            <td><strong>检索增强</strong></td>
+                            <td>只检索相关的信息</td>
+                            <td>提高相关性</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="warning">
+                    <strong>警告：</strong> 过度优化可能导致丢失重要信息。需要在效率和准确性之间找到平衡。
+                </div>
+            </section>
+            
+            <section id="best-practices">
+                <h2>最佳实践</h2>
+                
+                <h3>1. 系统提示词</h3>
+                <p>
+                    使用系统提示词定义 Agent 的角色和行为。这比在每个请求中重复说明更高效。
+                </p>
+                
+                <h3>2. 示例学习</h3>
+                <p>
+                    提供具体的示例帮助 Agent 理解期望的输出格式和风格。
+                </p>
+                
+                <h3>3. 逐步推理</h3>
+                <p>
+                    要求 Agent 逐步思考和解释，而不是直接给出答案。这提高了准确性。
+                </p>
+                
+                <h3>4. 反馈循环</h3>
+                <p>
+                    根据 Agent 的输出进行调整，不断优化 Prompt 和上下文。
+                </p>
+                
+                <h3>5. 版本管理</h3>
+                <p>
+                    保存不同版本的 Prompt，跟踪哪个版本效果最好。
+                </p>
+            </section>
+            
+            <section id="summary">
+                <h2>总结</h2>
+                <p>
+                    上下文工程是提升 Agent 智能的关键。通过精心设计 Prompt、有效管理上下文、应用高级技巧、优化性能，可以显著提高 Agent 的理解和决策能力。本章深入讲解了上下文工程的各个方面。
+                </p>
+                <div class="highlight">
+                    <strong>核心要点总结：</strong>
+                    <ul>
+                        <li><strong>上下文的重要性：</strong> 背景信息、指导方向、约束条件、示例学习、角色定位</li>
+                        <li><strong>Prompt 工程：</strong> 清晰明确、提供上下文、指定输出格式、使用示例</li>
+                        <li><strong>上下文管理：</strong> 信息收集、优先级排序、选择关键信息、构建 Prompt</li>
+                        <li><strong>高级技巧：</strong> 思维链、角色扮演、检索增强生成、动态调整</li>
+                        <li><strong>性能优化：</strong> 摘要、分块、缓存、检索增强等技巧</li>
+                        <li><strong>最佳实践：</strong> 系统提示词、示例学习、逐步推理、反馈循环、版本管理</li>
+                    </ul>
+                </div>
+                
+                <div class="key-point">
+                    <strong>上下文工程建议：</strong> 上下文工程是一门艺术和科学的结合。需要不断实验和优化，找到适合特定任务的最佳上下文策略。同时要监控 Agent 的性能，根据反馈进行调整。
+                </div>
+            </section>
+            
+            <div id="page-nav"></div>
+        </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+</body>
+</html>

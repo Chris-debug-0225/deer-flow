@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent 基础概念与设计思想 · DeerFlow 学习系列</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        /* 页面特定样式 - 与深色主题兼容 */
+        
+        .toc {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--accent);
+            padding: 20px;
+            margin-bottom: 40px;
+            border-radius: 8px;
+        }
+        
+        .toc h2 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .toc li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .toc a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .toc a:hover {
+            color: var(--accent-2);
+            text-decoration: underline;
+        }
+        
+        section {
+            margin-bottom: 50px;
+        }
+        
+        /* 代码块样式 */
+        .code-block {
+            background: var(--bg-code);
+            color: var(--text-soft);
+            padding: 18px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 18px 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 13.5px;
+            line-height: 1.65;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+        }
+        
+        .code-block code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--text-soft);
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            white-space: pre;
+            display: block;
+        }
+        
+        .code-block::-webkit-scrollbar {
+            height: 9px;
+        }
+        
+        .code-block::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        /* 提示框样式 */
+        .highlight {
+            background: var(--bg-soft);
+            padding: 15px 18px;
+            border-left: 4px solid var(--orange);
+            margin: 18px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+        
+        .comparison-table th {
+            background: var(--bg-soft);
+            color: var(--text);
+            padding: 11px 15px;
+            text-align: left;
+            font-weight: 650;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .comparison-table td {
+            padding: 11px 15px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-soft);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:hover td {
+            background: rgba(88,166,255,0.04);
+        }
+        
+        .key-point {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--green);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--green);
+        }
+        
+        .key-point strong {
+            color: var(--green-soft);
+            font-weight: 650;
+        }
+        
+        .example-case {
+            background: var(--bg-soft);
+            border-left: 4px solid var(--orange);
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
+        }
+        
+        .example-case strong {
+            color: var(--orange);
+            font-weight: 650;
+        }
+        
+        .warning {
+            background: var(--bg-soft);
+            border-left: 4px solid #ff6b6b;
+            padding: 15px 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .warning strong {
+            color: #ff6b6b;
+            font-weight: 650;
+        }
+        
+        /* 流程图样式 */
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        
+        .flow-step {
+            background: var(--bg-card);
+            border: 1.5px solid var(--accent);
+            color: var(--text);
+            padding: 12px 22px;
+            border-radius: 10px;
+            min-width: 120px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .flow-arrow {
+            font-size: 20px;
+            color: var(--text-dim);
+            line-height: 1.4;
+            padding: 2px 0;
+        }
+        
+        .diagram {
+            background: var(--bg-soft);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            margin: 24px 0;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+            color: var(--text-dim);
+        }
+    </style>
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+            <div class="toc">
+                <h2>📖 目录</h2>
+                <ul>
+                    <li><a href="#what-is-agent">什么是Agent？</a></li>
+                    <li><a href="#why-agent">为什么需要Agent？</a></li>
+                    <li><a href="#llm-capabilities">LLM的能力与局限</a></li>
+                    <li><a href="#agent-capabilities">Agent的核心能力</a></li>
+                    <li><a href="#agent-vs-program">Agent vs 传统程序</a></li>
+                    <li><a href="#evolution">从Chatbot到Agent的演进</a></li>
+                </ul>
+            </div>
+            
+            <!-- Section 1: What is Agent -->
+            <section id="what-is-agent">
+                <h2>1. 什么是Agent？</h2>
+                
+                <p>
+                    <strong>Agent（智能体）</strong>是一个能够感知环境、进行推理决策、采取行动的自主系统。
+                    在AI领域，Agent特指由大语言模型（LLM）驱动的系统，它能够：
+                </p>
+                
+                <ul>
+                    <li>理解用户的自然语言指令</li>
+                    <li>分析问题并制定解决方案</li>
+                    <li>使用各种工具和资源完成任务</li>
+                    <li>根据反馈进行自我调整</li>
+                    <li>在复杂环境中自主决策</li>
+                </ul>
+                
+                <div class="key-point">
+                    <strong>核心定义：</strong> Agent = LLM + 工具 + 记忆 + 反思能力
+                </div>
+                
+                <h3>Agent的基本特征</h3>
+                
+                <p>一个完整的Agent系统通常具有以下特征：</p>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>特征</th>
+                        <th>说明</th>
+                        <th>例子</th>
+                    </tr>
+                    <tr>
+                        <td><strong>自主性</strong></td>
+                        <td>能够独立做出决策，无需人类干预</td>
+                        <td>Agent自动选择使用哪个工具</td>
+                    </tr>
+                    <tr>
+                        <td><strong>反应性</strong></td>
+                        <td>能够感知环境变化并快速响应</td>
+                        <td>根据工具返回结果调整策略</td>
+                    </tr>
+                    <tr>
+                        <td><strong>主动性</strong></td>
+                        <td>能够主动采取行动实现目标</td>
+                        <td>主动分解任务、创建子任务</td>
+                    </tr>
+                    <tr>
+                        <td><strong>社交性</strong></td>
+                        <td>能够与其他Agent或人类协作</td>
+                        <td>多Agent系统中的协调</td>
+                    </tr>
+                </table>
+                
+                <h3>Agent的分类</h3>
+                
+                <p>根据复杂度和能力，Agent可以分为不同的类型：</p>
+                
+                <div class="example-case">
+                    <strong>1. 简单反应型Agent</strong><br>
+                    直接根据当前输入做出反应，无记忆和规划能力。
+                    例如：简单的FAQ机器人。
+                </div>
+                
+                <div class="example-case">
+                    <strong>2. 基于模型的Agent</strong><br>
+                    维护环境模型，能够预测行动结果。
+                    例如：能够规划多步骤任务的Agent。
+                </div>
+                
+                <div class="example-case">
+                    <strong>3. 目标驱动型Agent</strong><br>
+                    明确的目标，能够制定计划实现目标。
+                    例如：研究Agent、编程Agent。
+                </div>
+                
+                <div class="example-case">
+                    <strong>4. 学习型Agent</strong><br>
+                    能够从经验中学习，不断改进性能。
+                    例如：DeerFlow中具有长期记忆的Agent。
+                </div>
+            </section>
+            
+            <!-- Section 2: Why Agent -->
+            <section id="why-agent">
+                <h2>2. 为什么需要Agent？</h2>
+                
+                <p>
+                    虽然现代LLM已经非常强大，但它们仍然存在一些固有的局限性。
+                    Agent的出现正是为了克服这些局限，扩展LLM的能力。
+                </p>
+                
+                <h3>LLM的局限性</h3>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>局限性</th>
+                        <th>具体表现</th>
+                        <th>Agent的解决方案</th>
+                    </tr>
+                    <tr>
+                        <td><strong>知识过时</strong></td>
+                        <td>训练数据有截止日期，无法获取最新信息</td>
+                        <td>集成网络搜索工具，实时获取信息</td>
+                    </tr>
+                    <tr>
+                        <td><strong>计算能力有限</strong></td>
+                        <td>无法执行复杂的数学运算或代码</td>
+                        <td>调用代码执行工具、计算器等</td>
+                    </tr>
+                    <tr>
+                        <td><strong>无法访问外部系统</strong></td>
+                        <td>无法直接操作数据库、API等</td>
+                        <td>集成各种工具和API接口</td>
+                    </tr>
+                    <tr>
+                        <td><strong>容易产生幻觉</strong></td>
+                        <td>有时会生成看似合理但错误的内容</td>
+                        <td>通过工具验证、事实检查</td>
+                    </tr>
+                    <tr>
+                        <td><strong>无法处理长流程</strong></td>
+                        <td>复杂任务需要多步骤，容易出错</td>
+                        <td>分解任务、逐步执行、反思调整</td>
+                    </tr>
+                </table>
+                
+                <h3>Agent的价值</h3>
+                
+                <div class="key-point">
+                    <strong>1. 扩展能力：</strong> 通过工具和技能，Agent可以做LLM单独无法做的事情
+                </div>
+                
+                <div class="key-point">
+                    <strong>2. 提高准确性：</strong> 通过验证、反思和多步骤推理，减少错误
+                </div>
+                
+                <div class="key-point">
+                    <strong>3. 自主执行：</strong> Agent可以自主完成复杂任务，减少人类干预
+                </div>
+                
+                <div class="key-point">
+                    <strong>4. 实时性：</strong> 可以访问实时数据和外部系统
+                </div>
+                
+                <div class="key-point">
+                    <strong>5. 可扩展性：</strong> 可以轻松添加新的工具和能力
+                </div>
+                
+                <h3>现实应用场景</h3>
+                
+                <div class="example-case">
+                    <strong>📊 数据分析Agent</strong><br>
+                    接收用户的分析需求 → 查询数据库 → 执行数据处理 → 生成可视化 → 输出报告
+                </div>
+                
+                <div class="example-case">
+                    <strong>🔬 研究Agent</strong><br>
+                    接收研究课题 → 网络搜索 → 信息整理 → 深度分析 → 生成研究报告
+                </div>
+                
+                <div class="example-case">
+                    <strong>💻 编程Agent</strong><br>
+                    接收功能需求 → 代码生成 → 测试执行 → Bug修复 → 代码优化
+                </div>
+                
+                <div class="example-case">
+                    <strong>📝 内容创作Agent</strong><br>
+                    接收创作需求 → 信息收集 → 大纲生成 → 内容创作 → 质量审查
+                </div>
+            </section>
+            
+            <!-- Section 3: LLM Capabilities -->
+            <section id="llm-capabilities">
+                <h2>3. LLM的能力与局限</h2>
+                
+                <p>
+                    要理解Agent，首先要深入理解LLM的能力和局限。
+                    LLM是Agent的"大脑"，决定了Agent的决策质量。
+                </p>
+                
+                <h3>LLM的核心能力</h3>
+                
+                <p><strong>1. 自然语言理解与生成</strong></p>
+                <p>
+                    LLM能够理解自然语言的语义，生成连贯、自然的文本。
+                    这是Agent与用户交互的基础。
+                </p>
+                
+                <p><strong>2. 推理与逻辑思维</strong></p>
+                <p>
+                    现代LLM（如GPT-4、Claude）具有强大的推理能力，
+                    可以进行多步骤的逻辑推理，解决复杂问题。
+                </p>
+                
+                <p><strong>3. 知识整合</strong></p>
+                <p>
+                    LLM在训练过程中学习了大量知识，可以整合多个领域的信息。
+                </p>
+                
+                <p><strong>4. 代码理解与生成</strong></p>
+                <p>
+                    现代LLM可以理解和生成多种编程语言的代码。
+                </p>
+                
+                <h3>LLM的关键局限</h3>
+                
+                <p><strong>1. 知识截止日期</strong></p>
+                <div class="highlight">
+                    LLM的知识来自训练数据，有明确的截止日期。
+                    例如GPT-4的知识截止于2023年4月。
+                    这意味着它无法获知最新的新闻、股票价格、天气等实时信息。
+                </div>
+                
+                <p><strong>2. 幻觉问题（Hallucination）</strong></p>
+                <div class="highlight">
+                    LLM有时会生成看似合理但实际错误的内容。
+                    这不是因为LLM"故意说谎"，而是因为它的工作原理是基于概率预测下一个词。
+                    当不确定时，它仍然会生成看起来合理的答案。
+                </div>
+                
+                <p><strong>3. 上下文窗口限制</strong></p>
+                <div class="highlight">
+                    虽然现代LLM的上下文窗口在扩大（如Claude 3.5 Sonnet支持200K tokens），
+                    但仍然有限。这限制了Agent一次能处理的信息量。
+                </div>
+                
+                <p><strong>4. 计算能力有限</strong></p>
+                <div class="highlight">
+                    LLM本质上是文本预测模型，不擅长精确的数学计算。
+                    例如，让LLM计算两个大数的乘积，它可能会出错。
+                </div>
+                
+                <p><strong>5. 无法执行真实操作</strong></p>
+                <div class="highlight">
+                    LLM只能生成文本，无法直接操作计算机、访问数据库或调用API。
+                </div>
+                
+                <h3>Token与成本</h3>
+                
+                <p>
+                    理解Token对于设计高效的Agent至关重要。
+                </p>
+                
+                <div class="key-point">
+                    <strong>Token是什么？</strong><br>
+                    Token是LLM处理文本的基本单位。
+                    大约1个Token ≈ 4个英文字符 ≈ 1.3个中文字符。
+                    LLM的成本通常按Token计费。
+                </div>
+                
+                <p><strong>Token的影响：</strong></p>
+                <ul>
+                    <li><strong>成本：</strong> 输入和输出都需要付费，输出通常更贵</li>
+                    <li><strong>速度：</strong> Token越多，处理时间越长</li>
+                    <li><strong>准确性：</strong> 上下文越长，有时准确性反而下降（Lost in the Middle问题）</li>
+                </ul>
+                
+                <div class="example-case">
+                    <strong>Token计算例子：</strong><br>
+                    一个简单的对话：<br>
+                    用户: "请帮我写一个Python函数" (8 tokens)<br>
+                    助手: "当然可以。这是一个计算阶乘的函数..." (50 tokens)<br>
+                    总成本 = 8 + 50 = 58 tokens
+                </div>
+            </section>
+            
+            <!-- Section 4: Agent Capabilities -->
+            <section id="agent-capabilities">
+                <h2>4. Agent的核心能力</h2>
+                
+                <p>
+                    Agent通过集成工具、记忆和反思机制，
+                    扩展了LLM的能力。让我们深入理解Agent的四大核心能力。
+                </p>
+                
+                <h3>能力1：思考（Thinking）</h3>
+                
+                <p>
+                    Agent能够进行深度思考，分析问题的多个方面。
+                </p>
+                
+                <div class="example-case">
+                    <strong>例子：</strong><br>
+                    用户问："如何优化我的网站性能？"<br>
+                    <br>
+                    Agent的思考过程：<br>
+                    1. 分析问题：网站性能涉及多个方面（前端、后端、数据库等）<br>
+                    2. 识别关键因素：加载速度、响应时间、资源使用等<br>
+                    3. 制定策略：需要获取网站信息、分析瓶颈、提出优化方案<br>
+                    4. 决定下一步：应该先获取网站的技术栈信息
+                </div>
+                
+                <h3>能力2：规划（Planning）</h3>
+                
+                <p>
+                    Agent能够将复杂任务分解为多个步骤，制定执行计划。
+                </p>
+                
+                <div class="flow-diagram">
+                    <div class="flow-step">大任务</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">分解</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">子任务1</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">子任务2</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">汇聚</div>
+                </div>
+                
+                <div class="example-case">
+                    <strong>例子：生成一份研究报告</strong><br>
+                    <br>
+                    Agent的计划：<br>
+                    1. 确定研究主题和范围<br>
+                    2. 搜索相关资料（可能并行执行多个搜索）<br>
+                    3. 整理和分析信息<br>
+                    4. 撰写报告初稿<br>
+                    5. 审查和修改<br>
+                    6. 生成最终报告
+                </div>
+                
+                <h3>能力3：执行（Execution）</h3>
+                
+                <p>
+                    Agent能够使用各种工具执行具体的操作。
+                </p>
+                
+                <p><strong>Agent可以使用的工具类型：</strong></p>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>工具类型</th>
+                        <th>功能</th>
+                        <th>例子</th>
+                    </tr>
+                    <tr>
+                        <td><strong>信息获取</strong></td>
+                        <td>从外部获取信息</td>
+                        <td>网络搜索、API调用、数据库查询</td>
+                    </tr>
+                    <tr>
+                        <td><strong>数据处理</strong></td>
+                        <td>处理和转换数据</td>
+                        <td>代码执行、数据分析、格式转换</td>
+                    </tr>
+                    <tr>
+                        <td><strong>文件操作</strong></td>
+                        <td>读写文件系统</td>
+                        <td>创建文件、编辑文档、保存输出</td>
+                    </tr>
+                    <tr>
+                        <td><strong>系统操作</strong></td>
+                        <td>执行系统命令</td>
+                        <td>运行脚本、安装包、系统管理</td>
+                    </tr>
+                </table>
+                
+                <h3>能力4：反思（Reflection）</h3>
+                
+                <p>
+                    Agent能够评估自己的行动，发现问题并进行调整。
+                </p>
+                
+                <div class="example-case">
+                    <strong>反思的例子：</strong><br>
+                    <br>
+                    Agent执行了一个搜索，得到了结果。<br>
+                    反思：这些结果是否相关？是否足够？<br>
+                    如果不足够，Agent可能会：<br>
+                    - 调整搜索关键词<br>
+                    - 搜索更多资料<br>
+                    - 尝试不同的方法<br>
+                    - 向用户请求澄清
+                </div>
+            </section>
+            
+            <!-- Section 5: Agent vs Program -->
+            <section id="agent-vs-program">
+                <h2>5. Agent vs 传统程序</h2>
+                
+                <p>
+                    理解Agent与传统程序的区别，有助于我们更好地设计和使用Agent。
+                </p>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>方面</th>
+                        <th>传统程序</th>
+                        <th>Agent系统</th>
+                    </tr>
+                    <tr>
+                        <td><strong>控制流</strong></td>
+                        <td>由代码显式定义，流程固定</td>
+                        <td>由LLM动态决定，流程灵活</td>
+                    </tr>
+                    <tr>
+                        <td><strong>适应性</strong></td>
+                        <td>需要修改代码才能适应新情况</td>
+                        <td>可以通过提示词调整行为</td>
+                    </tr>
+                    <tr>
+                        <td><strong>错误处理</strong></td>
+                        <td>需要预先定义所有可能的错误</td>
+                        <td>可以动态处理未预见的情况</td>
+                    </tr>
+                    <tr>
+                        <td><strong>学习能力</strong></td>
+                        <td>无法学习，性能固定</td>
+                        <td>可以从经验中学习和改进</td>
+                    </tr>
+                    <tr>
+                        <td><strong>开发周期</strong></td>
+                        <td>长，需要详细设计和编码</td>
+                        <td>短，主要是提示词和工具配置</td>
+                    </tr>
+                    <tr>
+                        <td><strong>可解释性</strong></td>
+                        <td>高，代码清晰</td>
+                        <td>低，决策过程不透明</td>
+                    </tr>
+                </table>
+                
+                <h3>何时使用Agent，何时使用传统程序</h3>
+                
+                <div class="key-point">
+                    <strong>使用Agent的场景：</strong><br>
+                    ✓ 需要处理多种不同的输入和情况<br>
+                    ✓ 需要自然语言交互<br>
+                    ✓ 需要复杂的推理和决策<br>
+                    ✓ 需要快速迭代和调整<br>
+                    ✓ 需要从经验中学习
+                </div>
+                
+                <div class="key-point">
+                    <strong>使用传统程序的场景：</strong><br>
+                    ✓ 流程明确且固定<br>
+                    ✓ 需要高度的可预测性和可靠性<br>
+                    ✓ 性能要求极高<br>
+                    ✓ 需要完全的可解释性<br>
+                    ✓ 成本敏感（Agent的API调用成本较高）
+                </div>
+            </section>
+            
+            <!-- Section 6: Evolution -->
+            <section id="evolution">
+                <h2>6. 从Chatbot到Agent的演进</h2>
+                
+                <p>
+                    理解这个演进过程，可以帮助我们更好地理解Agent的设计思想。
+                </p>
+                
+                <h3>第一代：简单Chatbot</h3>
+                
+                <div class="example-case">
+                    <strong>特点：</strong><br>
+                    - 基于规则或简单的模式匹配<br>
+                    - 只能回答预定义的问题<br>
+                    - 无法理解复杂的自然语言<br>
+                    - 例子：早期的客服机器人
+                </div>
+                
+                <h3>第二代：LLM Chatbot</h3>
+                
+                <div class="example-case">
+                    <strong>特点：</strong><br>
+                    - 使用LLM进行对话<br>
+                    - 能理解自然语言<br>
+                    - 但仍然只能"说话"，无法"做事"<br>
+                    - 例子：ChatGPT（没有插件时）
+                </div>
+                
+                <h3>第三代：Tool-Using Agent</h3>
+                
+                <div class="example-case">
+                    <strong>特点：</strong><br>
+                    - LLM可以调用工具<br>
+                    - 能够执行具体的操作<br>
+                    - 但工具调用仍然相对简单<br>
+                    - 例子：ChatGPT with Plugins
+                </div>
+                
+                <h3>第四代：Autonomous Agent</h3>
+                
+                <div class="example-case">
+                    <strong>特点：</strong><br>
+                    - 可以自主规划和执行复杂任务<br>
+                    - 具有记忆和反思能力<br>
+                    - 可以创建和管理子Agent<br>
+                    - 例子：DeerFlow、AutoGPT
+                </div>
+                
+                <h3>演进的驱动力</h3>
+                
+                <div class="flow-diagram">
+                    <div class="flow-step">LLM能力提升</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">工具集成</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">自主规划</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">多Agent协作</div>
+                </div>
+                
+                <p>
+                    每一代的进步都建立在前一代的基础上。
+                    现在我们处于第四代，但这不是终点。
+                    未来的Agent可能会有更强的自主性、更好的协作能力、更高的可靠性。
+                </p>
+            </section>
+            
+            <!-- Summary -->
+            <section>
+                <h2>📝 关键要点总结</h2>
+                
+                <div class="key-point">
+                    <strong>1. Agent的定义：</strong> Agent = LLM + 工具 + 记忆 + 反思能力
+                </div>
+                
+                <div class="key-point">
+                    <strong>2. Agent的核心能力：</strong> 思考、规划、执行、反思
+                </div>
+                
+                <div class="key-point">
+                    <strong>3. Agent的价值：</strong> 扩展LLM能力，提高准确性，实现自主执行
+                </div>
+                
+                <div class="key-point">
+                    <strong>4. LLM的局限：</strong> 知识过时、幻觉、无法执行操作、计算能力有限
+                </div>
+                
+                <div class="key-point">
+                    <strong>5. Agent vs 程序：</strong> Agent更灵活，程序更可靠
+                </div>
+                
+                <div class="key-point">
+                    <strong>6. 演进方向：</strong> 从Chatbot → LLM Chatbot → Tool-Using Agent → Autonomous Agent
+                </div>
+            </section>
+            
+            <!-- Next Steps -->
+            <section>
+                <h2>🚀 下一步</h2>
+                
+                <p>
+                    现在你已经理解了Agent的基础概念。下一步是学习LangGraph框架，
+                    这是DeerFlow的核心基础。
+                </p>
+                
+                <div class="highlight">
+                    <strong>推荐阅读顺序：</strong><br>
+                    1. 本文：Agent基础概念 ✓<br>
+                    2. 01-langgraph-basics.html：LangGraph框架基础<br>
+                    3. 02-llm-and-tools.html：LLM调用与工具系统<br>
+                    4. 03-deerflow-overview.html：DeerFlow整体架构<br>
+                    5. 10-agent-execution-engine.html：Agent执行引擎深度学习
+                </div>
+            </section>
+      <div id="page-nav"></div>
+    </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+</body>
+</html>
