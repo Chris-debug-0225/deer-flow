@@ -119,6 +119,16 @@ def get_config() -> AppConfig:
     split-brain where the worker / lead-agent thread saw a stale startup
     snapshot.
 
+    Hot-reload boundary: fields backed by startup-time singletons
+    (engines, sandbox provider, IM channels, logging handler) require a
+    process restart to change at runtime. The authoritative list lives in
+    :mod:`deerflow.config.reload_boundary` and is mirrored by the
+    standardised ``"startup-only:"`` prefix on the matching
+    ``Field(description=...)`` in :class:`AppConfig` — IDE hover on those
+    fields will surface the boundary inline. See
+    ``backend/CLAUDE.md`` "Config Hot-Reload Boundary" for the operator
+    summary.
+
     Any failure to materialise the config (missing file, permission denied,
     YAML parse error, validation error) is reported as 503 — semantically
     "the gateway cannot serve requests without a usable configuration" — and
@@ -321,6 +331,17 @@ async def get_current_user_from_request(request: Request):
 
     Raises HTTPException 401 if not authenticated.
     """
+    state = getattr(request, "state", None)
+    state_user = getattr(state, "user", None)
+    from app.gateway.auth_disabled import AUTH_SOURCE_AUTH_DISABLED, AUTH_SOURCE_INTERNAL, AUTH_SOURCE_SESSION
+
+    if state_user is not None and getattr(state, "auth_source", None) in {
+        AUTH_SOURCE_SESSION,
+        AUTH_SOURCE_AUTH_DISABLED,
+        AUTH_SOURCE_INTERNAL,
+    }:
+        return state_user
+
     from app.gateway.auth import decode_token
     from app.gateway.auth.errors import AuthErrorCode, AuthErrorResponse, TokenError, token_error_to_code
 
