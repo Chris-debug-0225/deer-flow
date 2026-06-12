@@ -6,215 +6,7 @@
     <title>自定义Skills完全指南 · DeerFlow 学习系列</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
-        /* 页面特定样式 - 与深色主题兼容 */
-        
-        .toc {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--accent);
-            padding: 20px;
-            margin-bottom: 40px;
-            border-radius: 8px;
-        }
-        
-        .toc h2 {
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .toc li:before {
-            content: "▸";
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: bold;
-        }
-        
-        .toc a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .toc a:hover {
-            color: var(--accent-2);
-            text-decoration: underline;
-        }
-        
-        section {
-            margin-bottom: 50px;
-        }
-        
-        /* 代码块样式 */
-        .code-block {
-            background: var(--bg-code);
-            color: var(--text-soft);
-            padding: 18px 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 18px 0;
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 13.5px;
-            line-height: 1.65;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-        }
-        
-        .code-block code {
-            background: none;
-            border: none;
-            padding: 0;
-            color: var(--text-soft);
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            white-space: pre;
-            display: block;
-        }
-        
-        .code-block::-webkit-scrollbar {
-            height: 9px;
-        }
-        
-        .code-block::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-        
-        /* 提示框样式 */
-        .highlight {
-            background: var(--bg-soft);
-            padding: 15px 18px;
-            border-left: 4px solid var(--orange);
-            margin: 18px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .key-point {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--green);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--green);
-        }
-        
-        .key-point strong {
-            color: var(--green-soft);
-            font-weight: 650;
-        }
-        
-        .example-case {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--orange);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .example-case strong {
-            color: var(--orange);
-            font-weight: 650;
-        }
-        
-        .warning {
-            background: var(--bg-soft);
-            border-left: 4px solid #ff6b6b;
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid #ff6b6b;
-        }
-        
-        .warning strong {
-            color: #ff6b6b;
-            font-weight: 650;
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 18px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-        }
-        
-        .comparison-table th {
-            background: var(--bg-soft);
-            color: var(--text);
-            padding: 11px 15px;
-            text-align: left;
-            font-weight: 650;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .comparison-table td {
-            padding: 11px 15px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-soft);
-        }
-        
-        .comparison-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .comparison-table tr:hover td {
-            background: rgba(88,166,255,0.04);
-        }
-        
-        .flow-diagram {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        
-        .flow-step {
-            background: var(--bg-card);
-            border: 1.5px solid var(--accent);
-            color: var(--text);
-            padding: 12px 22px;
-            border-radius: 10px;
-            min-width: 120px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .flow-arrow {
-            font-size: 20px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            padding: 2px 0;
-        }
+        section { margin-bottom: 50px; }
     </style>
 </head>
 <body>
@@ -223,331 +15,125 @@
   <nav class="sidebar" id="sidebar"></nav>
   <main class="main">
     <div class="content">
-            <h1>自定义Skills完全指南</h1>
-            <p class="page-subtitle">DeerFlow 学习系列 - 第 30 章</p>
-            
-            <div class="toc">
-                <h2>📖 目录</h2>
-                <ul>
-                    <li><a href="#introduction">简介</a></li>
-                    <li><a href="#skill-structure">Skill 结构</a></li>
-                    <li><a href="#implementation">实现步骤</a></li>
-                    <li><a href="#advanced-features">高级特性</a></li>
-                    <li><a href="#testing">测试</a></li>
-                    <li><a href="#deployment">部署</a></li>
-                    <li><a href="#best-practices">最佳实践</a></li>
-                    <li><a href="#summary">总结</a></li>
-                </ul>
-            </div>
-            
-            <section id="introduction">
-                <h2>简介</h2>
-                <p>
-                    自定义 Skill 是扩展 Agent 功能的核心方式。通过编写自定义 Skill，可以让 Agent 执行任何你想要的操作。本章讲解如何从零开始编写、测试和部署自定义 Skill。
-                </p>
-                <div class="key-point">
-                    <strong>学习目标：</strong>
-                    <ul>
-                        <li>理解 Skill 的结构和生命周期</li>
-                        <li>掌握编写自定义 Skill 的完整流程</li>
-                        <li>学会测试和调试 Skill</li>
-                        <li>了解部署和维护 Skill</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <section id="skill-structure">
-                <h2>Skill 结构</h2>
-                <p>
-                    每个 Skill 都有标准的结构和接口。理解这个结构是编写 Skill 的基础。
-                </p>
-                
-                <h3>Skill 的基本组成</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">from</span> abc <span class="tok-kw">import</span> <span class="tok-cls">ABC</span>, abstractmethod
-<span class="tok-kw">from</span> typing <span class="tok-kw">import</span> <span class="tok-cls">Any</span>, <span class="tok-cls">Dict</span>
+      <h1>自定义Skills完全指南</h1>
+      <p class="page-subtitle">DeerFlow 学习系列 - 第 30 章</p>
 
-<span class="tok-kw">class</span> <span class="tok-cls">Skill</span>(<span class="tok-cls">ABC</span>):
-    <span class="tok-str">"""Skill 基类"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, name: <span class="tok-str">str</span>, description: <span class="tok-str">str</span>):
-        <span class="tok-kw">self</span>.name = name
-        <span class="tok-kw">self</span>.description = description
-        <span class="tok-kw">self</span>.version = <span class="tok-str">"1.0.0"</span>
-    
-    @abstractmethod
-    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, **kwargs) -> <span class="tok-cls">Any</span>:
-        <span class="tok-str">"""执行 Skill"""</span>
-        <span class="tok-kw">pass</span>
-    
-    @abstractmethod
-    <span class="tok-kw">def</span> <span class="tok-fn">validate_input</span>(<span class="tok-kw">self</span>, **kwargs) -> <span class="tok-str">bool</span>:
-        <span class="tok-str">"""验证输入参数"""</span>
-        <span class="tok-kw">pass</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">get_metadata</span>(<span class="tok-kw">self</span>) -> <span class="tok-cls">Dict</span>:
-        <span class="tok-str">"""获取 Skill 元数据"""</span>
-        <span class="tok-kw">return</span> {
-            <span class="tok-str">"name"</span>: <span class="tok-kw">self</span>.name,
-            <span class="tok-str">"description"</span>: <span class="tok-kw">self</span>.description,
-            <span class="tok-str">"version"</span>: <span class="tok-kw">self</span>.version
-        }
-</code></div>
-            </section>
-            
-            <section id="implementation">
-                <h2>实现步骤</h2>
-                <p>
-                    编写自定义 Skill 的完整步骤。
-                </p>
-                
-                <h3>第 1 步：定义 Skill 类</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">DataAnalysisSkill</span>(<span class="tok-cls">Skill</span>):
-    <span class="tok-str">"""数据分析 Skill"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-fn">super</span>().<span class="tok-fn">__init__</span>(
-            name=<span class="tok-str">"data_analysis"</span>,
-            description=<span class="tok-str">"分析数据并生成报告"</span>
-        )
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">validate_input</span>(<span class="tok-kw">self</span>, **kwargs) -> <span class="tok-str">bool</span>:
-        <span class="tok-str">"""验证输入"""</span>
-        required_fields = [<span class="tok-str">"data"</span>, <span class="tok-str">"analysis_type"</span>]
-        <span class="tok-kw">return</span> <span class="tok-fn">all</span>(field <span class="tok-kw">in</span> kwargs <span class="tok-kw">for</span> field <span class="tok-kw">in</span> required_fields)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, **kwargs):
-        <span class="tok-str">"""执行分析"""</span>
-        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-kw">self</span>.<span class="tok-fn">validate_input</span>(**kwargs):
-            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"Invalid input"</span>)
-        
-        data = kwargs[<span class="tok-str">"data"</span>]
-        analysis_type = kwargs[<span class="tok-str">"analysis_type"</span>]
-        
-        <span class="tok-com"># 执行分析逻辑</span>
-        result = <span class="tok-kw">self</span>.<span class="tok-fn">analyze</span>(data, analysis_type)
-        <span class="tok-kw">return</span> result
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">analyze</span>(<span class="tok-kw">self</span>, data, analysis_type):
-        <span class="tok-str">"""分析数据"""</span>
-        <span class="tok-kw">if</span> analysis_type == <span class="tok-str">"summary"</span>:
-            <span class="tok-kw">return</span> <span class="tok-kw">self</span>.<span class="tok-fn">summarize</span>(data)
-        <span class="tok-kw">elif</span> analysis_type == <span class="tok-str">"trend"</span>:
-            <span class="tok-kw">return</span> <span class="tok-kw">self</span>.<span class="tok-fn">analyze_trend</span>(data)
-        <span class="tok-kw">else</span>:
-            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"Unknown analysis type"</span>)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">summarize</span>(<span class="tok-kw">self</span>, data):
-        <span class="tok-str">"""生成摘要"""</span>
-        <span class="tok-kw">return</span> {<span class="tok-str">"type"</span>: <span class="tok-str">"summary"</span>, <span class="tok-str">"data"</span>: data}
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">analyze_trend</span>(<span class="tok-kw">self</span>, data):
-        <span class="tok-str">"""分析趋势"""</span>
-        <span class="tok-kw">return</span> {<span class="tok-str">"type"</span>: <span class="tok-str">"trend"</span>, <span class="tok-str">"data"</span>: data}
-</code></div>
-                
-                <div class="example-case">
-                    <strong>示例：</strong> 完整的 Skill 实现<br>
-                    <div class="code-block"><code>
-<span class="tok-com"># 使用 Skill</span>
-skill = <span class="tok-cls">DataAnalysisSkill</span>()
+      <div class="deerflow-map">
+        <h3>本章讲的是用户如何在 DeerFlow 里定义、安装和维护自己的 skill</h3>
+        <p>这一章不是解释整个 skills 系统如何工作，而是贴着 DeerFlow 当前仓库，讲“你要自己做一个 skill 时，目录长什么样、归档怎么安装、Gateway 怎么管理、为什么它会影响 agent 行为，以及哪些资源文件会被保留给 skill 使用”。</p>
+      </div>
 
-<span class="tok-com"># 执行 Skill</span>
-result = skill.<span class="tok-fn">execute</span>(
-    data=[<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">4</span>, <span class="tok-num">5</span>],
-    analysis_type=<span class="tok-str">"summary"</span>
-)
+      <div class="toc">
+        <h3>目录</h3>
+        <ul>
+          <li><a href="#problem">这项能力在 DeerFlow 中解决什么问题</a></li>
+          <li><a href="#codebase">这项能力在代码库中的位置</a></li>
+          <li><a href="#flow">真实运行链路或数据链路</a></li>
+          <li><a href="#config">配置面与使用方式</a></li>
+          <li><a href="#tradeoffs">关键实现细节与权衡</a></li>
+          <li><a href="#limits">当前限制、边界与非目标</a></li>
+          <li><a href="#relations">它与 DeerFlow 其他能力的关系</a></li>
+        </ul>
+      </div>
 
-<span class="tok-fn">print</span>(result)
-<span class="tok-com"># 输出: {'type': 'summary', 'data': [1, 2, 3, 4, 5]}</span>
-</code></div>
-                </div>
-            </section>
-            
-            <section id="advanced-features">
-                <h2>高级特性</h2>
-                <p>
-                    除了基本功能，Skill 还支持一些高级特性来增强功能和性能。
-                </p>
-                
-                <h3>异步执行</h3>
-                <p>
-                    对于耗时操作，可以使用异步执行提高效率：
-                </p>
-                <div class="code-block"><code>
-<span class="tok-kw">import</span> asyncio
-
-<span class="tok-kw">class</span> <span class="tok-cls">AsyncDataAnalysisSkill</span>(<span class="tok-cls">Skill</span>):
-    <span class="tok-kw">async</span> <span class="tok-kw">def</span> <span class="tok-fn">execute_async</span>(<span class="tok-kw">self</span>, **kwargs):
-        <span class="tok-str">"""异步执行"""</span>
-        <span class="tok-kw">return</span> <span class="tok-kw">await</span> <span class="tok-kw">self</span>.<span class="tok-fn">analyze_async</span>(kwargs)
-    
-    <span class="tok-kw">async</span> <span class="tok-kw">def</span> <span class="tok-fn">analyze_async</span>(<span class="tok-kw">self</span>, kwargs):
-        <span class="tok-str">"""异步分析"""</span>
-        <span class="tok-kw">await</span> asyncio.<span class="tok-fn">sleep</span>(<span class="tok-num">1</span>)  <span class="tok-com"># 模拟耗时操作</span>
-        <span class="tok-kw">return</span> {<span class="tok-str">"status"</span>: <span class="tok-str">"completed"</span>}
-</code></div>
-                
-                <h3>缓存和记忆化</h3>
-                <p>
-                    为 Skill 添加缓存以提高性能：
-                </p>
-                <div class="code-block"><code>
-<span class="tok-kw">from</span> functools <span class="tok-kw">import</span> lru_cache
-
-<span class="tok-kw">class</span> <span class="tok-cls">CachedSkill</span>(<span class="tok-cls">Skill</span>):
-    @lru_cache(maxsize=<span class="tok-num">128</span>)
-    <span class="tok-kw">def</span> <span class="tok-fn">expensive_operation</span>(<span class="tok-kw">self</span>, key: <span class="tok-str">str</span>):
-        <span class="tok-str">"""昂贵的操作，结果会被缓存"""</span>
-        <span class="tok-com"># 执行昂贵的计算</span>
-        <span class="tok-kw">return</span> <span class="tok-str">f"result_for_{key}"</span>
-</code></div>
-                
-                <h3>错误恢复</h3>
-                <p>
-                    实现错误恢复机制确保 Skill 的健壮性：
-                </p>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">RobustSkill</span>(<span class="tok-cls">Skill</span>):
-    <span class="tok-kw">def</span> <span class="tok-fn">execute_with_retry</span>(<span class="tok-kw">self</span>, **kwargs):
-        <span class="tok-str">"""带重试的执行"""</span>
-        max_retries = <span class="tok-num">3</span>
-        <span class="tok-kw">for</span> attempt <span class="tok-kw">in</span> <span class="tok-fn">range</span>(max_retries):
-            <span class="tok-kw">try</span>:
-                <span class="tok-kw">return</span> <span class="tok-kw">self</span>.<span class="tok-fn">execute</span>(**kwargs)
-            <span class="tok-kw">except</span> <span class="tok-cls">Exception</span> <span class="tok-kw">as</span> e:
-                <span class="tok-kw">if</span> attempt == max_retries - <span class="tok-num">1</span>:
-                    <span class="tok-kw">raise</span>
-                <span class="tok-fn">print</span>(<span class="tok-str">f"Retry {attempt + 1}"</span>)
-</code></div>
-            </section>
-            
-            <section id="testing">
-                <h2>测试</h2>
-                <p>
-                    充分的测试是确保 Skill 质量的关键。
-                </p>
-                
-                <h3>单元测试</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">import</span> unittest
-
-<span class="tok-kw">class</span> <span class="tok-cls">TestDataAnalysisSkill</span>(unittest.<span class="tok-cls">TestCase</span>):
-    <span class="tok-kw">def</span> <span class="tok-fn">setUp</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.skill = <span class="tok-cls">DataAnalysisSkill</span>()
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">test_valid_input</span>(<span class="tok-kw">self</span>):
-        <span class="tok-str">"""测试有效输入"""</span>
-        result = <span class="tok-kw">self</span>.skill.<span class="tok-fn">execute</span>(
-            data=[<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>],
-            analysis_type=<span class="tok-str">"summary"</span>
-        )
-        <span class="tok-kw">self</span>.<span class="tok-fn">assertIsNotNone</span>(result)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">test_invalid_input</span>(<span class="tok-kw">self</span>):
-        <span class="tok-str">"""测试无效输入"""</span>
-        <span class="tok-kw">with</span> <span class="tok-kw">self</span>.<span class="tok-fn">assertRaises</span>(<span class="tok-cls">ValueError</span>):
-            <span class="tok-kw">self</span>.skill.<span class="tok-fn">execute</span>(data=[<span class="tok-num">1</span>, <span class="tok-num">2</span>])
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">test_metadata</span>(<span class="tok-kw">self</span>):
-        <span class="tok-str">"""测试元数据"""</span>
-        metadata = <span class="tok-kw">self</span>.skill.<span class="tok-fn">get_metadata</span>()
-        <span class="tok-kw">self</span>.<span class="tok-fn">assertEqual</span>(metadata[<span class="tok-str">"name"</span>], <span class="tok-str">"data_analysis"</span>)
-</code></div>
-            </section>
-            
-            <section id="deployment">
-                <h2>部署</h2>
-                <p>
-                    部署 Skill 使其可以被 Agent 使用。
-                </p>
-                
-                <h3>部署步骤</h3>
-                <ol>
-                    <li><strong>打包：</strong> 将 Skill 代码打包为模块</li>
-                    <li><strong>注册：</strong> 在 Agent 中注册 Skill</li>
-                    <li><strong>验证：</strong> 验证 Skill 可以正常使用</li>
-                    <li><strong>监控：</strong> 监控 Skill 的执行情况</li>
-                </ol>
-                
-                <h3>注册 Skill</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">Agent</span>:
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.skills = {}
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">register_skill</span>(<span class="tok-kw">self</span>, skill: <span class="tok-cls">Skill</span>):
-        <span class="tok-str">"""注册 Skill"""</span>
-        <span class="tok-kw">self</span>.skills[skill.name] = skill
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">execute_skill</span>(<span class="tok-kw">self</span>, skill_name: <span class="tok-str">str</span>, **kwargs):
-        <span class="tok-str">"""执行 Skill"""</span>
-        <span class="tok-kw">if</span> skill_name <span class="tok-kw">not</span> <span class="tok-kw">in</span> <span class="tok-kw">self</span>.skills:
-            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Skill {skill_name} not found"</span>)
-        
-        skill = <span class="tok-kw">self</span>.skills[skill_name]
-        <span class="tok-kw">return</span> skill.<span class="tok-fn">execute</span>(**kwargs)
-
-<span class="tok-com"># 使用示例</span>
-agent = <span class="tok-cls">Agent</span>()
-agent.<span class="tok-fn">register_skill</span>(<span class="tok-cls">DataAnalysisSkill</span>())
-result = agent.<span class="tok-fn">execute_skill</span>(<span class="tok-str">"data_analysis"</span>, data=[<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>], analysis_type=<span class="tok-str">"summary"</span>)
-</code></div>
-            </section>
-            
-            <section id="best-practices">
-                <h2>最佳实践</h2>
-                
-                <h3>1. 清晰的接口</h3>
-                <p>
-                    Skill 的接口应该清晰、简单。参数和返回值应该有明确的类型和说明。
-                </p>
-                
-                <h3>2. 错误处理</h3>
-                <p>
-                    实现完善的错误处理。验证输入，捕获异常，提供有意义的错误信息。
-                </p>
-                
-                <h3>3. 文档</h3>
-                <p>
-                    为 Skill 编写清晰的文档。说明参数、返回值、异常和使用示例。
-                </p>
-                
-                <h3>4. 版本管理</h3>
-                <p>
-                    维护 Skill 的版本。当 API 改变时更新版本号。
-                </p>
-                
-                <h3>5. 性能考虑</h3>
-                <p>
-                    优化 Skill 的性能。考虑缓存、异步执行等优化方法。
-                </p>
-                
-                <div class="key-point">
-                    <strong>关键点：</strong> 好的 Skill 应该是可复用、可测试、易维护的。
-                </div>
-            </section>
-            
-            <section id="summary">
-                <h2>总结</h2>
-                <p>
-                    编写自定义 Skill 是扩展 Agent 功能的核心能力。通过遵循标准的结构、完善的测试和最佳实践，可以创建高质量、可复用的 Skill。关键要点包括：
-                </p>
-                <div class="highlight">
-                    <strong>核心要点：</strong>
-                    <ul>
-                        <li><strong>Skill 结构：</strong> 继承基类、实现 execute 和 validate_input 方法</li>
-                        <li><strong>实现步骤：</strong> 定义类、实现核心逻辑、处理错误、提供元数据</li>
-                        <li><strong>测试：</strong> 单元测试、集成测试、边界测试</li>
-                        <li><strong>部署：</strong> 打包、注册、验证、监控</li>
-                        <li><strong>最佳实践：</strong> 清晰接口、错误处理、文档、版本管理、性能优化</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <div id="page-nav"></div>
+      <section id="problem">
+        <h2>这项能力在 DeerFlow 中解决什么问题</h2>
+        <p>当你希望 DeerFlow 的 agent 形成某种稳定工作法，例如固定的排障流程、特定格式的文档生成方式、某类外部系统的使用约定，最合适的扩展点通常不是再加一个 tool，而是做一个自定义 skill。skill 更适合承载工作说明、模板、参考资料和配套脚本资源。</p>
+        <div class="warning">
+          <strong>分工边界：</strong> 本章讲用户如何定义和构建自定义 skills；<code>11-skills-system.html</code> 讲整个 skills 系统如何运作。
         </div>
+      </section>
+
+      <section id="codebase">
+        <h2>这项能力在代码库中的位置</h2>
+        <table class="comparison-table">
+          <tr>
+            <th>路径</th>
+            <th>职责</th>
+            <th>为什么要看</th>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/skills/</code></td>
+            <td>skills 类型、校验、存储、权限与 slash 解析</td>
+            <td>这是自定义 skill 真正落地的主目录</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/skills/installer.py</code></td>
+            <td>解包 <code>.skill</code> 归档、安全扫描、路径检查与安装</td>
+            <td>说明 DeerFlow 接受的不是任意 ZIP，而是受控 skill 包</td>
+          </tr>
+          <tr>
+            <td><code>backend/app/gateway/routers/skills.py</code></td>
+            <td>列出、安装、编辑、删除、回滚自定义 skills</td>
+            <td>这是你通过 Gateway 管理 skill 的入口</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code></td>
+            <td>延迟工具发现</td>
+            <td>很多 skill 会教 agent 什么时候去搜索工具，而不是自己替代工具</td>
+          </tr>
+        </table>
+      </section>
+
+      <section id="flow">
+        <h2>真实运行链路或数据链路</h2>
+        <div class="code-block"><code>author creates skill folder
+  -> SKILL.md + optional references/templates/scripts
+  -> package as .skill archive
+  -> backend/app/gateway/routers/skills.py
+  -> backend/packages/harness/deerflow/skills/installer.py
+  -> safe_extract + security scan + storage install
+  -> skill enabled in storage / config
+  -> lead agent prompt sees enabled skill in later runs</code></div>
+        <p>如果是浏览器或脚本触发安装，自定义 skill 往往先出现在某个 thread 的 artifact 或输出目录里，再由 <code>backend/app/gateway/routers/skills.py</code> 通过 thread 虚拟路径找到归档并安装。安装后，skills storage 会把它归入 DeerFlow 的可管理 skills 集合，后续 run 才能看到它的 skills 元数据并在需要时再去读取具体内容。</p>
+        <p>这条链非常重要，因为它说明“写一个 skill 文件”并不等于“agent 立刻可用”。真正生效之前，还要经过归档、扫描、安装、启用和 prompt 刷新这几步。</p>
+      </section>
+
+      <section id="config">
+        <h2>配置面与使用方式</h2>
+        <ul>
+          <li>自定义 skill 至少要包含 <code>SKILL.md</code>，其余支持文件通常落在 <code>references/</code>、<code>templates/</code> 或 <code>scripts/</code> 下。</li>
+          <li><code>backend/packages/harness/deerflow/skills/installer.py</code> 会拒绝路径穿越、符号链接和不安全归档成员，所以 skill 包结构必须干净且可扫描。</li>
+          <li><code>backend/app/gateway/routers/skills.py</code> 提供安装、启停、编辑、查看历史和回滚能力，这意味着自定义 skill 不是“一次拷贝完就再也不管”的静态资源。</li>
+          <li><code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 让 skill 可以把“先搜索某类 MCP 工具再执行”的工作法教给 agent，而不是把所有工具 schema 永远写死进 skill 文本。</li>
+        </ul>
+      </section>
+
+      <section id="tradeoffs">
+        <h2>关键实现细节与权衡</h2>
+        <ul>
+          <li>DeerFlow 选择 skill 目录 + 归档安装模型，而不是让用户直接往数据库里写一段提示词，这样能携带模板、参考资料和脚本。</li>
+          <li><code>backend/packages/harness/deerflow/skills/installer.py</code> 的安全扫描会增加安装成本，但它是把自定义 skill 当成系统边界处理的必要代价。</li>
+          <li>Gateway 支持在线编辑和回滚自定义 skills，这对迭代很友好，但也意味着 skill 不是“写完就固定”的一次性产物。</li>
+          <li>skill 更适合提供工作法和资源，而不是直接代替 runtime orchestration；这能保持边界清晰，但也要求用户分清该用 skill、tool 还是 subagent。</li>
+        </ul>
+      </section>
+
+      <section id="limits">
+        <h2>当前限制、边界与非目标</h2>
+        <ul>
+          <li>自定义 skill 不是任意插件执行环境。是否能携带脚本、脚本是否会在后续场景中被使用，都要服从 DeerFlow 当前的安全与工具边界。</li>
+          <li>写好 <code>SKILL.md</code> 并不会自动给 agent 新增 API 权限；如果需要新工具，还要回到工具与配置层处理。</li>
+          <li>本章不教你修改 skills 系统底层实现，那是第 11 章和源码层面的主题。</li>
+          <li>自定义 skill 的价值主要体现在后续运行时“变得可见且可按需激活”，而不是安装动作本身。默认情况下进入提示面的是 skills 元数据与使用规则；完整 <code>SKILL.md</code> 通常要靠按需 <code>read_file</code>，或通过显式 slash 激活进入更直接的注入路径。</li>
+        </ul>
+      </section>
+
+      <section id="relations">
+        <h2>它与 DeerFlow 其他能力的关系</h2>
+        <ul>
+          <li>它和第 11 章 skills 系统相连，因为第 11 章解释系统怎么运作，本章解释你如何往系统里放入自己的能力包。</li>
+          <li>它和第 20 章上下文工程相连，因为启用中的自定义 skill 会进入后续 run 的可见 skills 提示面，而完整 skill 内容则通常按需读取或在显式激活时进入更直接的运行上下文。</li>
+          <li>它和第 23 章高级模式相连，因为很多实用 skill 会指导 agent 何时使用 <code>tool_search</code>、何时委派任务、如何分阶段执行。</li>
+          <li>它和 Gateway API 相连，因为安装、编辑、回滚和启停这些动作都通过 <code>backend/app/gateway/routers/skills.py</code> 完成。</li>
+        </ul>
+        <div class="highlight">
+          建议把 <code>backend/packages/harness/deerflow/skills/</code>、<code>backend/packages/harness/deerflow/skills/installer.py</code>、<code>backend/app/gateway/routers/skills.py</code> 和 <code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 放在一起读。
+        </div>
+      </section>
+
+      <div id="page-nav"></div>
+    </div>
   </main>
 </div>
 <script src="assets/nav.js"></script>

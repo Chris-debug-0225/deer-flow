@@ -6,215 +6,7 @@
     <title>Gateway API：与外界的接口 · DeerFlow 学习系列</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
-        /* 页面特定样式 - 与深色主题兼容 */
-        
-        .toc {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--accent);
-            padding: 20px;
-            margin-bottom: 40px;
-            border-radius: 8px;
-        }
-        
-        .toc h2 {
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .toc li:before {
-            content: "▸";
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: bold;
-        }
-        
-        .toc a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .toc a:hover {
-            color: var(--accent-2);
-            text-decoration: underline;
-        }
-        
-        section {
-            margin-bottom: 50px;
-        }
-        
-        /* 代码块样式 */
-        .code-block {
-            background: var(--bg-code);
-            color: var(--text-soft);
-            padding: 18px 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 18px 0;
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 13.5px;
-            line-height: 1.65;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-        }
-        
-        .code-block code {
-            background: none;
-            border: none;
-            padding: 0;
-            color: var(--text-soft);
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            white-space: pre;
-            display: block;
-        }
-        
-        .code-block::-webkit-scrollbar {
-            height: 9px;
-        }
-        
-        .code-block::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-        
-        /* 提示框样式 */
-        .highlight {
-            background: var(--bg-soft);
-            padding: 15px 18px;
-            border-left: 4px solid var(--orange);
-            margin: 18px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .key-point {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--green);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--green);
-        }
-        
-        .key-point strong {
-            color: var(--green-soft);
-            font-weight: 650;
-        }
-        
-        .example-case {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--orange);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .example-case strong {
-            color: var(--orange);
-            font-weight: 650;
-        }
-        
-        .warning {
-            background: var(--bg-soft);
-            border-left: 4px solid #ff6b6b;
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid #ff6b6b;
-        }
-        
-        .warning strong {
-            color: #ff6b6b;
-            font-weight: 650;
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 18px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-        }
-        
-        .comparison-table th {
-            background: var(--bg-soft);
-            color: var(--text);
-            padding: 11px 15px;
-            text-align: left;
-            font-weight: 650;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .comparison-table td {
-            padding: 11px 15px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-soft);
-        }
-        
-        .comparison-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .comparison-table tr:hover td {
-            background: rgba(88,166,255,0.04);
-        }
-        
-        .flow-diagram {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        
-        .flow-step {
-            background: var(--bg-card);
-            border: 1.5px solid var(--accent);
-            color: var(--text);
-            padding: 12px 22px;
-            border-radius: 10px;
-            min-width: 120px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .flow-arrow {
-            font-size: 20px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            padding: 2px 0;
-        }
+        section { margin-bottom: 50px; }
     </style>
 </head>
 <body>
@@ -223,423 +15,157 @@
   <nav class="sidebar" id="sidebar"></nav>
   <main class="main">
     <div class="content">
-            <h1>Gateway API：与外界的接口</h1>
-            <p class="page-subtitle">DeerFlow 学习系列 - 第 15 章</p>
-            
-            <div class="toc">
-                <h2>📖 目录</h2>
-                <ul>
-                    <li><a href="#introduction">简介</a></li>
-                    <li><a href="#gateway-concept">Gateway的概念</a></li>
-                    <li><a href="#api-design">API设计</a></li>
-                    <li><a href="#request-handling">请求处理</a></li>
-                    <li><a href="#response-format">响应格式</a></li>
-                    <li><a href="#authentication">身份认证与授权</a></li>
-                    <li><a href="#rate-limiting">速率限制与监控</a></li>
-                    <li><a href="#best-practices">最佳实践</a></li>
-                    <li><a href="#summary">总结</a></li>
-                </ul>
-            </div>
-            
-            <section id="introduction">
-                <h2>简介</h2>
-                <p>
-                    Gateway API 是 DeerFlow Agent 与外部系统通信的桥梁。通过 Gateway，用户可以与 Agent 进行交互，外部系统可以调用 Agent 的功能。本章讲解 Gateway 的设计原理、API 接口设计、请求处理和响应格式等内容。
-                </p>
-                <div class="key-point">
-                    <strong>学习目标：</strong>
-                    <ul>
-                        <li>理解 Gateway 的作用和重要性</li>
-                        <li>掌握 API 设计的最佳实践</li>
-                        <li>学会处理各种请求和响应</li>
-                        <li>了解安全性和性能优化</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <section id="gateway-concept">
-                <h2>Gateway的概念</h2>
-                <p>
-                    Gateway 是一个中间层，负责接收来自外部的请求，将其转发给 Agent 处理，然后返回结果。Gateway 的主要职责包括：
-                </p>
-                <ul>
-                    <li><strong>请求路由</strong>：将请求路由到合适的 Agent</li>
-                    <li><strong>身份认证</strong>：验证请求的合法性</li>
-                    <li><strong>请求转换</strong>：将外部格式转换为 Agent 能理解的格式</li>
-                    <li><strong>响应转换</strong>：将 Agent 的结果转换为外部格式</li>
-                    <li><strong>错误处理</strong>：处理各种错误情况</li>
-                    <li><strong>日志记录</strong>：记录所有请求和响应</li>
-                </ul>
-                
-                <h3>Gateway 架构</h3>
-                <div class="flow-diagram">
-                    <div class="flow-step">外部请求</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">Gateway</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">Agent</div>
-                </div>
-                <div style="text-align: center; margin: 10px 0;">↓</div>
-                <div class="flow-diagram">
-                    <div class="flow-step">处理结果</div>
-                    <div class="flow-arrow">←</div>
-                    <div class="flow-step">Gateway</div>
-                    <div class="flow-arrow">←</div>
-                    <div class="flow-step">外部响应</div>
-                </div>
-            </section>
-            
-            <section id="api-design">
-                <h2>API设计</h2>
-                <p>
-                    良好的 API 设计是 Gateway 的基础。API 应该清晰、易用、可扩展。
-                </p>
-                
-                <h3>RESTful API 设计</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>HTTP 方法</th>
-                            <th>操作</th>
-                            <th>示例</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>POST</strong></td>
-                            <td>创建新请求或执行 Agent</td>
-                            <td>POST /api/agents/chat</td>
-                        </tr>
-                        <tr>
-                            <td><strong>GET</strong></td>
-                            <td>获取信息或历史记录</td>
-                            <td>GET /api/agents/history</td>
-                        </tr>
-                        <tr>
-                            <td><strong>PUT</strong></td>
-                            <td>更新配置或状态</td>
-                            <td>PUT /api/agents/config</td>
-                        </tr>
-                        <tr>
-                            <td><strong>DELETE</strong></td>
-                            <td>删除资源</td>
-                            <td>DELETE /api/sessions/{id}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <h3>API 端点设计</h3>
-                <div class="code-block"><code>
-<span class="tok-com"># 基础端点</span>
-POST /api/v1/agents/{agent_id}/chat
-GET /api/v1/agents/{agent_id}/status
-GET /api/v1/agents/{agent_id}/history
-POST /api/v1/agents/{agent_id}/execute
-GET /api/v1/sessions/{session_id}
-DELETE /api/v1/sessions/{session_id}
+      <h1>Gateway API：与外界的接口</h1>
+      <p class="page-subtitle">DeerFlow 学习系列 - 第 15 章</p>
 
-<span class="tok-com"># 管理端点</span>
-GET /api/v1/agents
-POST /api/v1/agents
-GET /api/v1/agents/{agent_id}
-PUT /api/v1/agents/{agent_id}
-DELETE /api/v1/agents/{agent_id}
+      <div class="deerflow-map">
+        <h3>本章讲的不是“薄代理层”</h3>
+        <p>DeerFlow 当前默认运行时并不是独立 LangGraph Server 再外面套一层轻 API。真正默认入口是 FastAPI Gateway：它持有路由、认证、线程语义、run lifecycle、SSE streaming、uploads、artifacts，以及面向前端和 IM 渠道的兼容接口。理解这一章的关键，是把 Gateway 看成 DeerFlow 的运行时承载体，而不是转发器。</p>
+      </div>
 
-<span class="tok-com"># 健康检查</span>
-GET /api/v1/health
-GET /api/v1/metrics
-</code></div>
-            </section>
-            
-            <section id="request-handling">
-                <h2>请求处理</h2>
-                <p>
-                    Gateway 需要正确处理各种类型的请求，包括验证、转换和路由。
-                </p>
-                
-                <h3>请求处理流程</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">Gateway</span>:
-    <span class="tok-str">"""Gateway API 处理器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">handle_request</span>(<span class="tok-kw">self</span>, request: <span class="tok-cls">Request</span>) -> <span class="tok-cls">Response</span>:
-        <span class="tok-str">"""处理请求"""</span>
-        <span class="tok-com"># 1. 验证请求</span>
-        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-kw">self</span>.<span class="tok-fn">validate_request</span>(request):
-            <span class="tok-kw">return</span> <span class="tok-cls">Response</span>(status=<span class="tok-num\">400</span>, error=<span class="tok-str">"Invalid request"</span>)
-        
-        <span class="tok-com"># 2. 认证</span>
-        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-kw">self</span>.<span class="tok-fn">authenticate</span>(request):
-            <span class="tok-kw">return</span> <span class="tok-cls">Response</span>(status=<span class="tok-num\">401</span>, error=<span class="tok-str">"Unauthorized"</span>)
-        
-        <span class="tok-com"># 3. 授权检查</span>
-        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-kw">self</span>.<span class="tok-fn">authorize</span>(request):
-            <span class="tok-kw">return</span> <span class="tok-cls">Response</span>(status=<span class="tok-num\">403</span>, error=<span class="tok-str">"Forbidden"</span>)
-        
-        <span class="tok-com"># 4. 路由到 Agent</span>
-        agent = <span class="tok-kw">self</span>.<span class="tok-fn">route_to_agent</span>(request)
-        
-        <span class="tok-com"># 5. 执行请求</span>
-        result = agent.<span class="tok-fn">execute</span>(request.data)
-        
-        <span class="tok-com"># 6. 返回响应</span>
-        <span class="tok-kw">return</span> <span class="tok-cls">Response</span>(status=<span class="tok-num\">200</span>, data=result)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">validate_request</span>(<span class="tok-kw">self</span>, request: <span class="tok-cls">Request</span>) -> <span class="tok-str\">bool</span>:
-        <span class="tok-str">"""验证请求格式"""</span>
-        <span class="tok-kw">return</span> request.method <span class="tok-kw\">in</span> [<span class="tok-str">"GET"</span>, <span class="tok-str">"POST"</span>, <span class="tok-str">"PUT"</span>, <span class="tok-str">"DELETE"</span>]
-</code></div>
-                
-                <div class="example-case">
-                    <strong>示例：</strong> 请求处理的实际应用<br>
-                    <div class="code-block"><code>
-<span class="tok-com"># 客户端请求</span>
-POST /api/v1/agents/chat_agent/chat
-Content-Type: application/json
-Authorization: Bearer token123
+      <div class="toc">
+        <h3>目录</h3>
+        <ul>
+          <li><a href="#problem">这项能力在 DeerFlow 中解决什么问题</a></li>
+          <li><a href="#codebase">这项能力在代码库中的位置</a></li>
+          <li><a href="#flow">真实运行链路或数据链路</a></li>
+          <li><a href="#config">配置面与使用方式</a></li>
+          <li><a href="#tradeoffs">关键实现细节与权衡</a></li>
+          <li><a href="#limits">当前限制、边界与非目标</a></li>
+          <li><a href="#relations">它与 DeerFlow 其他能力的关系</a></li>
+        </ul>
+      </div>
 
-{
-    <span class="tok-str">"message"</span>: <span class="tok-str">"你好，请帮我分析这个数据"</span>,
-    <span class="tok-str">"session_id"</span>: <span class="tok-str">"sess_12345"</span>,
-    <span class="tok-str">"context"</span>: {
-        <span class="tok-str">"user_id"</span>: <span class="tok-str">"user_001"</span>,
-        <span class="tok-str">"timestamp"</span>: <span class="tok-str">"2024-01-15T10:30:00Z"</span>
-    }
-}
-
-<span class="tok-com"># Gateway 处理流程</span>
-<span class="tok-com"># 1. 验证 JSON 格式 ✓</span>
-<span class="tok-com"># 2. 验证 Authorization header ✓</span>
-<span class="tok-com"># 3. 检查用户权限 ✓</span>
-<span class="tok-com"># 4. 路由到 chat_agent ✓</span>
-<span class="tok-com"># 5. 执行请求 ✓</span>
-<span class="tok-com"># 6. 返回响应</span>
-</code></div>
-                </div>
-            </section>
-            
-            <section id="response-format">
-                <h2>响应格式</h2>
-                <p>
-                    统一的响应格式使客户端更容易处理结果。Gateway 应该返回结构化的响应。
-                </p>
-                
-                <h3>标准响应格式</h3>
-                <div class="code-block"><code>
-{
-    <span class="tok-str">"status"</span>: <span class="tok-num\">200</span>,
-    <span class="tok-str">"message"</span>: <span class="tok-str">"Success"</span>,
-    <span class="tok-str">"data"</span>: {
-        <span class="tok-str">"result"</span>: <span class="tok-str">"处理结果"</span>,
-        <span class="tok-str">"execution_time"</span>: <span class="tok-num\">1.23</span>,
-        <span class="tok-str">"agent_id"</span>: <span class="tok-str">"chat_agent"</span>
-    },
-    <span class="tok-str">"timestamp"</span>: <span class="tok-str">"2024-01-15T10:30:05Z"</span>,
-    <span class="tok-str">"request_id"</span>: <span class="tok-str">"req_abc123"</span>
-}
-</code></div>
-                
-                <h3>错误响应格式</h3>
-                <div class="code-block"><code>
-{
-    <span class="tok-str">"status"</span>: <span class="tok-num\">500</span>,
-    <span class="tok-str">"message"</span>: <span class="tok-str">"Internal Server Error"</span>,
-    <span class="tok-str">"error"</span>: {
-        <span class="tok-str">"code"</span>: <span class="tok-str">"AGENT_EXECUTION_FAILED"</span>,
-        <span class="tok-str">"details"</span>: <span class="tok-str">"Agent 执行失败：超时"</span>,
-        <span class="tok-str">"trace_id"</span>: <span class="tok-str">"trace_xyz789"</span>
-    },
-    <span class="tok-str">"timestamp"</span>: <span class="tok-str">"2024-01-15T10:30:05Z"</span>,
-    <span class="tok-str">"request_id"</span>: <span class="tok-str">"req_abc123"</span>
-}
-</code></div>
-                
-                <div class="key-point">
-                    <strong>关键点：</strong> 响应应该包含足够的信息供客户端调试，但不应该暴露敏感的内部细节。
-                </div>
-            </section>
-            
-            <section id="authentication">
-                <h2>身份认证与授权</h2>
-                <p>
-                    Gateway 必须验证请求的合法性，确保只有授权的用户或系统可以访问 Agent。
-                </p>
-                
-                <h3>认证方式对比</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>认证方式</th>
-                            <th>特点</th>
-                            <th>适用场景</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>API Key</strong></td>
-                            <td>简单，适合服务间通信</td>
-                            <td>内部服务、第三方集成</td>
-                        </tr>
-                        <tr>
-                            <td><strong>OAuth 2.0</strong></td>
-                            <td>标准，支持委托授权</td>
-                            <td>用户认证、第三方应用</td>
-                        </tr>
-                        <tr>
-                            <td><strong>JWT Token</strong></td>
-                            <td>无状态，可扩展</td>
-                            <td>移动应用、SPA、微服务</td>
-                        </tr>
-                        <tr>
-                            <td><strong>mTLS</strong></td>
-                            <td>双向认证，安全性高</td>
-                            <td>高安全要求的系统</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <h3>认证实现示例</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">AuthenticationManager</span>:
-    <span class="tok-str">"""认证管理器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">authenticate</span>(<span class="tok-kw">self</span>, request: <span class="tok-cls">Request</span>) -> <span class="tok-str">bool</span>:
-        <span class="tok-str">"""验证请求的合法性"""</span>
-        <span class="tok-com"># 获取 Authorization header</span>
-        auth_header = request.<span class="tok-fn">get_header</span>(<span class="tok-str">"Authorization"</span>)
-        <span class="tok-kw">if</span> <span class="tok-kw">not</span> auth_header:
-            <span class="tok-kw">return</span> <span class="tok-kw">False</span>
-        
-        <span class="tok-com"># 解析 token</span>
-        token = auth_header.<span class="tok-fn">split</span>(<span class="tok-str">" "</span>)[<span class="tok-num">1</span>]
-        
-        <span class="tok-com"># 验证 token</span>
-        <span class="tok-kw">try</span>:
-            payload = <span class="tok-kw">self</span>.<span class="tok-fn">verify_token</span>(token)
-            request.user = payload[<span class="tok-str">"user_id"</span>]
-            <span class="tok-kw">return</span> <span class="tok-kw">True</span>
-        <span class="tok-kw">except</span>:
-            <span class="tok-kw">return</span> <span class="tok-kw">False</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">authorize</span>(<span class="tok-kw">self</span>, request: <span class="tok-cls">Request</span>, resource: <span class="tok-str">str</span>) -> <span class="tok-str">bool</span>:
-        <span class="tok-str">"""检查用户是否有权限访问资源"""</span>
-        user_permissions = <span class="tok-kw">self</span>.<span class="tok-fn">get_user_permissions</span>(request.user)
-        <span class="tok-kw">return</span> resource <span class="tok-kw">in</span> user_permissions
-</code></div>
-            </section>
-            
-            <section id="rate-limiting">
-                <h2>速率限制与监控</h2>
-                <p>
-                    为了保护 Gateway 和 Agent 不被滥用，需要实施速率限制和监控。
-                </p>
-                
-                <h3>速率限制策略</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">RateLimiter</span>:
-    <span class="tok-str">"""速率限制器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, requests_per_minute: <span class="tok-num">100</span>):
-        <span class="tok-kw">self</span>.limit = requests_per_minute
-        <span class="tok-kw">self</span>.requests = {}
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">is_allowed</span>(<span class="tok-kw">self</span>, user_id: <span class="tok-str">str</span>) -> <span class="tok-str">bool</span>:
-        <span class="tok-str">"""检查用户是否超过速率限制"""</span>
-        now = <span class="tok-fn">time</span>.<span class="tok-fn">time</span>()
-        
-        <span class="tok-com"># 获取用户的请求记录</span>
-        <span class="tok-kw">if</span> user_id <span class="tok-kw">not</span> <span class="tok-kw">in</span> <span class="tok-kw">self</span>.requests:
-            <span class="tok-kw">self</span>.requests[user_id] = []
-        
-        <span class="tok-com"># 清理过期的请求记录（超过1分钟）</span>
-        cutoff = now - <span class="tok-num">60</span>
-        <span class="tok-kw">self</span>.requests[user_id] = [
-            t <span class="tok-kw">for</span> t <span class="tok-kw">in</span> <span class="tok-kw">self</span>.requests[user_id] <span class="tok-kw">if</span> t > cutoff
-        ]
-        
-        <span class="tok-com"># 检查是否超过限制</span>
-        <span class="tok-kw">if</span> <span class="tok-fn">len</span>(<span class="tok-kw">self</span>.requests[user_id]) >= <span class="tok-kw">self</span>.limit:
-            <span class="tok-kw">return</span> <span class="tok-kw">False</span>
-        
-        <span class="tok-com"># 记录新请求</span>
-        <span class="tok-kw">self</span>.requests[user_id].<span class="tok-fn">append</span>(now)
-        <span class="tok-kw">return</span> <span class="tok-kw">True</span>
-</code></div>
-                
-                <h3>监控指标</h3>
-                <p>
-                    Gateway 应该监控关键指标，以便及时发现和解决问题：
-                </p>
-                <div class="key-point">
-                    <strong>关键监控指标：</strong>
-                    <ul>
-                        <li>请求速率（RPS）：每秒请求数</li>
-                        <li>响应时间：平均、P95、P99 响应时间</li>
-                        <li>错误率：各种错误的比例</li>
-                        <li>认证失败率：认证失败的请求比例</li>
-                        <li>Agent 可用性：Agent 的在线率</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <section id="best-practices">
-                <h2>最佳实践</h2>
-                
-                <h3>1. 版本管理</h3>
-                <p>
-                    在 API 路径中包含版本号（如 /api/v1/），便于向后兼容和升级。
-                </p>
-                
-                <h3>2. 速率限制</h3>
-                <p>
-                    实施速率限制防止滥用。可以按用户、IP 或 API 密钥进行限制。
-                </p>
-                
-                <h3>3. 日志和监控</h3>
-                <p>
-                    记录所有请求和响应，监控 API 性能和错误率。
-                </p>
-                
-                <h3>4. 安全性</h3>
-                <p>
-                    使用 HTTPS、API 密钥、OAuth 等安全机制保护 API。
-                </p>
-                
-                <h3>5. 文档</h3>
-                <p>
-                    提供详细的 API 文档，包括示例、错误代码和最佳实践。
-                </p>
-                
-                <div class="warning">
-                    <strong>警告：</strong> 不要在响应中暴露内部错误信息或堆栈跟踪。这可能导致安全漏洞。
-                </div>
-            </section>
-            
-            <section id="summary">
-                <h2>总结</h2>
-                <p>
-                    Gateway API 是 DeerFlow Agent 与外部系统通信的关键桥梁。通过良好的 API 设计、请求处理、响应管理、身份认证和速率限制，可以构建安全、高效的 Agent 服务。本章深入讲解了 Gateway 的设计和实现。
-                </p>
-                <div class="highlight">
-                    <strong>核心要点总结：</strong>
-                    <ul>
-                        <li><strong>Gateway 职责：</strong> 请求路由、身份认证、请求/响应转换、错误处理、日志记录</li>
-                        <li><strong>API 设计：</strong> RESTful 风格、清晰的端点设计、版本管理</li>
-                        <li><strong>请求处理：</strong> 验证、认证、授权、路由、执行、响应六步流程</li>
-                        <li><strong>响应格式：</strong> 统一的成功/错误响应格式，包含足够的调试信息</li>
-                        <li><strong>身份认证：</strong> API Key、OAuth 2.0、JWT Token、mTLS 等多种方式</li>
-                        <li><strong>速率限制：</strong> 保护系统不被滥用，监控关键指标</li>
-                        <li><strong>最佳实践：</strong> 版本管理、速率限制、日志监控、安全保护、完整文档</li>
-                    </ul>
-                </div>
-                
-                <div class="key-point">
-                    <strong>Gateway 设计建议：</strong> Gateway 是系统的关键组件，需要高可用、高性能和高安全性。在设计时要充分考虑扩展性、监控和故障恢复能力。同时要定期审查和更新安全策略，应对新的威胁。
-                </div>
-            </section>
-            
-            <div id="page-nav"></div>
+      <section id="problem">
+        <h2>这项能力在 DeerFlow 中解决什么问题</h2>
+        <p>DeerFlow 需要一个统一入口，把浏览器前端、LangGraph SDK 兼容客户端、IM channel worker、自定义脚本和本地文件生命周期都收进同一套运行时语义里。Gateway 正是用来解决这个问题的：它不仅暴露 REST API，还真正拥有线程、run、stream、上传、工件、认证和清理行为。</p>
+        <p>这也是为什么本章主题不是“怎么设计 API 风格”，而是“为什么 DeerFlow 把默认 runtime 放在 Gateway 里”。如果把 Gateway 误解成薄代理层，就会错过 DeerFlow 当前仓库最重要的架构事实。</p>
+        <div class="key-point">
+          <strong>必须明确的一点：</strong>
+          <code>/api/langgraph/*</code> 是 nginx 重写后的 Gateway 兼容路径，不是 DeerFlow 核心架构里另起的一套运行时。根据 <code>backend/docs/API.md</code> 与 <code>backend/docs/ARCHITECTURE.md</code>，公开的 LangGraph-compatible API 仍然由 Gateway 自己承接。
         </div>
+      </section>
+
+      <section id="codebase">
+        <h2>这项能力在代码库中的位置</h2>
+        <table class="comparison-table">
+          <tr>
+            <th>路径</th>
+            <th>职责</th>
+            <th>为什么要看</th>
+          </tr>
+          <tr>
+            <td><code>backend/app/gateway/app.py</code></td>
+            <td>Gateway 应用入口、middleware、lifespan、runtime 初始化</td>
+            <td>这是默认运行时真正启动的位置</td>
+          </tr>
+          <tr>
+            <td><code>backend/app/gateway/routers/thread_runs.py</code></td>
+            <td>线程级 runs、stream、wait、cancel、join</td>
+            <td>说明 run lifecycle 不在“外部 LangGraph 服务”里，而在 Gateway 自己手上</td>
+          </tr>
+          <tr>
+            <td><code>backend/app/gateway/routers/threads.py</code></td>
+            <td>thread 创建、状态、history、删除与本地清理</td>
+            <td>说明 thread 语义同时覆盖 checkpointer 与 DeerFlow 本地目录</td>
+          </tr>
+          <tr>
+            <td><code>backend/app/gateway/routers/uploads.py</code></td>
+            <td>上传、列表、限制、虚拟路径与 sandbox 同步</td>
+            <td>Gateway 负责把文件接入 thread runtime，而不是让前端直接碰磁盘</td>
+          </tr>
+          <tr>
+            <td><code>backend/app/gateway/routers/artifacts.py</code></td>
+            <td>工件读取、虚拟路径解析、活跃内容下载保护</td>
+            <td>说明 artifacts 也是运行时的一部分，而不只是静态文件服务</td>
+          </tr>
+          <tr>
+            <td><code>backend/docs/API.md</code></td>
+            <td>公开 API 契约与兼容路径说明</td>
+            <td>这里直接写明了 `/api/langgraph/*` 如何映射到 Gateway</td>
+          </tr>
+          <tr>
+            <td><code>backend/docs/ARCHITECTURE.md</code></td>
+            <td>整体部署图与 Gateway embedded runtime 描述</td>
+            <td>帮助把路由文件放回真实架构图中理解</td>
+          </tr>
+        </table>
+      </section>
+
+      <section id="flow">
+        <h2>真实运行链路或数据链路</h2>
+        <p>一次典型的 DeerFlow Web 运行链路可以压缩成下面这条主线：</p>
+        <div class="code-block"><code>nginx /api/langgraph/threads/{thread_id}/runs/stream
+  -> rewrite to Gateway-owned /api/* compatibility path
+  -> backend/app/gateway/app.py
+  -> backend/app/gateway/routers/thread_runs.py
+  -> app.gateway.services.start_run(...)
+  -> deerflow runtime worker / stream bridge
+  -> lead agent runtime
+  -> SSE back through Gateway response</code></div>
+        <p>删除线程时，链路又会回到 <code>backend/app/gateway/routers/threads.py</code>：它不仅会删 checkpoint / thread meta，还会调用 DeerFlow 的路径管理删除线程目录。上传文件时，请求进入 <code>backend/app/gateway/routers/uploads.py</code>，生成 thread uploads、虚拟路径和 artifact URL；读取工件时，再由 <code>backend/app/gateway/routers/artifacts.py</code> 按 thread 虚拟路径解析与返回。</p>
+        <div class="highlight">
+          <strong>关键理解：</strong>
+          Gateway 不是“请求进来转发给别的 DeerFlow 核心”。它自己就拥有 thread、run、upload、artifact 这些核心 runtime surface。
+        </div>
+      </section>
+
+      <section id="config">
+        <h2>配置面与使用方式</h2>
+        <p>对外使用时，调用方主要看到两组路径：</p>
+        <ul>
+          <li><code>/api/langgraph/*</code> 提供 LangGraph-compatible 线程与运行接口，方便前端和 SDK 沿用 LangGraph wire contract。</li>
+          <li><code>/api/*</code> 提供 DeerFlow 自己的 models、skills、uploads、artifacts、channels 等 REST surface。</li>
+        </ul>
+        <p>但从部署面看，这两组能力都在 <code>backend/app/gateway/app.py</code> 里被统一挂载。根据 <code>backend/docs/API.md</code>，nginx 是统一反向代理入口；根据 <code>backend/docs/ARCHITECTURE.md</code>，默认部署并不会额外跑一套独立 LangGraph runtime 来承接浏览器流量。</p>
+        <p>Gateway 还直接暴露了和浏览器安全相关的运行面：<code>backend/app/gateway/app.py</code> 会挂上 CORS、<code>CSRFMiddleware</code> 和 <code>AuthMiddleware</code>。这意味着 thread/run API 不只是“能调用”，还必须通过 DeerFlow 当前定义的 CSRF 和登录态保护。</p>
+        <p>实际使用时，前端会先用 thread API 创建会话，再用 run/stream API 发起执行；文件相关能力则通过 <code>backend/app/gateway/routers/uploads.py</code> 和 <code>backend/app/gateway/routers/artifacts.py</code> 进入同一个 thread 语义空间。IM channel 则通过内部认证 token 和匹配 CSRF 头进入同一 Gateway surface，而不是直接调用 runtime 私有函数。</p>
+      </section>
+
+      <section id="tradeoffs">
+        <h2>关键实现细节与权衡</h2>
+        <ul>
+          <li><code>backend/app/gateway/app.py</code> 在 lifespan 里初始化 LangGraph runtime、认证升级迁移和 channel service，说明 Gateway 拿着应用启动期的关键所有权。</li>
+          <li><code>backend/app/gateway/routers/thread_runs.py</code> 直接实现 create / stream / wait / cancel / join，这比“反代到远端 API”更紧耦合，但也让 run manager、stream bridge 与鉴权能保持一致。</li>
+          <li><code>backend/app/gateway/routers/threads.py</code> 把 LangGraph state 和 DeerFlow 本地 thread 目录一起管理，代价是 thread 删除不只是删一行元数据，而是多层清理。</li>
+          <li><code>backend/app/gateway/routers/uploads.py</code> 与 <code>backend/app/gateway/routers/artifacts.py</code> 都坚持 thread 虚拟路径语义，这让 sandbox、前端下载和用户隔离可以共用同一套路径模型。</li>
+          <li><code>backend/docs/ARCHITECTURE.md</code> 明确把默认 Gateway worker 约束在单 worker 语义上，原因不是部署偷懒，而是 run ownership、进程内 stream bridge 与部分 channel/service 生命周期目前都绑定在当前进程。</li>
+          <li><code>backend/packages/harness/deerflow/client.py</code> 与 Gateway 共享同一 agent runtime 和模型/技能装配逻辑，但它故意保留同步、进程内的调用体验；这正是为什么 DeerFlow 既有 Gateway 路径，也有 embedded client 路径。</li>
+          <li><code>backend/docs/API.md</code> 选择对外维持 LangGraph-compatible 路径，换来生态兼容性；代价是读代码时必须知道“公开路径名”和“内部原生 router 前缀”不是一回事。</li>
+        </ul>
+        <div class="key-point">
+          <strong>核心取舍：</strong>
+          DeerFlow 把默认运行时嵌进 Gateway，牺牲了一点“组件边界看起来更纯”的抽象感，换来了认证、线程、文件、streaming 和渠道接入的一致性。
+        </div>
+      </section>
+
+      <section id="limits">
+        <h2>当前限制、边界与非目标</h2>
+        <ul>
+          <li>当前默认架构不是“Gateway 前面随便横向扩，多 worker 自动安全”。run ownership、stream bridge 和部分 channel 语义仍然依赖当前进程内状态。</li>
+          <li><code>/api/langgraph/*</code> 是兼容 surface，不意味着 DeerFlow 内部所有实现都按 LangGraph Server 原生模块组织。</li>
+          <li>Gateway 受 CORS、CSRF、auth 和 internal channel 调用机制共同约束，因此它也不是一个“任何内部流量都可无保护绕过”的裸 API 面。</li>
+          <li>Gateway 负责 artifacts 和 uploads 的 HTTP 面，但它不是通用对象存储服务，也不是任意静态站点服务器。</li>
+          <li>本章不覆盖所有 router；重点是默认 runtime 为什么落在 Gateway，以及 thread/run/uploads/artifacts 这几块如何体现这个事实。</li>
+        </ul>
+      </section>
+
+      <section id="relations">
+        <h2>它与 DeerFlow 其他能力的关系</h2>
+        <p>Gateway 是 DeerFlow 多个能力的汇合点：</p>
+        <ul>
+          <li>它和第 10 章执行引擎相连，因为 run/stream 请求最终会驱动 lead agent runtime，而不是停留在 API 层。</li>
+          <li>它和第 12、13 章的 sandbox、memory、files 相连，因为 thread 目录、uploads、artifacts 与用户隔离都通过 Gateway surface 暴露给外部。</li>
+          <li>它和第 21 章模型集成相连，因为前端选择模型与 thinking 开关，最终是经由 Gateway request context 进入运行时。</li>
+          <li>它和第 22 章 channels 集成相连，因为 IM channel manager 也是复用 Gateway runtime、auth 和 thread API，而不是绕过它另建执行通道。</li>
+        </ul>
+        <div class="highlight">
+          建议把 <code>backend/app/gateway/app.py</code>、<code>backend/app/gateway/routers/thread_runs.py</code>、<code>backend/app/gateway/routers/threads.py</code>、<code>backend/app/gateway/routers/uploads.py</code>、<code>backend/app/gateway/routers/artifacts.py</code>、<code>backend/docs/API.md</code> 和 <code>backend/docs/ARCHITECTURE.md</code> 连起来读。这样最容易看清 DeerFlow 默认 runtime 的真实承载面。
+        </div>
+      </section>
+
+      <div id="page-nav"></div>
+    </div>
   </main>
 </div>
 <script src="assets/nav.js"></script>

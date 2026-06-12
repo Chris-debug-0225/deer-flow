@@ -6,215 +6,7 @@
     <title>模型集成：支持多种LLM · DeerFlow 学习系列</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
-        /* 页面特定样式 - 与深色主题兼容 */
-        
-        .toc {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--accent);
-            padding: 20px;
-            margin-bottom: 40px;
-            border-radius: 8px;
-        }
-        
-        .toc h2 {
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .toc li:before {
-            content: "▸";
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: bold;
-        }
-        
-        .toc a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .toc a:hover {
-            color: var(--accent-2);
-            text-decoration: underline;
-        }
-        
-        section {
-            margin-bottom: 50px;
-        }
-        
-        /* 代码块样式 */
-        .code-block {
-            background: var(--bg-code);
-            color: var(--text-soft);
-            padding: 18px 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 18px 0;
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 13.5px;
-            line-height: 1.65;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-        }
-        
-        .code-block code {
-            background: none;
-            border: none;
-            padding: 0;
-            color: var(--text-soft);
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            white-space: pre;
-            display: block;
-        }
-        
-        .code-block::-webkit-scrollbar {
-            height: 9px;
-        }
-        
-        .code-block::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-        
-        /* 提示框样式 */
-        .highlight {
-            background: var(--bg-soft);
-            padding: 15px 18px;
-            border-left: 4px solid var(--orange);
-            margin: 18px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .key-point {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--green);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--green);
-        }
-        
-        .key-point strong {
-            color: var(--green-soft);
-            font-weight: 650;
-        }
-        
-        .example-case {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--orange);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .example-case strong {
-            color: var(--orange);
-            font-weight: 650;
-        }
-        
-        .warning {
-            background: var(--bg-soft);
-            border-left: 4px solid #ff6b6b;
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid #ff6b6b;
-        }
-        
-        .warning strong {
-            color: #ff6b6b;
-            font-weight: 650;
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 18px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-        }
-        
-        .comparison-table th {
-            background: var(--bg-soft);
-            color: var(--text);
-            padding: 11px 15px;
-            text-align: left;
-            font-weight: 650;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .comparison-table td {
-            padding: 11px 15px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-soft);
-        }
-        
-        .comparison-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .comparison-table tr:hover td {
-            background: rgba(88,166,255,0.04);
-        }
-        
-        .flow-diagram {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        
-        .flow-step {
-            background: var(--bg-card);
-            border: 1.5px solid var(--accent);
-            color: var(--text);
-            padding: 12px 22px;
-            border-radius: 10px;
-            min-width: 120px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .flow-arrow {
-            font-size: 20px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            padding: 2px 0;
-        }
+        section { margin-bottom: 50px; }
     </style>
 </head>
 <body>
@@ -223,372 +15,147 @@
   <nav class="sidebar" id="sidebar"></nav>
   <main class="main">
     <div class="content">
-            <h1>模型集成：支持多种LLM</h1>
-            <p class="page-subtitle">DeerFlow 学习系列 - 第 21 章</p>
-            
-            <div class="toc">
-                <h2>📖 目录</h2>
-                <ul>
-                    <li><a href="#introduction">简介</a></li>
-                    <li><a href="#model-landscape">模型生态</a></li>
-                    <li><a href="#model-abstraction">模型抽象层</a></li>
-                    <li><a href="#model-switching">模型切换</a></li>
-                    <li><a href="#fallback-strategy">故障转移策略</a></li>
-                    <li><a href="#cost-optimization">成本优化</a></li>
-                    <li><a href="#best-practices">最佳实践</a></li>
-                    <li><a href="#summary">总结</a></li>
-                </ul>
-            </div>
-            
-            <section id="introduction">
-                <h2>简介</h2>
-                <p>
-                    不同的 LLM 模型各有优缺点。支持多种模型能让 Agent 根据需求灵活选择最合适的模型。本章讲解如何集成多个 LLM、设计模型抽象层、实现模型切换和成本优化等内容。
-                </p>
-                <div class="key-point">
-                    <strong>学习目标：</strong>
-                    <ul>
-                        <li>理解不同 LLM 的特点和差异</li>
-                        <li>掌握模型抽象层的设计</li>
-                        <li>学会实现模型切换机制</li>
-                        <li>了解成本优化策略</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <section id="model-landscape">
-                <h2>模型生态</h2>
-                <p>
-                    当前 LLM 市场有多个主要参与者，各自提供不同的模型和服务。
-                </p>
-                
-                <h3>主流模型对比</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>模型</th>
-                            <th>提供商</th>
-                            <th>优势</th>
-                            <th>劣势</th>
-                            <th>成本</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>GPT-4</strong></td>
-                            <td>OpenAI</td>
-                            <td>最强能力</td>
-                            <td>成本高</td>
-                            <td>$$$$</td>
-                        </tr>
-                        <tr>
-                            <td><strong>GPT-3.5</strong></td>
-                            <td>OpenAI</td>
-                            <td>性价比高</td>
-                            <td>能力有限</td>
-                            <td>$</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Claude 3</strong></td>
-                            <td>Anthropic</td>
-                            <td>推理能力强</td>
-                            <td>成本较高</td>
-                            <td>$$$</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Gemini</strong></td>
-                            <td>Google</td>
-                            <td>多模态</td>
-                            <td>集成复杂</td>
-                            <td>$$</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Llama 2</strong></td>
-                            <td>Meta</td>
-                            <td>开源免费</td>
-                            <td>能力较弱</td>
-                            <td>免费</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-            
-            <section id="model-abstraction">
-                <h2>模型抽象层</h2>
-                <p>
-                    设计一个抽象层可以隐藏不同模型的差异，提供统一的接口。
-                </p>
-                
-                <h3>抽象层设计</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">from</span> abc <span class="tok-kw">import</span> <span class="tok-cls">ABC</span>, abstractmethod
+      <h1>模型集成：支持多种LLM</h1>
+      <p class="page-subtitle">DeerFlow 学习系列 - 第 21 章</p>
 
-<span class="tok-kw">class</span> <span class="tok-cls">LLMProvider</span>(<span class="tok-cls">ABC</span>):
-    <span class="tok-str">"""LLM 提供商抽象基类"""</span>
-    
-    @abstractmethod
-    <span class="tok-kw">def</span> <span class="tok-fn">invoke</span>(<span class="tok-kw">self</span>, prompt: <span class="tok-str">str</span>, **kwargs) -> <span class="tok-str">str</span>:
-        <span class="tok-str">"""调用模型"""</span>
-        <span class="tok-kw">pass</span>
-    
-    @abstractmethod
-    <span class="tok-kw">def</span> <span class="tok-fn">get_cost</span>(<span class="tok-kw">self</span>, tokens: <span class="tok-num">1000</span>) -> <span class="tok-num">0.0</span>:
-        <span class="tok-str">"""计算成本"""</span>
-        <span class="tok-kw">pass</span>
+      <div class="deerflow-map">
+        <h3>本章讲的是 DeerFlow 怎样解析模型，不是模型科普</h3>
+        <p>在 DeerFlow 当前仓库里，模型集成的核心问题不是“OpenAI、Anthropic、DeepSeek 有什么区别”，而是：配置文件怎样声明模型、Gateway 怎样把这些配置暴露给前端、运行时怎样解析主 agent 与 subagent 的模型选择、嵌入式 client 怎样复用这套逻辑，以及文档怎样约束这些行为。</p>
+      </div>
 
-<span class="tok-com"># 具体实现</span>
-<span class="tok-kw">class</span> <span class="tok-cls">OpenAIProvider</span>(<span class="tok-cls">LLMProvider</span>):
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, api_key: <span class="tok-str">str</span>, model: <span class="tok-str">str</span> = <span class="tok-str">"gpt-3.5-turbo"</span>):
-        <span class="tok-kw">self</span>.api_key = api_key
-        <span class="tok-kw">self</span>.model = model
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">invoke</span>(<span class="tok-kw">self</span>, prompt: <span class="tok-str">str</span>, **kwargs) -> <span class="tok-str">str</span>:
-        <span class="tok-com"># 调用 OpenAI API</span>
-        <span class="tok-kw">pass</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">get_cost</span>(<span class="tok-kw">self</span>, tokens: <span class="tok-num">1000</span>) -> <span class="tok-num">0.0</span>:
-        <span class="tok-com"># 计算 OpenAI 成本</span>
-        <span class="tok-kw">pass</span>
+      <div class="toc">
+        <h3>目录</h3>
+        <ul>
+          <li><a href="#problem">这项能力在 DeerFlow 中解决什么问题</a></li>
+          <li><a href="#codebase">这项能力在代码库中的位置</a></li>
+          <li><a href="#flow">真实运行链路或数据链路</a></li>
+          <li><a href="#config">配置面与使用方式</a></li>
+          <li><a href="#tradeoffs">关键实现细节与权衡</a></li>
+          <li><a href="#limits">当前限制、边界与非目标</a></li>
+          <li><a href="#relations">它与 DeerFlow 其他能力的关系</a></li>
+        </ul>
+      </div>
 
-<span class="tok-kw">class</span> <span class="tok-cls">AnthropicProvider</span>(<span class="tok-cls">LLMProvider</span>):
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, api_key: <span class="tok-str">str</span>, model: <span class="tok-str">str</span> = <span class="tok-str">"claude-3-opus"</span>):
-        <span class="tok-kw">self</span>.api_key = api_key
-        <span class="tok-kw">self</span>.model = model
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">invoke</span>(<span class="tok-kw">self</span>, prompt: <span class="tok-str">str</span>, **kwargs) -> <span class="tok-str">str</span>:
-        <span class="tok-com"># 调用 Anthropic API</span>
-        <span class="tok-kw">pass</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">get_cost</span>(<span class="tok-kw">self</span>, tokens: <span class="tok-num">1000</span>) -> <span class="tok-num">0.0</span>:
-        <span class="tok-com"># 计算 Anthropic 成本</span>
-        <span class="tok-kw">pass</span>
-</code></div>
-            </section>
-            
-            <section id="model-switching">
-                <h2>模型切换</h2>
-                <p>
-                    根据不同的场景和需求，动态切换到最合适的模型。
-                </p>
-                
-                <h3>模型选择策略</h3>
-                <div class="flow-diagram">
-                    <div class="flow-step">分析任务</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">评估复杂度</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">选择模型</div>
-                </div>
-                <div style="text-align: center; margin: 10px 0;">↓</div>
-                <div class="flow-diagram">
-                    <div class="flow-step">执行任务</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">评估结果</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">调整策略</div>
-                </div>
-                
-                <h3>模型选择器实现</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">ModelSelector</span>:
-    <span class="tok-str">"""模型选择器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.providers = {
-            <span class="tok-str">"gpt-4"</span>: <span class="tok-cls">OpenAIProvider</span>(<span class="tok-str">"key"</span>, <span class="tok-str">"gpt-4"</span>),
-            <span class="tok-str">"gpt-3.5"</span>: <span class="tok-cls">OpenAIProvider</span>(<span class="tok-str">"key"</span>, <span class="tok-str">"gpt-3.5-turbo"</span>),
-            <span class="tok-str">"claude"</span>: <span class="tok-cls">AnthropicProvider</span>(<span class="tok-str">"key"</span>)
-        }
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">select_model</span>(<span class="tok-kw">self</span>, task_complexity: <span class="tok-num">5</span>, budget: <span class="tok-num">10</span>) -> <span class="tok-cls">LLMProvider</span>:
-        <span class="tok-str">"""根据任务复杂度和预算选择模型"""</span>
-        <span class="tok-kw">if</span> task_complexity > <span class="tok-num">8</span>:
-            <span class="tok-kw">return</span> <span class="tok-kw">self</span>.providers[<span class="tok-str">"gpt-4"</span>]
-        <span class="tok-kw">elif</span> budget < <span class="tok-num">5</span>:
-            <span class="tok-kw">return</span> <span class="tok-kw">self</span>.providers[<span class="tok-str">"gpt-3.5"</span>]
-        <span class="tok-kw">else</span>:
-            <span class="tok-kw">return</span> <span class="tok-kw">self</span>.providers[<span class="tok-str">"claude"</span>]
-</code></div>
-                
-                <div class="example-case">
-                    <strong>示例：</strong> 模型切换的实际应用<br>
-                    <div class="code-block"><code>
-selector = <span class="tok-cls">ModelSelector</span>()
+      <section id="problem">
+        <h2>这项能力在 DeerFlow 中解决什么问题</h2>
+        <p>DeerFlow 需要让浏览器、Gateway runtime、embedded Python client 和 subagent 执行器都能用同一套模型配置工作，同时又支持 thinking、reasoning effort、provider-specific patch、CLI-backed provider 和 per-subagent override。这不是“列几个模型名字”能解决的问题，而是配置到运行时的完整解析链问题。</p>
+        <p>因此，本章的重点是 DeerFlow 如何把 <code>config.yaml</code> 里的模型声明，变成 Gateway 可查询的模型列表、主运行时可实例化的 chat model，以及 subagent 可继承或覆盖的模型选择。</p>
+      </section>
 
-<span class="tok-com"># 简单任务：使用便宜的模型</span>
-simple_task = <span class="tok-str">"翻译这句话"</span>
-model = selector.<span class="tok-fn">select_model</span>(task_complexity=<span class="tok-num">2</span>, budget=<span class="tok-num">1</span>)
-result = model.<span class="tok-fn">invoke</span>(simple_task)
+      <section id="codebase">
+        <h2>这项能力在代码库中的位置</h2>
+        <table class="comparison-table">
+          <tr>
+            <th>路径</th>
+            <th>职责</th>
+            <th>为什么要看</th>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/config/app_config.py</code></td>
+            <td>加载 <code>config.yaml</code>、持有 <code>models</code> 列表、应用单例配置</td>
+            <td>所有模型集成都从这里开始</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/subagents/config.py</code></td>
+            <td><code>SubagentConfig</code> 与 <code>resolve_subagent_model_name</code></td>
+            <td>解释 subagent 怎样继承父模型或回退默认模型</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/config/subagents_config.py</code></td>
+            <td>subagent 全局默认、per-agent override、custom agent 模型覆盖</td>
+            <td>说明模型选择不只存在于主 agent</td>
+          </tr>
+          <tr>
+            <td><code>backend/app/gateway/routers/models.py</code></td>
+            <td>把配置中的模型安全暴露给前端与 API 客户端</td>
+            <td>这里定义了浏览器能看到的模型 surface</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/client.py</code></td>
+            <td>embedded client 的模型解析、agent 重建与 config 继承</td>
+            <td>说明 DeerFlow 不只有 Gateway 一条运行路径</td>
+          </tr>
+          <tr>
+            <td><code>backend/docs/CONFIGURATION.md</code></td>
+            <td>模型配置格式、provider 示例、thinking patch、CLI provider 说明</td>
+            <td>这是理解源码前后的关键配套文档</td>
+          </tr>
+        </table>
+      </section>
 
-<span class="tok-com"># 复杂任务：使用强大的模型</span>
-complex_task = <span class="tok-str">"分析这个复杂的代码并提出优化建议"</span>
-model = selector.<span class="tok-fn">select_model</span>(task_complexity=<span class="tok-num">9</span>, budget=<span class="tok-num">50</span>)
-result = model.<span class="tok-fn">invoke</span>(complex_task)
-</code></div>
-                </div>
-            </section>
-            
-            <section id="fallback-strategy">
-                <h2>故障转移策略</h2>
-                <p>
-                    当某个模型失败或超时时，需要有备用方案来保证系统的可靠性。
-                </p>
-                
-                <h3>故障转移实现</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">FallbackModelManager</span>:
-    <span class="tok-str">"""故障转移模型管理器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.primary_model = <span class="tok-cls">OpenAIProvider</span>(<span class="tok-str">"key"</span>, <span class="tok-str">"gpt-4"</span>)
-        <span class="tok-kw">self</span>.fallback_models = [
-            <span class="tok-cls">AnthropicProvider</span>(<span class="tok-str">"key"</span>),
-            <span class="tok-cls">OpenAIProvider</span>(<span class="tok-str">"key"</span>, <span class="tok-str">"gpt-3.5-turbo"</span>)
-        ]
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">invoke_with_fallback</span>(<span class="tok-kw">self</span>, prompt: <span class="tok-str">str</span>, timeout: <span class="tok-num">30</span>) -> <span class="tok-str">str</span>:
-        <span class="tok-str">"""尝试使用主模型，失败时使用备用模型"""</span>
-        models = [<span class="tok-kw">self</span>.primary_model] + <span class="tok-kw">self</span>.fallback_models
-        
-        <span class="tok-kw">for</span> model <span class="tok-kw">in</span> models:
-            <span class="tok-kw">try</span>:
-                result = model.<span class="tok-fn">invoke</span>(prompt, timeout=timeout)
-                <span class="tok-kw">return</span> result
-            <span class="tok-kw">except</span> <span class="tok-cls">Exception</span> <span class="tok-kw">as</span> e:
-                <span class="tok-com"># 记录错误，尝试下一个模型</span>
-                <span class="tok-fn">print</span>(<span class="tok-str">f"Model failed: {e}, trying fallback"</span>)
-                <span class="tok-kw">continue</span>
-        
-        <span class="tok-kw">raise</span> <span class="tok-cls">Exception</span>(<span class="tok-str">"All models failed"</span>)
-</code></div>
-                
-                <h3>故障检测和恢复</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>故障类型</th>
-                            <th>检测方式</th>
-                            <th>恢复策略</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>超时</strong></td>
-                            <td>响应时间超过阈值</td>
-                            <td>切换到更快的模型</td>
-                        </tr>
-                        <tr>
-                            <td><strong>API 错误</strong></td>
-                            <td>HTTP 错误码</td>
-                            <td>重试或使用备用模型</td>
-                        </tr>
-                        <tr>
-                            <td><strong>配额限制</strong></td>
-                            <td>429 Too Many Requests</td>
-                            <td>等待或使用其他模型</td>
-                        </tr>
-                        <tr>
-                            <td><strong>质量问题</strong></td>
-                            <td>输出评分低于阈值</td>
-                            <td>重新调用或升级模型</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-            
-            <section id="cost-optimization">
-                <h2>成本优化</h2>
-                <p>
-                    使用多个模型可以优化成本。关键是在成本和质量之间找到平衡。
-                </p>
-                
-                <h3>成本优化策略</h3>
-                <ul>
-                    <li><strong>分级处理</strong>：简单任务用便宜模型，复杂任务用强大模型</li>
-                    <li><strong>缓存结果</strong>：缓存常见问题的答案，避免重复调用</li>
-                    <li><strong>批量处理</strong>：合并多个请求，减少 API 调用次数</li>
-                    <li><strong>降级策略</strong>：当高级模型超时或失败时，降级到低级模型</li>
-                    <li><strong>成本监控</strong>：实时监控成本，设置预算告警</li>
-                </ul>
-                
-                <h3>成本计算器</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">CostCalculator</span>:
-    <span class="tok-str">"""成本计算器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.rates = {
-            <span class="tok-str">"gpt-4"</span>: {<span class="tok-str">"input"</span>: <span class="tok-num">0.03</span>, <span class="tok-str">"output"</span>: <span class="tok-num">0.06</span>},
-            <span class="tok-str">"gpt-3.5"</span>: {<span class="tok-str">"input"</span>: <span class="tok-num">0.0005</span>, <span class="tok-str">"output"</span>: <span class="tok-num">0.0015</span>},
-            <span class="tok-str">"claude"</span>: {<span class="tok-str">"input"</span>: <span class="tok-num">0.008</span>, <span class="tok-str">"output"</span>: <span class="tok-num">0.024</span>}
-        }
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">calculate_cost</span>(<span class="tok-kw">self</span>, model: <span class="tok-str">str</span>, input_tokens: <span class="tok-num">1000</span>, output_tokens: <span class="tok-num">500</span>) -> <span class="tok-num">0.0</span>:
-        <span class="tok-str">"""计算调用成本"""</span>
-        rate = <span class="tok-kw">self</span>.rates[model]
-        input_cost = input_tokens * rate[<span class="tok-str">"input"</span>] / <span class="tok-num">1000</span>
-        output_cost = output_tokens * rate[<span class="tok-str">"output"</span>] / <span class="tok-num">1000</span>
-        <span class="tok-kw">return</span> input_cost + output_cost
-</code></div>
-                
-                <div class="key-point">
-                    <strong>关键点：</strong> 成本优化不是简单地选择最便宜的模型，而是在成本、质量和速度之间找到最优平衡。
-                </div>
-            </section>
-            
-            <section id="best-practices">
-                <h2>最佳实践</h2>
-                
-                <h3>1. 统一接口</h3>
-                <p>
-                    为所有模型提供统一的接口，使得切换模型不需要改变上层代码。
-                </p>
-                
-                <h3>2. 错误处理</h3>
-                <p>
-                    实现降级策略，当一个模型失败时自动切换到备用模型。
-                </p>
-                
-                <h3>3. 性能监控</h3>
-                <p>
-                    监控每个模型的性能指标，包括延迟、成本和准确性。
-                </p>
-                
-                <h3>4. 配置管理</h3>
-                <p>
-                    使用配置文件管理模型选择策略，便于调整而不需要修改代码。
-                </p>
-                
-                <h3>5. 成本控制</h3>
-                <p>
-                    设置成本预算和告警，防止意外的高成本。
-                </p>
-            </section>
-            
-            <section id="summary">
-                <h2>总结</h2>
-                <p>
-                    支持多种 LLM 模型能让 Agent 更灵活地适应不同场景。通过设计良好的抽象层、实现智能的模型选择、故障转移和成本优化，可以构建高效、经济、可靠的 Agent 系统。本章深入讲解了模型集成的各个方面。
-                </p>
-                <div class="highlight">
-                    <strong>核心要点总结：</strong>
-                    <ul>
-                        <li><strong>模型生态：</strong> 了解不同模型的优缺点和成本</li>
-                        <li><strong>抽象层设计：</strong> 为所有模型提供统一接口</li>
-                        <li><strong>模型切换：</strong> 根据任务复杂度和预算动态选择模型</li>
-                        <li><strong>故障转移：</strong> 当模型失败时自动切换到备用模型</li>
-                        <li><strong>成本优化：</strong> 分级处理、缓存、批量处理、降级策略</li>
-                        <li><strong>最佳实践：</strong> 统一接口、错误处理、性能监控、配置管理、成本控制</li>
-                    </ul>
-                </div>
-                
-                <div class="key-point">
-                    <strong>模型集成建议：</strong> 多模型集成是构建鲁棒 Agent 系统的关键。需要在性能、成本和可靠性之间找到平衡。同时要定期评估模型性能，根据实际情况调整策略。
-                </div>
-            </section>
-            
-            <div id="page-nav"></div>
+      <section id="flow">
+        <h2>真实运行链路或数据链路</h2>
+        <p>主运行时和 embedded client 的模型解析链大致如下：</p>
+        <div class="code-block"><code>config.yaml
+  -> backend/packages/harness/deerflow/config/app_config.py
+  -> AppConfig.models / get_model_config(...)
+  -> Gateway path: backend/app/gateway/routers/models.py for listing
+  -> runtime path: create_chat_model(name=..., thinking_enabled=...)
+  -> backend/packages/harness/deerflow/client.py or Gateway lead agent build
+  -> optional subagent override via backend/packages/harness/deerflow/subagents/config.py
+  -> effective model instance used in agent execution</code></div>
+        <p>如果当前执行的是 subagent，那么 <code>backend/packages/harness/deerflow/config/subagents_config.py</code> 会先读取全局和 per-agent override，再由 <code>backend/packages/harness/deerflow/subagents/config.py</code> 的 <code>resolve_subagent_model_name</code> 决定究竟是继承父模型、使用显式覆盖，还是回退到 <code>backend/packages/harness/deerflow/config/app_config.py</code> 中的默认首个模型。</p>
+        <div class="highlight">
+          <strong>重点不是“模型很多”：</strong>
+          重点是 DeerFlow 有一条统一解析链，让 Gateway、client 和 subagent 最终都落到同一套配置来源上。
         </div>
+      </section>
+
+      <section id="config">
+        <h2>配置面与使用方式</h2>
+        <p>根据 <code>backend/docs/CONFIGURATION.md</code>，DeerFlow 的模型配置面至少包括：</p>
+        <ul>
+          <li><code>backend/packages/harness/deerflow/config/app_config.py</code> 读取 <code>models:</code> 列表，每项包含 <code>name</code>、<code>use</code>、<code>model</code>、<code>api_key</code>、thinking / vision / reasoning 能力等字段。</li>
+          <li><code>backend/app/gateway/routers/models.py</code> 只暴露前端需要的安全字段，例如 <code>display_name</code>、<code>supports_thinking</code>、<code>supports_reasoning_effort</code>，不会直接透出敏感配置。</li>
+          <li><code>backend/packages/harness/deerflow/client.py</code> 允许调用方在构造 client 或每次 runnable config 中指定 <code>model_name</code> 与 <code>thinking_enabled</code>。</li>
+          <li><code>backend/packages/harness/deerflow/config/subagents_config.py</code> 允许为某个 subagent 指定独立 <code>model</code> 覆盖；而 <code>backend/packages/harness/deerflow/subagents/config.py</code> 负责把这层覆盖解析成有效模型名。</li>
+          <li><code>backend/docs/CONFIGURATION.md</code> 还明确区分了 vision 能力、thinking patch 和 provider-specific patched classes，这说明“支持多种 LLM”在 DeerFlow 里包括能力差异建模，而不只是换模型名。</li>
+        </ul>
+        <p>这意味着 DeerFlow 的“切模型”不是单个 UI 下拉框逻辑，而是配置加载、API 暴露和 runtime 解析共同完成的。</p>
+      </section>
+
+      <section id="tradeoffs">
+        <h2>关键实现细节与权衡</h2>
+        <ul>
+          <li><code>backend/packages/harness/deerflow/config/app_config.py</code> 把多种配置单例集中应用，换来统一入口；代价是部分运行组件仍有全局配置依赖。</li>
+          <li><code>backend/app/gateway/routers/models.py</code> 只返回展示层需要的模型元信息，这样更安全，但前端如果想理解更深 provider 细节，仍需回到配置或文档。</li>
+          <li><code>backend/packages/harness/deerflow/client.py</code> 会按模型名、thinking、plan mode、subagent 开关等重建内部 agent，说明模型切换会连带影响整个 agent 组装，而不只是替换一个字符串。</li>
+          <li><code>backend/packages/harness/deerflow/subagents/config.py</code> 采用“显式 override -> 继承父模型 -> 回退默认模型”的解析顺序，保证 subagent 有清晰的 fallback 语义。</li>
+          <li>DeerFlow 还区分“主对话模型”和部分派生任务的模型语义。例如 memory 更新链路会通过专门的 memory update prompt 与 token counting 策略工作，这提醒我们：模型集成不只影响主聊天，还影响记忆提炼等旁路 LLM 调用。</li>
+          <li><code>backend/docs/CONFIGURATION.md</code> 明确支持 provider-specific patched model 类，这说明 DeerFlow 的模型层并不假装所有 OpenAI-compatible provider 都能完全共享同一实现。</li>
+        </ul>
+        <div class="key-point">
+          <strong>核心取舍：</strong>
+          DeerFlow 选择把模型集成做成“配置驱动 + 运行时解析 + provider patch”，而不是写死几家供应商分支。这提高了可扩展性，但也要求读者同时理解配置文档和解析链。
+        </div>
+      </section>
+
+      <section id="limits">
+        <h2>当前限制、边界与非目标</h2>
+        <ul>
+          <li>本章不做模型能力排行榜，也不讨论哪家模型“最强”；那不是 DeerFlow 当前仓库的核心设计问题。</li>
+          <li>虽然 <code>backend/app/gateway/routers/models.py</code> 会列出可选模型，但真正可用性仍取决于配置是否正确、环境变量是否存在以及 provider patch 是否匹配。</li>
+          <li>DeerFlow 的 agent factory 仍有部分运行组件会在调用期读取全局配置，这也是 <code>backend/packages/harness/deerflow/client.py</code> 文档里提到的 config-free runtime 尚未完全完成之处。</li>
+          <li>subagent 模型覆盖只解决“选哪个模型”，不自动解决提示词、工具、timeout 与 skills 的所有协同问题。</li>
+        </ul>
+      </section>
+
+      <section id="relations">
+        <h2>它与 DeerFlow 其他能力的关系</h2>
+        <p>模型集成和 DeerFlow 的其他运行时层强相关：</p>
+        <ul>
+          <li>它和第 20 章上下文工程相连，因为 thinking、reasoning 和 provider patch 会直接影响上下文预算与消息格式要求。</li>
+          <li>它和第 14、23 章 subagent / 高级模式相连，因为 subagent 可以继承或覆盖主模型，从而形成更细粒度的成本与能力分配。</li>
+          <li>它和 Gateway API 相连，因为浏览器的模型选择面通过 <code>backend/app/gateway/routers/models.py</code> 暴露，但实际执行仍回到同一 runtime 解析链。</li>
+          <li>它和 embedded client 相连，因为 <code>backend/packages/harness/deerflow/client.py</code> 复用了同一配置来源，避免出现“Gateway 和 Python 调用用不同模型规则”的分叉。</li>
+        </ul>
+        <div class="highlight">
+          建议把 <code>backend/packages/harness/deerflow/config/app_config.py</code>、<code>backend/packages/harness/deerflow/subagents/config.py</code>、<code>backend/packages/harness/deerflow/config/subagents_config.py</code>、<code>backend/app/gateway/routers/models.py</code>、<code>backend/packages/harness/deerflow/client.py</code> 和 <code>backend/docs/CONFIGURATION.md</code> 放在一起读。这样最容易看清 DeerFlow 的模型配置与运行时解析闭环。
+        </div>
+      </section>
+
+      <div id="page-nav"></div>
+    </div>
   </main>
 </div>
 <script src="assets/nav.js"></script>

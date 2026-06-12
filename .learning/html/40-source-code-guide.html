@@ -6,215 +6,7 @@
     <title>源码导航与阅读指南 · DeerFlow 学习系列</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
-        /* 页面特定样式 - 与深色主题兼容 */
-        
-        .toc {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--accent);
-            padding: 20px;
-            margin-bottom: 40px;
-            border-radius: 8px;
-        }
-        
-        .toc h2 {
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .toc li:before {
-            content: "▸";
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: bold;
-        }
-        
-        .toc a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .toc a:hover {
-            color: var(--accent-2);
-            text-decoration: underline;
-        }
-        
-        section {
-            margin-bottom: 50px;
-        }
-        
-        /* 代码块样式 */
-        .code-block {
-            background: var(--bg-code);
-            color: var(--text-soft);
-            padding: 18px 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 18px 0;
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 13.5px;
-            line-height: 1.65;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-        }
-        
-        .code-block code {
-            background: none;
-            border: none;
-            padding: 0;
-            color: var(--text-soft);
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            white-space: pre;
-            display: block;
-        }
-        
-        .code-block::-webkit-scrollbar {
-            height: 9px;
-        }
-        
-        .code-block::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-        
-        /* 提示框样式 */
-        .highlight {
-            background: var(--bg-soft);
-            padding: 15px 18px;
-            border-left: 4px solid var(--orange);
-            margin: 18px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .key-point {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--green);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--green);
-        }
-        
-        .key-point strong {
-            color: var(--green-soft);
-            font-weight: 650;
-        }
-        
-        .example-case {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--orange);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .example-case strong {
-            color: var(--orange);
-            font-weight: 650;
-        }
-        
-        .warning {
-            background: var(--bg-soft);
-            border-left: 4px solid #ff6b6b;
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid #ff6b6b;
-        }
-        
-        .warning strong {
-            color: #ff6b6b;
-            font-weight: 650;
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 18px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-        }
-        
-        .comparison-table th {
-            background: var(--bg-soft);
-            color: var(--text);
-            padding: 11px 15px;
-            text-align: left;
-            font-weight: 650;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .comparison-table td {
-            padding: 11px 15px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-soft);
-        }
-        
-        .comparison-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .comparison-table tr:hover td {
-            background: rgba(88,166,255,0.04);
-        }
-        
-        .flow-diagram {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        
-        .flow-step {
-            background: var(--bg-card);
-            border: 1.5px solid var(--accent);
-            color: var(--text);
-            padding: 12px 22px;
-            border-radius: 10px;
-            min-width: 120px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .flow-arrow {
-            font-size: 20px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            padding: 2px 0;
-        }
+        section { margin-bottom: 50px; }
     </style>
 </head>
 <body>
@@ -223,243 +15,128 @@
   <nav class="sidebar" id="sidebar"></nav>
   <main class="main">
     <div class="content">
-            <h1>源码导航与阅读指南</h1>
-            <p class="page-subtitle">DeerFlow 学习系列 - 第 40 章</p>
-            
-            <div class="toc">
-                <h2>📖 目录</h2>
-                <ul>
-                    <li><a href="#introduction">简介</a></li>
-                    <li><a href="#project-structure">项目结构</a></li>
-                    <li><a href="#key-modules">关键模块</a></li>
-                    <li><a href="#reading-paths">阅读路线</a></li>
-                    <li><a href="#debugging-tips">调试技巧</a></li>
-                    <li><a href="#summary">总结</a></li>
-                </ul>
-            </div>
-            
-            <section id="introduction">
-                <h2>简介</h2>
-                <p>
-                    理解 DeerFlow 源码是深入学习的关键。本章提供源码导航和阅读指南，帮助你快速定位关键代码、理解架构设计、学习最佳实践。
-                </p>
-                <div class="key-point">
-                    <strong>学习目标：</strong>
-                    <ul>
-                        <li>理解 DeerFlow 的项目结构</li>
-                        <li>掌握关键模块的功能和位置</li>
-                        <li>学会有效的源码阅读方法</li>
-                        <li>了解调试和追踪技巧</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <section id="project-structure">
-                <h2>项目结构</h2>
-                <p>
-                    DeerFlow 项目的整体结构和各个目录的用途。
-                </p>
-                
-                <h3>目录树</h3>
-                <div class="code-block"><code>
-deerflow/
-├── backend/
-│   ├── app/
-│   │   ├── channels/          <span class="tok-com"># 渠道集成</span>
-│   │   ├── gateway/           <span class="tok-com"># Gateway API</span>
-│   │   └── __init__.py
-│   ├── packages/
-│   │   └── harness/           <span class="tok-com"># 执行框架</span>
-│   ├── docs/                  <span class="tok-com"># 文档</span>
-│   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── app/               <span class="tok-com"># 应用主体</span>
-│   │   ├── components/        <span class="tok-com"># React 组件</span>
-│   │   └── content/           <span class="tok-com"># 内容管理</span>
-│   └── package.json
-├── skills/
-│   └── public/                <span class="tok-com"># 公开 Skills</span>
-├── docker/                    <span class="tok-com"># Docker 配置</span>
-└── scripts/                   <span class="tok-com"># 工具脚本</span>
-</code></div>
-            </section>
-            
-            <section id="key-modules">
-                <h2>关键模块</h2>
-                <p>
-                    DeerFlow 的核心模块和它们的职责。
-                </p>
-                
-                <h3>后端核心模块</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>模块</th>
-                            <th>位置</th>
-                            <th>职责</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Agent Core</strong></td>
-                            <td>backend/app/</td>
-                            <td>Agent 执行引擎</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Skills</strong></td>
-                            <td>backend/app/skills/</td>
-                            <td>Skill 系统</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Channels</strong></td>
-                            <td>backend/app/channels/</td>
-                            <td>多渠道集成</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Gateway</strong></td>
-                            <td>backend/app/gateway/</td>
-                            <td>API 网关</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Memory</strong></td>
-                            <td>backend/app/memory/</td>
-                            <td>长期记忆系统</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <h3>关键文件</h3>
-                <ul>
-                    <li><strong>backend/app/__init__.py</strong> - 应用初始化</li>
-                    <li><strong>backend/app/core.py</strong> - Agent 核心逻辑</li>
-                    <li><strong>backend/app/executor.py</strong> - 执行引擎</li>
-                    <li><strong>backend/app/memory.py</strong> - 内存管理</li>
-                    <li><strong>backend/requirements.txt</strong> - Python 依赖</li>
-                </ul>
-            </section>
-            
-            <section id="reading-paths">
-                <h2>阅读路线</h2>
-                <p>
-                    推荐的源码阅读顺序，根据不同的学习目标。
-                </p>
-                
-                <h3>初级路线：理解基础架构</h3>
-                <div class="flow-diagram">
-                    <div class="flow-step">__init__.py</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">core.py</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">executor.py</div>
-                </div>
-                
-                <h3>中级路线：深入各个模块</h3>
-                <div class="code-block"><code>
-<span class="tok-com"># 1. 学习 Agent 执行流程</span>
-backend/app/core.py
-backend/app/executor.py
+      <h1>源码导航与阅读指南</h1>
+      <p class="page-subtitle">DeerFlow 学习系列 - 第 40 章</p>
 
-<span class="tok-com"># 2. 学习 Skills 系统</span>
-backend/app/skills/base.py
-backend/app/skills/registry.py
+      <div class="deerflow-map">
+        <h3>本章讲的是读 DeerFlow 源码时应该先抓哪些目录、再抓哪些链路</h3>
+        <p>DeerFlow 不是一个靠单文件就能看懂的项目。最有效的阅读方式，是先把 Gateway、agents、runtime、sandbox、skills、channels 这几个核心目录放到同一张地图里，再按“外部入口 -> 运行主线 -> 支撑基础设施 -> 扩展点”逐层下钻。</p>
+      </div>
 
-<span class="tok-com"># 3. 学习内存系统</span>
-backend/app/memory/storage.py
-backend/app/memory/retrieval.py
+      <div class="toc">
+        <h3>目录</h3>
+        <ul>
+          <li><a href="#problem">这项能力在 DeerFlow 中解决什么问题</a></li>
+          <li><a href="#codebase">这项能力在代码库中的位置</a></li>
+          <li><a href="#flow">真实运行链路或数据链路</a></li>
+          <li><a href="#config">配置面与使用方式</a></li>
+          <li><a href="#tradeoffs">关键实现细节与权衡</a></li>
+          <li><a href="#limits">当前限制、边界与非目标</a></li>
+          <li><a href="#relations">它与 DeerFlow 其他能力的关系</a></li>
+        </ul>
+      </div>
 
-<span class="tok-com"># 4. 学习 Gateway</span>
-backend/app/gateway/api.py
-backend/app/gateway/handler.py
-</code></div>
-                
-                <h3>高级路线：完整系统理解</h3>
-                <p>
-                    从入口点开始追踪完整的请求流程：
-                </p>
-                <ol>
-                    <li>HTTP 请求进入 Gateway</li>
-                    <li>Gateway 路由到相应的 Agent</li>
-                    <li>Agent 分析任务</li>
-                    <li>Agent 选择和执行 Skills</li>
-                    <li>结果存储到 Memory</li>
-                    <li>返回响应给客户端</li>
-                </ol>
-            </section>
-            
-            <section id="debugging-tips">
-                <h2>调试技巧</h2>
-                <p>
-                    有效的调试和追踪方法。
-                </p>
-                
-                <h3>使用日志</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">import</span> logging
+      <section id="problem">
+        <h2>这项能力在 DeerFlow 中解决什么问题</h2>
+        <p>如果你第一次打开 DeerFlow 仓库就从某个深层模块开始，很容易陷进局部细节。源码导航这一章要解决的问题是：帮助你建立最短阅读路线，让你先看到 DeerFlow 的真实主线，再回头理解每个扩展点。</p>
+      </section>
 
-logger = logging.<span class="tok-fn">getLogger</span>(__name__)
+      <section id="codebase">
+        <h2>这项能力在代码库中的位置</h2>
+        <table class="comparison-table">
+          <tr>
+            <th>路径</th>
+            <th>职责</th>
+            <th>阅读建议</th>
+          </tr>
+          <tr>
+            <td><code>backend/app/gateway/</code></td>
+            <td>外部 API、auth、routers、service 生命周期</td>
+            <td>先看外部入口和默认运行时承载面</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/agents/</code></td>
+            <td>lead agent、factory、middlewares、memory、thread state</td>
+            <td>再看真正的 agent 构建与执行主线</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/runtime/</code></td>
+            <td>run worker、stream bridge、serialization、records</td>
+            <td>理解运行期状态和流式协议</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/sandbox/</code></td>
+            <td>虚拟路径、provider、文件工具、边界控制</td>
+            <td>理解文件、命令与 artifact 是怎么落地的</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/skills/</code></td>
+            <td>skills 类型、安装、存储、安全扫描</td>
+            <td>看能力包如何进入系统</td>
+          </tr>
+          <tr>
+            <td><code>backend/app/channels/</code></td>
+            <td>IM adapter、message bus、channel manager</td>
+            <td>最后看外部渠道如何复用 Gateway runtime</td>
+          </tr>
+        </table>
+      </section>
 
-<span class="tok-com"># 在关键位置添加日志</span>
-logger.<span class="tok-fn">info</span>(<span class="tok-str">f"Executing task: {task}"</span>)
-logger.<span class="tok-fn">debug</span>(<span class="tok-str">f"Selected skill: {skill_name}"</span>)
-logger.<span class="tok-fn">error</span>(<span class="tok-str">f"Error occurred: {error}"</span>)
-</code></div>
-                
-                <h3>调试工具</h3>
-                <ul>
-                    <li><strong>pdb</strong> - Python 调试器，使用 <code>import pdb; pdb.set_trace()</code></li>
-                    <li><strong>logging</strong> - 日志系统，记录执行流程</li>
-                    <li><strong>pytest</strong> - 单元测试框架，验证功能</li>
-                    <li><strong>IDE 调试器</strong> - VS Code、PyCharm 等 IDE 的调试功能</li>
-                </ul>
-                
-                <h3>追踪执行流程</h3>
-                <div class="code-block"><code>
-<span class="tok-com"># 添加执行追踪</span>
-<span class="tok-kw">def</span> <span class="tok-fn">trace_execution</span>(func):
-    <span class="tok-str">"""执行追踪装饰器"""</span>
-    <span class="tok-kw">def</span> <span class="tok-fn">wrapper</span>(*args, **kwargs):
-        logger.<span class="tok-fn">info</span>(<span class="tok-str">f"Entering {func.__name__}"</span>)
-        result = <span class="tok-fn">func</span>(*args, **kwargs)
-        logger.<span class="tok-fn">info</span>(<span class="tok-str">f"Exiting {func.__name__}"</span>)
-        <span class="tok-kw">return</span> result
-    <span class="tok-kw">return</span> wrapper
+      <section id="flow">
+        <h2>真实运行链路或数据链路</h2>
+        <div class="code-block"><code>recommended reading path
+  -> backend/docs/ARCHITECTURE.md
+  -> backend/app/gateway/
+  -> backend/packages/harness/deerflow/agents/
+  -> backend/packages/harness/deerflow/runtime/
+  -> backend/packages/harness/deerflow/sandbox/
+  -> backend/packages/harness/deerflow/skills/
+  -> backend/app/channels/</code></div>
+        <p>如果你的目标是排查“用户发一句话以后系统怎么走”，就优先看 Gateway -> agents -> runtime；如果目标是排查“文件、上传、artifact 为什么表现成这样”，就从 sandbox 和 uploads/artifacts routers 下钻；如果目标是扩展能力，则优先看 skills、custom agents 和 channels。</p>
+      </section>
 
-@<span class="tok-fn">trace_execution</span>
-<span class="tok-kw">def</span> <span class="tok-fn">execute_task</span>(task):
-    <span class="tok-str">"""执行任务"""</span>
-    <span class="tok-kw">pass</span>
-</code></div>
-                
-                <div class="key-point">
-                    <strong>关键点：</strong> 好的日志和追踪能大大加快调试速度。
-                </div>
-            </section>
-            
-            <section id="summary">
-                <h2>总结</h2>
-                <p>
-                    掌握源码导航和阅读方法能大大加快学习效率。通过理解项目结构、关键模块、推荐的阅读路线和调试技巧，可以快速定位问题、理解设计、学习最佳实践。本章提供了完整的源码导航指南。
-                </p>
-                <div class="highlight">
-                    <strong>核心要点总结：</strong>
-                    <ul>
-                        <li><strong>项目结构：</strong> 后端、前端、Skills、Docker、脚本等目录的组织</li>
-                        <li><strong>关键模块：</strong> Agent Core、Skills、Channels、Gateway、Memory 等核心模块</li>
-                        <li><strong>阅读路线：</strong> 初级、中级、高级三个阶段的推荐阅读顺序</li>
-                        <li><strong>执行流程：</strong> 从 HTTP 请求到响应返回的完整流程</li>
-                        <li><strong>调试技巧：</strong> 日志、追踪、调试工具的使用方法</li>
-                        <li><strong>最佳实践：</strong> 从入口点追踪完整流程，理解系统设计</li>
-                    </ul>
-                </div>
-                
-                <div class="key-point">
-                    <strong>源码阅读建议：</strong> 阅读源码是深入理解系统的最好方式。不要害怕复杂的代码，逐步追踪、理解每一部分的功能。利用好调试工具和日志，可以大大加快学习速度。
-                </div>
-            </section>
-            
-            <div id="page-nav"></div>
+      <section id="config">
+        <h2>配置面与使用方式</h2>
+        <ul>
+          <li>阅读源码前，最好先配合 <code>backend/docs/ARCHITECTURE.md</code> 和 <code>backend/docs/API.md</code> 建立目录地图。</li>
+          <li>读 <code>backend/app/gateway/</code> 时，要同步关注 auth、uploads、artifacts、thread_runs 这些 routers 的关系，而不是单看一个 endpoint。</li>
+          <li>读 <code>backend/packages/harness/deerflow/agents/</code> 时，要把 factory、lead agent、middlewares、memory 放在一起理解。</li>
+          <li>读 <code>backend/app/channels/</code> 时，要始终记得它是在复用 Gateway runtime，而不是单独一套 agent 宿主。</li>
+        </ul>
+      </section>
+
+      <section id="tradeoffs">
+        <h2>关键实现细节与权衡</h2>
+        <ul>
+          <li>按目录分层阅读能更快建立全局心智，但会暂时忽略一些跨层 helper；这是值得接受的阅读权衡。</li>
+          <li>如果你先看 <code>runtime/</code> 再看 <code>gateway/</code>，会更快理解 streaming 与 run ownership，但可能一开始不理解请求怎么进入系统。</li>
+          <li>如果你先看 <code>skills/</code> 或 <code>channels/</code>，容易误把扩展点当成系统主线，所以通常不建议作为第一站。</li>
+        </ul>
+      </section>
+
+      <section id="limits">
+        <h2>当前限制、边界与非目标</h2>
+        <ul>
+          <li>本章提供的是阅读地图，不是每个目录的完整 API 手册。</li>
+          <li>源码导航只能帮你决定“先看哪里”，真正理解仍要回到前面章节对应的实现解释。</li>
+          <li>随着 DeerFlow 演进，某些目录职责会扩展，但当前主线仍然围绕这里列出的几个核心区域。</li>
+        </ul>
+      </section>
+
+      <section id="relations">
+        <h2>它与 DeerFlow 其他能力的关系</h2>
+        <ul>
+          <li>它是前面所有章节的索引页，帮助你把学习材料和真实源码重新对齐。</li>
+          <li>它和第 41 章 FAQ 相连，因为很多排障动作的第一步就是知道该去哪个目录找答案。</li>
+          <li>它和第 32 章系统构建视角相连，因为“从零构建”的经验最终也要落回到“哪些代码区域承载了哪些责任”。</li>
+        </ul>
+        <div class="highlight">
+          建议配合 <code>backend/app/gateway/</code>、<code>backend/packages/harness/deerflow/agents/</code>、<code>backend/packages/harness/deerflow/runtime/</code>、<code>backend/packages/harness/deerflow/sandbox/</code>、<code>backend/packages/harness/deerflow/skills/</code> 和 <code>backend/app/channels/</code> 同步阅读。
         </div>
+      </section>
+
+      <div id="page-nav"></div>
+    </div>
   </main>
 </div>
 <script src="assets/nav.js"></script>

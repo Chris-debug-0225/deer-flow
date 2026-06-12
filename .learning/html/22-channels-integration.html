@@ -6,215 +6,7 @@
     <title>多渠道集成：从IM到API · DeerFlow 学习系列</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
-        /* 页面特定样式 - 与深色主题兼容 */
-        
-        .toc {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--accent);
-            padding: 20px;
-            margin-bottom: 40px;
-            border-radius: 8px;
-        }
-        
-        .toc h2 {
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .toc li:before {
-            content: "▸";
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: bold;
-        }
-        
-        .toc a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .toc a:hover {
-            color: var(--accent-2);
-            text-decoration: underline;
-        }
-        
-        section {
-            margin-bottom: 50px;
-        }
-        
-        /* 代码块样式 */
-        .code-block {
-            background: var(--bg-code);
-            color: var(--text-soft);
-            padding: 18px 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 18px 0;
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 13.5px;
-            line-height: 1.65;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-        }
-        
-        .code-block code {
-            background: none;
-            border: none;
-            padding: 0;
-            color: var(--text-soft);
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            white-space: pre;
-            display: block;
-        }
-        
-        .code-block::-webkit-scrollbar {
-            height: 9px;
-        }
-        
-        .code-block::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-        
-        /* 提示框样式 */
-        .highlight {
-            background: var(--bg-soft);
-            padding: 15px 18px;
-            border-left: 4px solid var(--orange);
-            margin: 18px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .key-point {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--green);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--green);
-        }
-        
-        .key-point strong {
-            color: var(--green-soft);
-            font-weight: 650;
-        }
-        
-        .example-case {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--orange);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .example-case strong {
-            color: var(--orange);
-            font-weight: 650;
-        }
-        
-        .warning {
-            background: var(--bg-soft);
-            border-left: 4px solid #ff6b6b;
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid #ff6b6b;
-        }
-        
-        .warning strong {
-            color: #ff6b6b;
-            font-weight: 650;
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 18px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-        }
-        
-        .comparison-table th {
-            background: var(--bg-soft);
-            color: var(--text);
-            padding: 11px 15px;
-            text-align: left;
-            font-weight: 650;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .comparison-table td {
-            padding: 11px 15px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-soft);
-        }
-        
-        .comparison-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .comparison-table tr:hover td {
-            background: rgba(88,166,255,0.04);
-        }
-        
-        .flow-diagram {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        
-        .flow-step {
-            background: var(--bg-card);
-            border: 1.5px solid var(--accent);
-            color: var(--text);
-            padding: 12px 22px;
-            border-radius: 10px;
-            min-width: 120px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .flow-arrow {
-            font-size: 20px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            padding: 2px 0;
-        }
+        section { margin-bottom: 50px; }
     </style>
 </head>
 <body>
@@ -223,449 +15,152 @@
   <nav class="sidebar" id="sidebar"></nav>
   <main class="main">
     <div class="content">
-            <h1>多渠道集成：从IM到API</h1>
-            <p class="page-subtitle">DeerFlow 学习系列 - 第 22 章</p>
-            
-            <div class="toc">
-                <h2>📖 目录</h2>
-                <ul>
-                    <li><a href="#introduction">简介</a></li>
-                    <li><a href="#channel-types">渠道类型</a></li>
-                    <li><a href="#channel-abstraction">渠道抽象层</a></li>
-                    <li><a href="#message-handling">消息处理</a></li>
-                    <li><a href="#state-management">状态管理</a></li>
-                    <li><a href="#webhook-integration">Webhook集成</a></li>
-                    <li><a href="#best-practices">最佳实践</a></li>
-                    <li><a href="#summary">总结</a></li>
-                </ul>
-            </div>
-            
-            <section id="introduction">
-                <h2>简介</h2>
-                <p>
-                    Agent 需要与用户通过多种渠道交互。从即时通讯应用到 Web API，每个渠道都有不同的特点和要求。本章讲解如何设计和实现多渠道集成，包括渠道抽象、消息处理、状态管理等内容。
-                </p>
-                <div class="key-point">
-                    <strong>学习目标：</strong>
-                    <ul>
-                        <li>理解不同渠道的特点和差异</li>
-                        <li>掌握渠道抽象层的设计</li>
-                        <li>学会处理各种消息格式</li>
-                        <li>了解跨渠道状态管理</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <section id="channel-types">
-                <h2>渠道类型</h2>
-                <p>
-                    不同的渠道适合不同的使用场景。了解各种渠道的特点很重要。
-                </p>
-                
-                <h3>主流渠道对比</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>渠道</th>
-                            <th>特点</th>
-                            <th>优势</th>
-                            <th>劣势</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>WeChat</strong></td>
-                            <td>即时通讯</td>
-                            <td>用户量大、实时性强</td>
-                            <td>API 限制多</td>
-                        </tr>
-                        <tr>
-                            <td><strong>DingTalk</strong></td>
-                            <td>企业通讯</td>
-                            <td>企业场景、功能完整</td>
-                            <td>用户群体有限</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Slack</strong></td>
-                            <td>团队协作</td>
-                            <td>开发友好、集成丰富</td>
-                            <td>国内使用少</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Web API</strong></td>
-                            <td>HTTP 接口</td>
-                            <td>通用、灵活</td>
-                            <td>需要自建前端</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Telegram</strong></td>
-                            <td>即时通讯</td>
-                            <td>API 开放、开发友好</td>
-                            <td>国内使用受限</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <h3>渠道架构</h3>
-                <div class="flow-diagram">
-                    <div class="flow-step">WeChat</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">渠道适配器</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">Agent</div>
-                </div>
-                <div style="text-align: center; margin: 10px 0;">↓</div>
-                <div class="flow-diagram">
-                    <div class="flow-step">DingTalk</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">消息处理</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">响应</div>
-                </div>
-            </section>
-            
-            <section id="channel-abstraction">
-                <h2>渠道抽象层</h2>
-                <p>
-                    设计一个抽象层可以隐藏不同渠道的差异，提供统一的接口。
-                </p>
-                
-                <h3>渠道接口设计</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">from</span> abc <span class="tok-kw">import</span> <span class="tok-cls">ABC</span>, abstractmethod
+      <h1>多渠道集成：从IM到API</h1>
+      <p class="page-subtitle">DeerFlow 学习系列 - 第 22 章</p>
 
-<span class="tok-kw">class</span> <span class="tok-cls">Channel</span>(<span class="tok-cls">ABC</span>):
-    <span class="tok-str">"""渠道抽象基类"""</span>
-    
-    @abstractmethod
-    <span class="tok-kw">def</span> <span class="tok-fn">receive_message</span>(<span class="tok-kw">self</span>) -> <span class="tok-cls">Message</span>:
-        <span class="tok-str">"""接收消息"""</span>
-        <span class="tok-kw">pass</span>
-    
-    @abstractmethod
-    <span class="tok-kw">def</span> <span class="tok-fn">send_message</span>(<span class="tok-kw">self</span>, message: <span class="tok-cls">Message</span>) -> <span class="tok-str">bool</span>:
-        <span class="tok-str">"""发送消息"""</span>
-        <span class="tok-kw">pass</span>
-    
-    @abstractmethod
-    <span class="tok-kw">def</span> <span class="tok-fn">get_user_info</span>(<span class="tok-kw">self</span>, user_id: <span class="tok-str">str</span>) -> <span class="tok-cls">UserInfo</span>:
-        <span class="tok-str">"""获取用户信息"""</span>
-        <span class="tok-kw">pass</span>
+      <div class="deerflow-map">
+        <h3>本章讲的是 DeerFlow 怎样把 IM 接入收进同一运行时</h3>
+        <p>DeerFlow 的渠道接入不是“每个平台自己跑一套 agent 逻辑”。当前仓库的核心设计是：IM/channel worker 把外部消息转换成 DeerFlow 线程语义，再复用 Gateway runtime、认证与 runs API。这样浏览器会话和 IM 会话虽然入口不同，但共享的是同一条 DeerFlow 执行主线。</p>
+      </div>
 
-<span class="tok-com"># 具体实现</span>
-<span class="tok-kw">class</span> <span class="tok-cls">WeChatChannel</span>(<span class="tok-cls">Channel</span>):
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, app_id: <span class="tok-str">str</span>, app_secret: <span class="tok-str">str</span>):
-        <span class="tok-kw">self</span>.app_id = app_id
-        <span class="tok-kw">self</span>.app_secret = app_secret
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">receive_message</span>(<span class="tok-kw">self</span>) -> <span class="tok-cls">Message</span>:
-        <span class="tok-com"># 从 WeChat 接收消息</span>
-        <span class="tok-kw">pass</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">send_message</span>(<span class="tok-kw">self</span>, message: <span class="tok-cls">Message</span>) -> <span class="tok-str">bool</span>:
-        <span class="tok-com"># 发送到 WeChat</span>
-        <span class="tok-kw">pass</span>
+      <div class="toc">
+        <h3>目录</h3>
+        <ul>
+          <li><a href="#problem">这项能力在 DeerFlow 中解决什么问题</a></li>
+          <li><a href="#codebase">这项能力在代码库中的位置</a></li>
+          <li><a href="#flow">真实运行链路或数据链路</a></li>
+          <li><a href="#config">配置面与使用方式</a></li>
+          <li><a href="#tradeoffs">关键实现细节与权衡</a></li>
+          <li><a href="#limits">当前限制、边界与非目标</a></li>
+          <li><a href="#relations">它与 DeerFlow 其他能力的关系</a></li>
+        </ul>
+      </div>
 
-<span class="tok-kw">class</span> <span class="tok-cls">WebAPIChannel</span>(<span class="tok-cls">Channel</span>):
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, base_url: <span class="tok-str">str</span>):
-        <span class="tok-kw">self</span>.base_url = base_url
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">receive_message</span>(<span class="tok-kw">self</span>) -> <span class="tok-cls">Message</span>:
-        <span class="tok-com"># 从 HTTP 请求接收消息</span>
-        <span class="tok-kw">pass</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">send_message</span>(<span class="tok-kw">self</span>, message: <span class="tok-cls">Message</span>) -> <span class="tok-str">bool</span>:
-        <span class="tok-com"># 返回 HTTP 响应</span>
-        <span class="tok-kw">pass</span>
-</code></div>
-            </section>
-            
-            <section id="message-handling">
-                <h2>消息处理</h2>
-                <p>
-                    不同渠道的消息格式不同，需要进行转换和处理。
-                </p>
-                
-                <h3>消息转换流程</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">Message</span>:
-    <span class="tok-str">"""统一消息格式"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, user_id: <span class="tok-str">str</span>, content: <span class="tok-str">str</span>, channel: <span class="tok-str">str</span>):
-        <span class="tok-kw">self</span>.user_id = user_id
-        <span class="tok-kw">self</span>.content = content
-        <span class="tok-kw">self</span>.channel = channel
-        <span class="tok-kw">self</span>.timestamp = <span class="tok-fn">time</span>.<span class="tok-fn">time</span>()
+      <section id="problem">
+        <h2>这项能力在 DeerFlow 中解决什么问题</h2>
+        <p>DeerFlow 既要支持浏览器聊天，也要支持飞书等 IM 接入。如果每个渠道都直接内嵌一套 agent 执行逻辑，就会很快出现线程不一致、认证不一致、uploads / artifacts / streaming 行为分叉的问题。channels 集成要解决的就是这个复用问题。</p>
+        <p>因此 DeerFlow 当前实现选择让 channel worker 做协议适配，而不是做独立 runtime。外部平台消息进入后，会被归一化成 DeerFlow 的 thread、run、message 和 attachment 语义，再通过 Gateway 继续执行。</p>
+      </section>
 
-<span class="tok-kw">class</span> <span class="tok-cls">MessageConverter</span>:
-    <span class="tok-str">"""消息转换器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">from_wechat</span>(<span class="tok-kw">self</span>, wechat_msg: <span class="tok-cls">dict</span>) -> <span class="tok-cls">Message</span>:
-        <span class="tok-str">"""从 WeChat 消息转换"""</span>
-        <span class="tok-kw">return</span> <span class="tok-cls">Message</span>(
-            user_id=wechat_msg[<span class="tok-str">"FromUserName"</span>],
-            content=wechat_msg[<span class="tok-str">"Content"</span>],
-            channel=<span class="tok-str">"wechat"</span>
-        )
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">to_wechat</span>(<span class="tok-kw">self</span>, message: <span class="tok-cls">Message</span>) -> <span class="tok-cls">dict</span>:
-        <span class="tok-str">"""转换为 WeChat 消息"""</span>
-        <span class="tok-kw">return</span> {
-            <span class="tok-str">"ToUserName"</span>: message.user_id,
-            <span class="tok-str">"MsgType"</span>: <span class="tok-str">"text"</span>,
-            <span class="tok-str">"Content"</span>: message.content
-        }
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">from_api</span>(<span class="tok-kw">self</span>, api_msg: <span class="tok-cls">dict</span>) -> <span class="tok-cls">Message</span>:
-        <span class="tok-str">"""从 API 消息转换"""</span>
-        <span class="tok-kw">return</span> <span class="tok-cls">Message</span>(
-            user_id=api_msg[<span class="tok-str">"user_id"</span>],
-            content=api_msg[<span class="tok-str">"text"</span>],
-            channel=<span class="tok-str">"api"</span>
-        )
-</code></div>
-                
-                <div class="example-case">
-                    <strong>示例：</strong> 多渠道消息处理<br>
-                    <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">MultiChannelAgent</span>:
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.channels = {
-            <span class="tok-str">"wechat"</span>: <span class="tok-cls">WeChatChannel</span>(),
-            <span class="tok-str">"api"</span>: <span class="tok-cls">WebAPIChannel</span>()
-        }
-        <span class="tok-kw">self</span>.converter = <span class="tok-cls">MessageConverter</span>()
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">handle_message</span>(<span class="tok-kw">self</span>, channel_name: <span class="tok-str">str</span>, raw_msg: <span class="tok-cls">dict</span>):
-        <span class="tok-str">"""处理来自任何渠道的消息"""</span>
-        <span class="tok-com"># 1. 转换为统一格式</span>
-        <span class="tok-kw">if</span> channel_name == <span class="tok-str">"wechat"</span>:
-            message = <span class="tok-kw">self</span>.converter.<span class="tok-fn">from_wechat</span>(raw_msg)
-        <span class="tok-kw">elif</span> channel_name == <span class="tok-str">"api"</span>:
-            message = <span class="tok-kw">self</span>.converter.<span class="tok-fn">from_api</span>(raw_msg)
-        
-        <span class="tok-com"># 2. 处理消息</span>
-        response = <span class="tok-kw">self</span>.<span class="tok-fn">process</span>(message)
-        
-        <span class="tok-com"># 3. 转换回原渠道格式</span>
-        <span class="tok-kw">if</span> channel_name == <span class="tok-str">"wechat"</span>:
-            wechat_response = <span class="tok-kw">self</span>.converter.<span class="tok-fn">to_wechat</span>(response)
-        
-        <span class="tok-com"># 4. 发送响应</span>
-        <span class="tok-kw">self</span>.channels[channel_name].<span class="tok-fn">send_message</span>(response)
-</code></div>
-                </div>
-            </section>
-            
-            <section id="state-management">
-                <h2>状态管理</h2>
-                <p>
-                    在多渠道环境中，需要跨渠道维护用户状态和会话。
-                </p>
-                
-                <h3>会话管理</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">Session</span>:
-    <span class="tok-str">"""用户会话"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, user_id: <span class="tok-str">str</span>):
-        <span class="tok-kw">self</span>.user_id = user_id
-        <span class="tok-kw">self</span>.channels = set()
-        <span class="tok-kw">self</span>.context = {}
-        <span class="tok-kw">self</span>.created_at = <span class="tok-fn">time</span>.<span class="tok-fn">time</span>()
+      <section id="codebase">
+        <h2>这项能力在代码库中的位置</h2>
+        <table class="comparison-table">
+          <tr>
+            <th>路径</th>
+            <th>职责</th>
+            <th>为什么要看</th>
+          </tr>
+          <tr>
+            <td><code>backend/app/channels/manager.py</code></td>
+            <td>消费 inbound 消息、解析 thread、调用 Gateway run API、处理 streaming</td>
+            <td>这是 IM 接入复用 DeerFlow runtime 的主控文件</td>
+          </tr>
+          <tr>
+            <td><code>backend/app/channels/base.py</code></td>
+            <td>渠道抽象基类、消息收发约定、附件发送钩子</td>
+            <td>说明 DeerFlow 对“channel”本身的最小接口建模</td>
+          </tr>
+          <tr>
+            <td><code>backend/app/channels/feishu.py</code></td>
+            <td>飞书 WebSocket 接入、消息解析、回复与文件上传</td>
+            <td>这是当前最完整的具体平台实现之一</td>
+          </tr>
+          <tr>
+            <td><code>backend/app/gateway/routers/channels.py</code></td>
+            <td>实例级 channel service 状态与重启接口</td>
+            <td>说明 Gateway 也拥有渠道服务管理面</td>
+          </tr>
+          <tr>
+            <td><code>backend/app/gateway/routers/channel_connections.py</code></td>
+            <td>浏览器侧 provider 列表、连接、运行时凭据管理与绑定关系</td>
+            <td>说明用户连接面也统一经过 Gateway</td>
+          </tr>
+          <tr>
+            <td><code>backend/docs/AUTH_DESIGN.md</code></td>
+            <td>内部认证、CSRF、default/internal 用户桶与线程隔离设计</td>
+            <td>理解 channels 为什么能安全复用 Gateway runtime 必须看这份文档</td>
+          </tr>
+        </table>
+      </section>
 
-<span class="tok-kw">class</span> <span class="tok-cls">SessionManager</span>:
-    <span class="tok-str">"""会话管理器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.sessions = {}
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">get_or_create_session</span>(<span class="tok-kw">self</span>, user_id: <span class="tok-str">str</span>) -> <span class="tok-cls">Session</span>:
-        <span class="tok-str">"""获取或创建会话"""</span>
-        <span class="tok-kw">if</span> user_id <span class="tok-kw">not</span> <span class="tok-kw">in</span> <span class="tok-kw">self</span>.sessions:
-            <span class="tok-kw">self</span>.sessions[user_id] = <span class="tok-cls">Session</span>(user_id)
-        <span class="tok-kw">return</span> <span class="tok-kw">self</span>.sessions[user_id]
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">add_channel</span>(<span class="tok-kw">self</span>, user_id: <span class="tok-str">str</span>, channel: <span class="tok-str">str</span>):
-        <span class="tok-str">"""添加渠道"""</span>
-        session = <span class="tok-kw">self</span>.<span class="tok-fn">get_or_create_session</span>(user_id)
-        session.channels.<span class="tok-fn">add</span>(channel)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">get_context</span>(<span class="tok-kw">self</span>, user_id: <span class="tok-str">str</span>) -> <span class="tok-cls">dict</span>:
-        <span class="tok-str">"""获取用户上下文"""</span>
-        session = <span class="tok-kw">self</span>.<span class="tok-fn">get_or_create_session</span>(user_id)
-        <span class="tok-kw">return</span> session.context
-</code></div>
-                
-                <div class="key-point">
-                    <strong>关键点：</strong> 跨渠道状态管理很重要。用户在 WeChat 上的对话应该能在 Web 上继续。
-                </div>
-            </section>
-            
-            <section id="webhook-integration">
-                <h2>Webhook集成</h2>
-                <p>
-                    Webhook 是实现实时消息推送的关键。通过 Webhook，外部系统可以主动推送事件到 Agent。
-                </p>
-                
-                <h3>Webhook 处理流程</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">from</span> flask <span class="tok-kw">import</span> <span class="tok-cls">Flask</span>, request
-
-app = <span class="tok-cls">Flask</span>(__name__)
-
-<span class="tok-kw">class</span> <span class="tok-cls">WebhookHandler</span>:
-    <span class="tok-str">"""Webhook 处理器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.handlers = {}
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">register</span>(<span class="tok-kw">self</span>, event_type: <span class="tok-str">str</span>, handler):
-        <span class="tok-str">"""注册事件处理器"""</span>
-        <span class="tok-kw">self</span>.handlers[event_type] = handler
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">handle_webhook</span>(<span class="tok-kw">self</span>, payload: <span class="tok-cls">dict</span>):
-        <span class="tok-str">"""处理 Webhook 请求"""</span>
-        event_type = payload.<span class="tok-fn">get</span>(<span class="tok-str">"event"</span>)
-        <span class="tok-kw">if</span> event_type <span class="tok-kw">in</span> <span class="tok-kw">self</span>.handlers:
-            <span class="tok-kw">return</span> <span class="tok-kw">self</span>.handlers[event_type](payload)
-        <span class="tok-kw">else</span>:
-            <span class="tok-kw">return</span> {<span class="tok-str">"error"</span>: <span class="tok-str">"Unknown event type"</span>}
-
-webhook_handler = <span class="tok-cls">WebhookHandler</span>()
-
-@app.<span class="tok-fn">route</span>(<span class="tok-str">"/webhook/wechat"</span>, methods=[<span class="tok-str">"POST"</span>])
-<span class="tok-kw">def</span> <span class="tok-fn">wechat_webhook</span>():
-    <span class="tok-str">"""WeChat Webhook 端点"""</span>
-    payload = request.<span class="tok-fn">get_json</span>()
-    result = webhook_handler.<span class="tok-fn">handle_webhook</span>(payload)
-    <span class="tok-kw">return</span> result
-
-@app.<span class="tok-fn">route</span>(<span class="tok-str">"/webhook/dingtalk"</span>, methods=[<span class="tok-str">"POST"</span>])
-<span class="tok-kw">def</span> <span class="tok-fn">dingtalk_webhook</span>():
-    <span class="tok-str">"""DingTalk Webhook 端点"""</span>
-    payload = request.<span class="tok-fn">get_json</span>()
-    result = webhook_handler.<span class="tok-fn">handle_webhook</span>(payload)
-    <span class="tok-kw">return</span> result
-</code></div>
-                
-                <h3>Webhook 安全性</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>安全措施</th>
-                            <th>说明</th>
-                            <th>实现方式</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>签名验证</strong></td>
-                            <td>验证请求来自可信源</td>
-                            <td>HMAC-SHA256 签名</td>
-                        </tr>
-                        <tr>
-                            <td><strong>时间戳检查</strong></td>
-                            <td>防止重放攻击</td>
-                            <td>检查请求时间戳</td>
-                        </tr>
-                        <tr>
-                            <td><strong>IP 白名单</strong></td>
-                            <td>限制请求来源</td>
-                            <td>检查请求 IP</td>
-                        </tr>
-                        <tr>
-                            <td><strong>速率限制</strong></td>
-                            <td>防止 DDoS 攻击</td>
-                            <td>限制请求频率</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <div class="code-block"><code>
-<span class="tok-kw">import</span> hmac
-<span class="tok-kw">import</span> hashlib
-
-<span class="tok-kw">class</span> <span class="tok-cls">SecureWebhookHandler</span>:
-    <span class="tok-str">"""安全的 Webhook 处理器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, secret: <span class="tok-str">str</span>):
-        <span class="tok-kw">self</span>.secret = secret
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">verify_signature</span>(<span class="tok-kw">self</span>, payload: <span class="tok-str">str</span>, signature: <span class="tok-str">str</span>) -> <span class="tok-str">bool</span>:
-        <span class="tok-str">"""验证签名"""</span>
-        expected = hmac.<span class="tok-fn">new</span>(
-            <span class="tok-kw">self</span>.secret.<span class="tok-fn">encode</span>(),
-            payload.<span class="tok-fn">encode</span>(),
-            hashlib.sha256
-        ).<span class="tok-fn">hexdigest</span>()
-        <span class="tok-kw">return</span> hmac.<span class="tok-fn">compare_digest</span>(expected, signature)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">verify_timestamp</span>(<span class="tok-kw">self</span>, timestamp: <span class="tok-num">0</span>, max_age: <span class="tok-num">300</span>) -> <span class="tok-str">bool</span>:
-        <span class="tok-str">"""验证时间戳"""</span>
-        <span class="tok-kw">import</span> time
-        current_time = <span class="tok-fn">int</span>(<span class="tok-fn">time</span>.<span class="tok-fn">time</span>())
-        <span class="tok-kw">return</span> <span class="tok-fn">abs</span>(current_time - timestamp) < max_age
-</code></div>
-            </section>
-            
-            <section id="best-practices">
-                <h2>最佳实践</h2>
-                
-                <h3>1. 统一消息格式</h3>
-                <p>
-                    定义统一的内部消息格式，所有渠道都转换为这个格式处理。
-                </p>
-                
-                <h3>2. 渠道隔离</h3>
-                <p>
-                    每个渠道的实现应该独立，不应该相互影响。
-                </p>
-                
-                <h3>3. 错误处理</h3>
-                <p>
-                    不同渠道的错误处理方式不同，需要分别处理。
-                </p>
-                
-                <h3>4. 速率限制</h3>
-                <p>
-                    不同渠道有不同的速率限制，需要分别控制。
-                </p>
-                
-                <h3>5. 监控和日志</h3>
-                <p>
-                    记录每个渠道的消息流量和错误，便于调试和优化。
-                </p>
-                
-                <div class="warning">
-                    <strong>警告：</strong> 不同渠道的 API 限制和特性差异很大。不要假设一个渠道的实现能直接用于另一个渠道。
-                </div>
-            </section>
-            
-            <section id="summary">
-                <h2>总结</h2>
-                <p>
-                    多渠道集成让 Agent 能够通过多种方式与用户交互。通过设计好的抽象层、统一的消息格式、跨渠道状态管理和 Webhook 集成，可以构建灵活、可扩展的多渠道系统。本章深入讲解了多渠道集成的各个方面。
-                </p>
-                <div class="highlight">
-                    <strong>核心要点总结：</strong>
-                    <ul>
-                        <li><strong>渠道类型：</strong> WeChat、DingTalk、Slack、Web API、Telegram 等各有特点</li>
-                        <li><strong>渠道抽象层：</strong> 为所有渠道提供统一接口</li>
-                        <li><strong>消息处理：</strong> 转换不同渠道的消息格式为统一格式</li>
-                        <li><strong>状态管理：</strong> 跨渠道维护用户会话和上下文</li>
-                        <li><strong>Webhook集成：</strong> 实时消息推送、签名验证、时间戳检查</li>
-                        <li><strong>最佳实践：</strong> 统一格式、渠道隔离、错误处理、速率限制、监控日志</li>
-                    </ul>
-                </div>
-                
-                <div class="key-point">
-                    <strong>多渠道集成建议：</strong> 多渠道集成的关键是设计好的抽象层和统一的消息格式。同时要充分考虑不同渠道的特性和限制，实现相应的适配器。定期测试和监控各个渠道的性能。
-                </div>
-            </section>
-            
-            <div id="page-nav"></div>
+      <section id="flow">
+        <h2>真实运行链路或数据链路</h2>
+        <p>一条典型飞书消息进入 DeerFlow 的链路大致如下：</p>
+        <div class="code-block"><code>Feishu websocket event
+  -> backend/app/channels/feishu.py
+  -> backend/app/channels/base.py message abstraction
+  -> backend/app/channels/manager.py
+  -> resolve channel thread / attachments / session overrides
+  -> call Gateway /api/threads + /runs.wait by default
+  -> if channel supports streaming, use /runs.stream
+  -> Gateway auth via internal token + CSRF
+  -> DeerFlow runtime executes thread
+  -> channel manager reads final result or stream events
+  -> backend/app/channels/feishu.py sends reply back to IM</code></div>
+        <p><code>backend/app/channels/manager.py</code> 里最关键的点，不是“怎么发 HTTP 请求”，而是它主动复用了 DeerFlow 的 thread 语义、run 配置、stream mode、skills slash command 解析和附件处理。默认情况下它会走 <code>runs.wait</code>；只有像 Feishu、WeCom 这样声明支持流式回显的渠道，才会走 <code>runs.stream</code>。也正因为如此，channel 消息不是旁路执行，而是进入同一个 Gateway 运行面。</p>
+        <div class="highlight">
+          <strong>认证边界要一起看：</strong>
+          根据 <code>backend/docs/AUTH_DESIGN.md</code>，IM channel worker 不持有浏览器 cookie，而是通过内部 token 与匹配的 CSRF 头进入 Gateway。默认情况下，这些请求落在 internal / <code>default</code> 用户桶语义上。
         </div>
+      </section>
+
+      <section id="config">
+        <h2>配置面与使用方式</h2>
+        <p>DeerFlow 的 channels 集成至少有两层配置面：</p>
+        <ul>
+          <li><code>backend/app/gateway/routers/channel_connections.py</code> 提供浏览器可见的 provider 列表、connect code、运行时凭据录入和已绑定连接查询。</li>
+          <li><code>backend/app/gateway/routers/channels.py</code> 提供实例级 channel service 状态与重启能力，更偏向运维控制面。</li>
+          <li><code>backend/app/channels/base.py</code> 和具体平台实现如 <code>backend/app/channels/feishu.py</code> 负责平台协议适配，但不重复发明 DeerFlow 的线程与运行配置。</li>
+          <li><code>backend/app/channels/manager.py</code> 还负责把外部附件同步成 DeerFlow 线程可见资产；这些文件随后会进入 uploads / artifact / sandbox 语义，而不是永远停留在平台私有 URL 上。</li>
+          <li><code>backend/docs/AUTH_DESIGN.md</code> 明确了内部调用必须复用 Gateway 的 auth / CSRF 设计，而不是偷偷绕过 HTTP 入口。</li>
+        </ul>
+        <p>因此，从用户视角看是“连上一个 IM 平台”，从仓库视角看其实是“让一个外部渠道获得进入 Gateway runtime 的合法方式”。</p>
+      </section>
+
+      <section id="tradeoffs">
+        <h2>关键实现细节与权衡</h2>
+        <ul>
+          <li><code>backend/app/channels/manager.py</code> 直接面向 Gateway API 工作，这让 browser 与 IM 共享同一运行主线；代价是 channels 对 Gateway wire contract 有明确耦合。</li>
+          <li><code>backend/app/channels/base.py</code> 保持抽象最小化，只定义生命周期与消息收发契约，避免把所有平台差异硬塞进统一大接口。</li>
+          <li><code>backend/app/channels/feishu.py</code> 自己处理平台级 websocket、卡片、文件资源，但真正的 agent runtime 仍委托给 Gateway，这减少了逻辑分叉。</li>
+          <li><code>backend/app/gateway/routers/channel_connections.py</code> 把浏览器侧连接与实例级运行时凭据拆开，区分“谁绑定了渠道”和“节点上能否真正启动该渠道”。</li>
+          <li>附件同步是这层设计的一个关键细节：channel 先下载或读取平台文件，再通过 DeerFlow uploads/thread 语义变成 sandbox 可见路径，这样后续 agent 才能在统一路径契约里处理它们。</li>
+          <li>并不是所有渠道都走流式路径。<code>backend/app/channels/manager.py</code> 会按渠道能力分流，只有支持 streaming 的 provider 才会进入 <code>runs.stream</code>，其余渠道保持 <code>runs.wait</code> 这条更稳的默认主路径。</li>
+          <li><code>backend/docs/AUTH_DESIGN.md</code> 记录了 internal token + CSRF 的设计，说明 channels 复用 Gateway runtime 并不是“内部代码所以可以跳过认证”。</li>
+        </ul>
+        <div class="key-point">
+          <strong>核心取舍：</strong>
+          DeerFlow 选择把 channels 设计成 Gateway runtime 的外部入口适配层，而不是独立 agent 宿主。这样线程、权限和文件语义更统一，但渠道层必须理解更多 DeerFlow 运行契约。
+        </div>
+      </section>
+
+      <section id="limits">
+        <h2>当前限制、边界与非目标</h2>
+        <ul>
+          <li>channels 当前默认进入 internal / <code>default</code> 用户桶语义，这适合平台级 bot，但不等于“每个外部 IM 用户都天然映射成独立 DeerFlow 用户”。</li>
+          <li>不同平台的 streaming 能力不完全一致，<code>backend/app/channels/manager.py</code> 里也有按平台能力降级的逻辑。</li>
+          <li>如果是 Docker Compose 或分离部署，channels 能否正常上传、读取附件和访问 Gateway，取决于运行时网络、共享存储与 thread 文件目录是否按 DeerFlow 预期打通。</li>
+          <li>渠道实现不是统一到零差异的“万能 connector”；具体平台文件如 <code>backend/app/channels/feishu.py</code> 仍保留大量平台细节。</li>
+          <li>本章不覆盖所有 provider 的逐项接入步骤；重点是它们怎样复用 Gateway runtime、auth 与 thread 语义。</li>
+        </ul>
+      </section>
+
+      <section id="relations">
+        <h2>它与 DeerFlow 其他能力的关系</h2>
+        <p>channels 集成是 DeerFlow 运行时复用能力的直接体现：</p>
+        <ul>
+          <li>它和第 15 章 Gateway API 相连，因为 channel manager 的目标就是复用 Gateway，而不是绕过它。</li>
+          <li>它和第 20 章上下文工程相连，因为 IM 消息、附件、slash skills 和 clarification 都会进入同一上下文组装流程。</li>
+          <li>它和认证设计相连，因为 <code>backend/docs/AUTH_DESIGN.md</code> 里专门描述了 internal channel 调用的身份边界。</li>
+          <li>它和 streaming 相连，因为平台是否支持逐步回显，会影响 <code>backend/app/channels/manager.py</code> 采用 stream 还是 wait 路径。</li>
+        </ul>
+        <div class="highlight">
+          建议把 <code>backend/app/channels/manager.py</code>、<code>backend/app/channels/base.py</code>、<code>backend/app/channels/feishu.py</code>、<code>backend/app/gateway/routers/channels.py</code>、<code>backend/app/gateway/routers/channel_connections.py</code> 和 <code>backend/docs/AUTH_DESIGN.md</code> 放在一起读。这样最容易看清 DeerFlow 如何把 IM/channel 接入收编到同一 Gateway runtime 下。
+        </div>
+      </section>
+
+      <div id="page-nav"></div>
+    </div>
   </main>
 </div>
 <script src="assets/nav.js"></script>

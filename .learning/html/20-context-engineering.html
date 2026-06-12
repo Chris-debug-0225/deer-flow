@@ -6,215 +6,7 @@
     <title>上下文工程：提升Agent智能 · DeerFlow 学习系列</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
-        /* 页面特定样式 - 与深色主题兼容 */
-        
-        .toc {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--accent);
-            padding: 20px;
-            margin-bottom: 40px;
-            border-radius: 8px;
-        }
-        
-        .toc h2 {
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .toc li:before {
-            content: "▸";
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: bold;
-        }
-        
-        .toc a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .toc a:hover {
-            color: var(--accent-2);
-            text-decoration: underline;
-        }
-        
-        section {
-            margin-bottom: 50px;
-        }
-        
-        /* 代码块样式 */
-        .code-block {
-            background: var(--bg-code);
-            color: var(--text-soft);
-            padding: 18px 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 18px 0;
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 13.5px;
-            line-height: 1.65;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-        }
-        
-        .code-block code {
-            background: none;
-            border: none;
-            padding: 0;
-            color: var(--text-soft);
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            white-space: pre;
-            display: block;
-        }
-        
-        .code-block::-webkit-scrollbar {
-            height: 9px;
-        }
-        
-        .code-block::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-        
-        /* 提示框样式 */
-        .highlight {
-            background: var(--bg-soft);
-            padding: 15px 18px;
-            border-left: 4px solid var(--orange);
-            margin: 18px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .key-point {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--green);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--green);
-        }
-        
-        .key-point strong {
-            color: var(--green-soft);
-            font-weight: 650;
-        }
-        
-        .example-case {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--orange);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .example-case strong {
-            color: var(--orange);
-            font-weight: 650;
-        }
-        
-        .warning {
-            background: var(--bg-soft);
-            border-left: 4px solid #ff6b6b;
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid #ff6b6b;
-        }
-        
-        .warning strong {
-            color: #ff6b6b;
-            font-weight: 650;
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 18px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-        }
-        
-        .comparison-table th {
-            background: var(--bg-soft);
-            color: var(--text);
-            padding: 11px 15px;
-            text-align: left;
-            font-weight: 650;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .comparison-table td {
-            padding: 11px 15px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-soft);
-        }
-        
-        .comparison-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .comparison-table tr:hover td {
-            background: rgba(88,166,255,0.04);
-        }
-        
-        .flow-diagram {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        
-        .flow-step {
-            background: var(--bg-card);
-            border: 1.5px solid var(--accent);
-            color: var(--text);
-            padding: 12px 22px;
-            border-radius: 10px;
-            min-width: 120px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .flow-arrow {
-            font-size: 20px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            padding: 2px 0;
-        }
+        section { margin-bottom: 50px; }
     </style>
 </head>
 <body>
@@ -223,420 +15,143 @@
   <nav class="sidebar" id="sidebar"></nav>
   <main class="main">
     <div class="content">
-            <h1>上下文工程：提升Agent智能</h1>
-            <p class="page-subtitle">DeerFlow 学习系列 - 第 20 章</p>
-            
-            <div class="toc">
-                <h2>📖 目录</h2>
-                <ul>
-                    <li><a href="#introduction">简介</a></li>
-                    <li><a href="#context-importance">上下文的重要性</a></li>
-                    <li><a href="#prompt-engineering">Prompt工程</a></li>
-                    <li><a href="#context-management">上下文管理</a></li>
-                    <li><a href="#advanced-techniques">高级技巧</a></li>
-                    <li><a href="#optimization">性能优化</a></li>
-                    <li><a href="#best-practices">最佳实践</a></li>
-                    <li><a href="#summary">总结</a></li>
-                </ul>
-            </div>
-            
-            <section id="introduction">
-                <h2>简介</h2>
-                <p>
-                    上下文工程是提升 Agent 智能的关键。通过精心设计 Prompt、管理上下文窗口、优化信息流，可以显著提高 Agent 的理解能力和决策质量。本章讲解上下文工程的核心概念、Prompt 设计、上下文管理和性能优化等内容。
-                </p>
-                <div class="key-point">
-                    <strong>学习目标：</strong>
-                    <ul>
-                        <li>理解上下文对 Agent 性能的影响</li>
-                        <li>掌握 Prompt 工程的最佳实践</li>
-                        <li>学会管理和优化上下文</li>
-                        <li>提升 Agent 的智能水平</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <section id="context-importance">
-                <h2>上下文的重要性</h2>
-                <p>
-                    上下文是 Agent 理解和决策的基础。好的上下文能让 Agent 更准确地理解问题，做出更好的决策。
-                </p>
-                
-                <h3>上下文的作用</h3>
-                <ul>
-                    <li><strong>背景信息</strong>：提供问题的背景和相关信息</li>
-                    <li><strong>指导方向</strong>：引导 Agent 朝着正确的方向思考</li>
-                    <li><strong>约束条件</strong>：限制 Agent 的行为范围</li>
-                    <li><strong>示例学习</strong>：通过示例帮助 Agent 学习模式</li>
-                    <li><strong>角色定位</strong>：定义 Agent 的角色和职责</li>
-                </ul>
-                
-                <h3>上下文窗口</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>模型</th>
-                            <th>上下文窗口</th>
-                            <th>优势</th>
-                            <th>劣势</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>GPT-3.5</strong></td>
-                            <td>4K tokens</td>
-                            <td>成本低</td>
-                            <td>上下文有限</td>
-                        </tr>
-                        <tr>
-                            <td><strong>GPT-4</strong></td>
-                            <td>8K/32K tokens</td>
-                            <td>上下文较大</td>
-                            <td>成本高</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Claude 3</strong></td>
-                            <td>200K tokens</td>
-                            <td>超大上下文</td>
-                            <td>成本更高</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <div class="key-point">
-                    <strong>关键点：</strong> 上下文窗口大小直接影响 Agent 能处理的信息量。选择合适的模型很重要。
-                </div>
-            </section>
-            
-            <section id="prompt-engineering">
-                <h2>Prompt工程</h2>
-                <p>
-                    Prompt 是与 Agent 沟通的语言。好的 Prompt 能让 Agent 更好地理解需求。
-                </p>
-                
-                <h3>Prompt 设计原则</h3>
-                <div class="code-block"><code>
-<span class="tok-com"># 原则 1: 清晰明确</span>
-<span class="tok-str">"请分析这个数据"</span>  <span class="tok-com"># 不好：模糊</span>
-<span class="tok-str">"请分析这个销售数据，找出增长最快的产品类别"</span>  <span class="tok-com"># 好：清晰</span>
+      <h1>上下文工程：提升Agent智能</h1>
+      <p class="page-subtitle">DeerFlow 学习系列 - 第 20 章</p>
 
-<span class="tok-com"># 原则 2: 提供上下文</span>
-<span class="tok-str">"你是一个数据分析师。请分析2024年的销售数据..."</span>
+      <div class="deerflow-map">
+        <h3>本章讲的不是通用 prompt engineering 技巧</h3>
+        <p>DeerFlow 里的上下文工程是一套运行时联动系统：lead agent prompt、skills 注入、memory 注入、deferred tool search、uploads、images、summarization，以及多个 middleware 共同决定模型在这一轮真正“看到什么、什么时候看到、以什么形式看到”。这一章要追踪的是仓库中的真实上下文组装链，而不是抽象原则。</p>
+      </div>
 
-<span class="tok-com"># 原则 3: 指定输出格式</span>
-<span class="tok-str">"请返回 JSON 格式的结果，包含 'product', 'growth_rate', 'rank' 字段"</span>
+      <div class="toc">
+        <h3>目录</h3>
+        <ul>
+          <li><a href="#problem">这项能力在 DeerFlow 中解决什么问题</a></li>
+          <li><a href="#codebase">这项能力在代码库中的位置</a></li>
+          <li><a href="#flow">真实运行链路或数据链路</a></li>
+          <li><a href="#config">配置面与使用方式</a></li>
+          <li><a href="#tradeoffs">关键实现细节与权衡</a></li>
+          <li><a href="#limits">当前限制、边界与非目标</a></li>
+          <li><a href="#relations">它与 DeerFlow 其他能力的关系</a></li>
+        </ul>
+      </div>
 
-<span class="tok-com"># 原则 4: 使用示例</span>
-<span class="tok-str">"示例输入: {...}, 示例输出: {...}"</span>
-</code></div>
-                
-                <h3>Prompt 模板</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">PromptTemplate</span>:
-    <span class="tok-str">"""Prompt 模板"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.system_prompt = <span class="tok-str">"""你是一个专业的数据分析师。
-你的职责是：
-1. 分析数据
-2. 识别趋势
-3. 提供建议
-"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">build_prompt</span>(<span class="tok-kw">self</span>, task: <span class="tok-str">str</span>, data: <span class="tok-str">str</span>) -> <span class="tok-str">str</span>:
-        <span class="tok-str">"""构建完整的 Prompt"""</span>
-        <span class="tok-kw">return</span> <span class="tok-str">f</span><span class="tok-str\">"""</span>{<span class="tok-kw">self</span>.system_prompt}
+      <section id="problem">
+        <h2>这项能力在 DeerFlow 中解决什么问题</h2>
+        <p>DeerFlow 要解决的不是“怎么把一段系统提示写得更好看”，而是“在长任务和多能力运行时里，怎样让模型看到刚好够用、不会失控的上下文”。这里的上下文来源很多：基础 prompt、启用中的 skills、长期记忆、上传文件、图片查看结果、summarization 压缩内容，以及中间件动态插入的控制信息。</p>
+        <p>如果没有这套联动机制，DeerFlow 很快会遇到两类问题：第一，信息太少，模型不知道用户长期偏好、工具策略和线程资产；第二，信息太多，prompt 被历史、文件和工具 schema 淹没。所以 DeerFlow 的上下文工程本质上是 runtime composition，而不是静态模板编写。</p>
+      </section>
 
-任务：{task}
+      <section id="codebase">
+        <h2>这项能力在代码库中的位置</h2>
+        <table class="comparison-table">
+          <tr>
+            <th>路径</th>
+            <th>职责</th>
+            <th>为什么要看</th>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code></td>
+            <td>lead agent system prompt、skills 缓存、subagent 与 deferred tools 提示片段</td>
+            <td>这是 DeerFlow 静态提示骨架与技能提示片段的主要入口</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/agents/factory.py</code></td>
+            <td>middleware 装配顺序与功能特性组合</td>
+            <td>说明上下文不只来自 prompt，还来自 middleware 链</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/agents/middlewares/</code></td>
+            <td>dynamic context、memory、summarization、uploads、view-image、todo 等运行时注入点</td>
+            <td>这是 DeerFlow 把当轮上下文真正注入运行链的核心目录</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/agents/memory/prompt.py</code></td>
+            <td>memory update prompt、token counting 与记忆文本格式化</td>
+            <td>长期记忆不是黑盒文件，而是经过专门 prompt 处理的上下文层</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code></td>
+            <td>deferred tool catalog 与 <code>tool_search</code> 工具</td>
+            <td>说明 DeerFlow 如何把工具 schema 也纳入“按需暴露”的上下文策略</td>
+          </tr>
+        </table>
+      </section>
 
-数据：
-{data}
-
-请提供详细的分析结果。
-"""</span>
-</code></div>
-                
-                <div class="example-case">
-                    <strong>示例：</strong> 好的 Prompt 设计<br>
-                    <div class="code-block"><code>
-<span class="tok-str">"""你是一个专业的代码审查专家。
-
-任务：审查以下 Python 代码，找出潜在的问题。
-
-代码：
-```python
-def calculate_total(items):
-    total = 0
-    for item in items:
-        total = total + item['price'] * item['quantity']
-    return total
-```
-
-请提供：
-1. 代码质量评分（1-10）
-2. 发现的问题列表
-3. 改进建议
-4. 改进后的代码示例
-
-输出格式：JSON
-"""</span>
-</code></div>
-                </div>
-            </section>
-            
-            <section id="context-management">
-                <h2>上下文管理</h2>
-                <p>
-                    管理上下文意味着有效地组织和利用有限的上下文窗口。
-                </p>
-                
-                <h3>上下文管理策略</h3>
-                <div class="flow-diagram">
-                    <div class="flow-step">收集信息</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">优先级排序</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">选择关键信息</div>
-                </div>
-                <div style="text-align: center; margin: 10px 0;">↓</div>
-                <div class="flow-diagram">
-                    <div class="flow-step">构建 Prompt</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">发送请求</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">获取结果</div>
-                </div>
-                
-                <h3>上下文管理的实现</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">ContextManager</span>:
-    <span class="tok-str">"""上下文管理器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, max_tokens: <span class="tok-num\">4000</span>):
-        <span class="tok-kw">self</span>.max_tokens = max_tokens
-        <span class="tok-kw">self</span>.context = []
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">add_context</span>(<span class="tok-kw">self</span>, text: <span class="tok-str\">str</span>, priority: <span class="tok-num\">1</span>):
-        <span class="tok-str\">"""添加上下文"""</span>
-        tokens = <span class="tok-fn">len</span>(text.<span class="tok-fn">split</span>())
-        <span class="tok-kw">self</span>.context.<span class="tok-fn">append</span>({
-            <span class="tok-str\">"text\"</span>: text,
-            <span class="tok-str\">"tokens\"</span>: tokens,
-            <span class="tok-str\">"priority\"</span>: priority
-        })
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">get_context</span>(<span class="tok-kw">self</span>) -> <span class="tok-str\">str</span>:
-        <span class="tok-str\">"""获取优化后的上下文"""</span>
-        <span class="tok-com"># 按优先级排序</span>
-        sorted_context = <span class="tok-fn">sorted</span>(
-            <span class="tok-kw">self</span>.context,
-            key=<span class="tok-kw\">lambda</span> x: x[<span class="tok-str\">"priority\"</span>],
-            reverse=<span class="tok-kw\">True</span>
-        )
-        
-        <span class="tok-com"># 选择不超过 max_tokens 的内容</span>
-        total_tokens = <span class="tok-num\">0</span>
-        selected = []
-        <span class="tok-kw">for</span> item <span class="tok-kw\">in</span> sorted_context:
-            <span class="tok-kw">if</span> total_tokens + item[<span class="tok-str\">"tokens\"</span>] <= <span class="tok-kw\">self</span>.max_tokens:
-                selected.<span class="tok-fn">append</span>(item[<span class="tok-str\">"text\"</span>])
-                total_tokens += item[<span class="tok-str\">"tokens\"</span>]
-        
-        <span class="tok-kw">return</span> <span class="tok-str\">"\n"</span>.<span class="tok-fn">join</span>(selected)
-</code></div>
-            </section>
-            
-            <section id="advanced-techniques">
-                <h2>高级技巧</h2>
-                <p>
-                    除了基础的上下文管理，还有一些高级技巧可以进一步提升 Agent 的性能。
-                </p>
-                
-                <h3>思维链（Chain of Thought）</h3>
-                <p>
-                    要求 Agent 逐步思考和推理，而不是直接给出答案：
-                </p>
-                <div class="code-block"><code>
-<span class="tok-str">"""请按以下步骤解决这个问题：
-1. 首先，理解问题的核心
-2. 其次，列出可能的解决方案
-3. 然后，分析每个方案的优缺点
-4. 最后，给出最优方案和理由
-
-问题：如何优化数据库查询性能？
-"""</span>
-</code></div>
-                
-                <h3>角色扮演（Role Playing）</h3>
-                <p>
-                    定义 Agent 的角色，让它在特定的角色背景下工作：
-                </p>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">RoleBasedPrompt</span>:
-    <span class="tok-str">"""基于角色的 Prompt"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, role: <span class="tok-str">str</span>):
-        <span class="tok-kw">self</span>.role = role
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">build</span>(<span class="tok-kw">self</span>, task: <span class="tok-str">str</span>) -> <span class="tok-str">str</span>:
-        <span class="tok-str">"""构建角色 Prompt"""</span>
-        <span class="tok-kw">return</span> <span class="tok-str">f</span><span class="tok-str\">"""你是一个{self.role}。
-根据你的专业知识和经验，完成以下任务：
-
-{task}
-
-请用{self.role}的角度和方式来回答。
-"""</span>
-</code></div>
-                
-                <h3>检索增强生成（RAG）</h3>
-                <p>
-                    结合外部知识库，提供更准确的上下文：
-                </p>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">RAGSystem</span>:
-    <span class="tok-str">"""检索增强生成系统"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, knowledge_base):
-        <span class="tok-kw">self</span>.kb = knowledge_base
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">retrieve_context</span>(<span class="tok-kw">self</span>, query: <span class="tok-str">str</span>, top_k: <span class="tok-num">5</span>) -> List[<span class="tok-str">str</span>]:
-        <span class="tok-str">"""从知识库检索相关上下文"""</span>
-        <span class="tok-com"># 使用向量相似度搜索</span>
-        results = <span class="tok-kw">self</span>.kb.<span class="tok-fn">search</span>(query, top_k=top_k)
-        <span class="tok-kw">return</span> [r[<span class="tok-str">'content'</span>] <span class="tok-kw">for</span> r <span class="tok-kw">in</span> results]
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">augment_prompt</span>(<span class="tok-kw">self</span>, query: <span class="tok-str">str</span>) -> <span class="tok-str">str</span>:
-        <span class="tok-str">"""用检索到的上下文增强 Prompt"""</span>
-        context = <span class="tok-kw">self</span>.<span class="tok-fn">retrieve_context</span>(query)
-        <span class="tok-kw">return</span> <span class="tok-str">f</span><span class="tok-str\">"""根据以下背景信息回答问题：
-
-背景信息：
-{chr(10).join(context)}
-
-问题：{query}
-"""</span>
-</code></div>
-                
-                <h3>动态上下文调整</h3>
-                <p>
-                    根据 Agent 的反馈动态调整上下文：
-                </p>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">DynamicContextAdjuster</span>:
-    <span class="tok-str">"""动态上下文调整器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">adjust</span>(<span class="tok-kw">self</span>, response: <span class="tok-str">str</span>, confidence: <span class="tok-num">0.5</span>) -> <span class="tok-str">str</span>:
-        <span class="tok-str">"""根据置信度调整上下文"""</span>
-        <span class="tok-kw">if</span> confidence < <span class="tok-num">0.5</span>:
-            <span class="tok-com"># 置信度低，添加更多上下文</span>
-            <span class="tok-kw">return</span> <span class="tok-str">"增加详细信息和示例"</span>
-        <span class="tok-kw">elif</span> confidence > <span class="tok-num">0.9</span>:
-            <span class="tok-com"># 置信度高，简化上下文</span>
-            <span class="tok-kw">return</span> <span class="tok-str">"简化上下文，提高效率"</span>
-        <span class="tok-kw">else</span>:
-            <span class="tok-com"># 置信度中等，保持当前上下文</span>
-            <span class="tok-kw">return</span> <span class="tok-str">"保持当前上下文"</span>
-</code></div>
-            </section>
-            
-            <section id="optimization">
-                <h2>性能优化</h2>
-                <p>
-                    优化上下文可以提高 Agent 的性能和降低成本。
-                </p>
-                
-                <h3>优化技巧</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>优化方法</th>
-                            <th>说明</th>
-                            <th>效果</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>摘要</strong></td>
-                            <td>将长文本摘要为关键信息</td>
-                            <td>减少 50-70% tokens</td>
-                        </tr>
-                        <tr>
-                            <td><strong>分块</strong></td>
-                            <td>将大任务分成小任务</td>
-                            <td>提高准确性</td>
-                        </tr>
-                        <tr>
-                            <td><strong>缓存</strong></td>
-                            <td>缓存常用的上下文</td>
-                            <td>减少 API 调用</td>
-                        </tr>
-                        <tr>
-                            <td><strong>检索增强</strong></td>
-                            <td>只检索相关的信息</td>
-                            <td>提高相关性</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <div class="warning">
-                    <strong>警告：</strong> 过度优化可能导致丢失重要信息。需要在效率和准确性之间找到平衡。
-                </div>
-            </section>
-            
-            <section id="best-practices">
-                <h2>最佳实践</h2>
-                
-                <h3>1. 系统提示词</h3>
-                <p>
-                    使用系统提示词定义 Agent 的角色和行为。这比在每个请求中重复说明更高效。
-                </p>
-                
-                <h3>2. 示例学习</h3>
-                <p>
-                    提供具体的示例帮助 Agent 理解期望的输出格式和风格。
-                </p>
-                
-                <h3>3. 逐步推理</h3>
-                <p>
-                    要求 Agent 逐步思考和解释，而不是直接给出答案。这提高了准确性。
-                </p>
-                
-                <h3>4. 反馈循环</h3>
-                <p>
-                    根据 Agent 的输出进行调整，不断优化 Prompt 和上下文。
-                </p>
-                
-                <h3>5. 版本管理</h3>
-                <p>
-                    保存不同版本的 Prompt，跟踪哪个版本效果最好。
-                </p>
-            </section>
-            
-            <section id="summary">
-                <h2>总结</h2>
-                <p>
-                    上下文工程是提升 Agent 智能的关键。通过精心设计 Prompt、有效管理上下文、应用高级技巧、优化性能，可以显著提高 Agent 的理解和决策能力。本章深入讲解了上下文工程的各个方面。
-                </p>
-                <div class="highlight">
-                    <strong>核心要点总结：</strong>
-                    <ul>
-                        <li><strong>上下文的重要性：</strong> 背景信息、指导方向、约束条件、示例学习、角色定位</li>
-                        <li><strong>Prompt 工程：</strong> 清晰明确、提供上下文、指定输出格式、使用示例</li>
-                        <li><strong>上下文管理：</strong> 信息收集、优先级排序、选择关键信息、构建 Prompt</li>
-                        <li><strong>高级技巧：</strong> 思维链、角色扮演、检索增强生成、动态调整</li>
-                        <li><strong>性能优化：</strong> 摘要、分块、缓存、检索增强等技巧</li>
-                        <li><strong>最佳实践：</strong> 系统提示词、示例学习、逐步推理、反馈循环、版本管理</li>
-                    </ul>
-                </div>
-                
-                <div class="key-point">
-                    <strong>上下文工程建议：</strong> 上下文工程是一门艺术和科学的结合。需要不断实验和优化，找到适合特定任务的最佳上下文策略。同时要监控 Agent 的性能，根据反馈进行调整。
-                </div>
-            </section>
-            
-            <div id="page-nav"></div>
+      <section id="flow">
+        <h2>真实运行链路或数据链路</h2>
+        <p>一轮 DeerFlow 上下文组装，通常会沿着下面这条链发生：</p>
+        <div class="code-block"><code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py
+  -> build base system prompt
+  -> inject enabled skills
+  -> inject deferred tool names from backend/packages/harness/deerflow/tools/builtins/tool_search.py
+  -> backend/packages/harness/deerflow/agents/factory.py
+  -> mount middleware chain from backend/packages/harness/deerflow/agents/middlewares/
+  -> DynamicContextMiddleware injects current date + memory for this turn
+  -> uploads / images / summarization / other middlewares modify runtime state
+  -> final model invocation sees composed context</code></div>
+        <p>这里要特别分清两层责任。<code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code> 主要提供静态 system prompt 骨架、skills 提示和 deferred tools 片段；而 memory 和当前日期这类“每轮都可能变化”的信息，是通过 <code>backend/packages/harness/deerflow/agents/middlewares/dynamic_context_middleware.py</code> 在当轮消息里注入的。<code>backend/packages/harness/deerflow/agents/memory/prompt.py</code> 则负责长期记忆更新所需的提示与格式化，而不是主对话链里唯一的注入点。</p>
+        <p>上传文件、图片查看、summary 压缩也不是简单地“拼接到 prompt 末尾”，而是借助不同 middleware 在不同阶段注入 thread state 或额外说明。</p>
+        <div class="highlight">
+          <strong>一个很 DeerFlow 的点：</strong>
+          工具上下文也被分层处理。<code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 让 MCP 工具默认只以名字进入 prompt，真正 schema 要在运行中按需搜索，避免一次把全部工具细节塞进模型上下文。
         </div>
+      </section>
+
+      <section id="config">
+        <h2>配置面与使用方式</h2>
+        <p>从使用面看，DeerFlow 的上下文工程至少有这些开关和入口：</p>
+        <ul>
+          <li>启用中的 skills 会被 <code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code> 缓存并注入，影响后续新 run 的 system prompt。</li>
+          <li>memory 配置与 <code>backend/packages/harness/deerflow/agents/memory/prompt.py</code> 的 token counting 策略决定记忆注入成本和回退方式。</li>
+          <li><code>backend/packages/harness/deerflow/agents/factory.py</code> 里的 feature 组合和 middleware 顺序，决定是否挂入 <code>dynamic_context</code>、summarization、memory、uploads、view-image、todo 等上下文相关能力。</li>
+          <li>上传文件与图片由对应 middleware 转成 thread 级上下文资产，而不是让 prompt 静态引用宿主机路径。</li>
+          <li><code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 的 deferred tool 策略，决定模型最初看到的是“工具名列表”还是完整 schema。</li>
+        </ul>
+      </section>
+
+      <section id="tradeoffs">
+        <h2>关键实现细节与权衡</h2>
+        <ul>
+          <li><code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code> 使用 enabled skills 缓存与失效刷新，避免每次请求同步扫盘；代价是理解 prompt 来源时要同时考虑缓存生命周期。</li>
+          <li><code>backend/packages/harness/deerflow/agents/factory.py</code> 把上下文相关能力拆成 middleware 链，而不是一个超级 prompt builder，这样更组合化，但调试时需要跨文件追踪。</li>
+          <li><code>backend/packages/harness/deerflow/agents/middlewares/dynamic_context_middleware.py</code> 把 memory 与当前日期做成 per-turn 注入，而不是写死在静态 prompt 文件里，这更贴近实时状态，但也让“上下文从哪来”必须按静态提示和动态提示分开理解。</li>
+          <li><code>backend/packages/harness/deerflow/agents/memory/prompt.py</code> 在 tiktoken 不可用时会退回字符估算，说明 DeerFlow 明确把“上下文预算可用性”看得比“绝对精确 token 数”更重要。</li>
+          <li><code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 采用 deferred tools，是为了控制上下文体积；代价是模型必须先学会何时搜索工具，而不是天然拿到完整 schema。</li>
+          <li><code>backend/packages/harness/deerflow/agents/middlewares/</code> 中多种 middleware 联动，说明 DeerFlow 的上下文工程是运行态注入系统，不是单一 prompt 模板。</li>
+        </ul>
+        <div class="key-point">
+          <strong>核心取舍：</strong>
+          DeerFlow 选择“少量静态 prompt + 大量运行时中间件联动”的方式管理上下文，这比纯 prompt 拼接更复杂，但更贴合真实 thread、files、images、memory 和 tools 的生命周期。
+        </div>
+      </section>
+
+      <section id="limits">
+        <h2>当前限制、边界与非目标</h2>
+        <ul>
+          <li>DeerFlow 的上下文工程不是通用 RAG 框架，也不是把所有外部知识统一索引后再检索注入。</li>
+          <li>skills、memory、summary、uploads、images 都会影响上下文，但它们不是同一种数据层，不能简单合并成一个“万能 context blob”。</li>
+          <li><code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 只解决 deferred tool schema 暴露，不负责所有工具策略判断。</li>
+          <li>本章不展开每个 middleware 逐行源码；重点是理解它们如何共同塑造模型看到的上下文面。</li>
+        </ul>
+      </section>
+
+      <section id="relations">
+        <h2>它与 DeerFlow 其他能力的关系</h2>
+        <p>上下文工程几乎连接 DeerFlow 的所有运行时能力：</p>
+        <ul>
+          <li>它和第 11 章 skills 系统相连，因为 skills 进入 <code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code> 后，会直接改变系统提示。</li>
+          <li>它和第 13 章 memory 相连，因为长期记忆既依赖 <code>backend/packages/harness/deerflow/agents/memory/prompt.py</code> 的更新提示，也依赖 <code>dynamic_context</code> 这类 middleware 在当轮注入可见内容。</li>
+          <li>它和第 12 章 files / sandbox 相连，因为 uploads、artifacts、images 最终都要变成模型可理解的 thread 资产。</li>
+          <li>它和第 21、23 章模型集成与高级模式相连，因为上下文预算、thinking 模式、tool search 和 subagent 组合都会改变最优上下文策略。</li>
+        </ul>
+        <div class="highlight">
+          建议把 <code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code>、<code>backend/packages/harness/deerflow/agents/factory.py</code>、<code>backend/packages/harness/deerflow/agents/middlewares/</code>、<code>backend/packages/harness/deerflow/agents/memory/prompt.py</code> 和 <code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 连起来读。这样最容易看到 DeerFlow 上下文工程的真实联动机制。
+        </div>
+      </section>
+
+      <div id="page-nav"></div>
+    </div>
   </main>
 </div>
 <script src="assets/nav.js"></script>

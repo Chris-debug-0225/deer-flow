@@ -6,238 +6,7 @@
     <title>Skills系统：Agent的能力扩展 · DeerFlow 学习系列</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
-        /* 页面特定样式 - 与深色主题兼容 */
-        
-        .toc {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--accent);
-            padding: 20px;
-            margin-bottom: 40px;
-            border-radius: 8px;
-        }
-        
-        .toc h2 {
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .toc li:before {
-            content: "▸";
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: bold;
-        }
-        
-        .toc a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .toc a:hover {
-            color: var(--accent-2);
-            text-decoration: underline;
-        }
-        
-        section {
-            margin-bottom: 50px;
-        }
-        
-        /* 代码块样式 */
-        .code-block {
-            background: var(--bg-code);
-            color: var(--text-soft);
-            padding: 18px 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 18px 0;
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 13.5px;
-            line-height: 1.65;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-        }
-        
-        .code-block code {
-            background: none;
-            border: none;
-            padding: 0;
-            color: var(--text-soft);
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            white-space: pre;
-            display: block;
-        }
-        
-        .code-block::-webkit-scrollbar {
-            height: 9px;
-        }
-        
-        .code-block::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-        
-        /* 提示框样式 */
-        .highlight {
-            background: var(--bg-soft);
-            padding: 15px 18px;
-            border-left: 4px solid var(--orange);
-            margin: 18px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .key-point {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--green);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--green);
-        }
-        
-        .key-point strong {
-            color: var(--green-soft);
-            font-weight: 650;
-        }
-        
-        .example-case {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--orange);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .example-case strong {
-            color: var(--orange);
-            font-weight: 650;
-        }
-        
-        .warning {
-            background: var(--bg-soft);
-            border-left: 4px solid #ff6b6b;
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid #ff6b6b;
-        }
-        
-        .warning strong {
-            color: #ff6b6b;
-            font-weight: 650;
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 18px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-        }
-        
-        .comparison-table th {
-            background: var(--bg-soft);
-            color: var(--text);
-            padding: 11px 15px;
-            text-align: left;
-            font-weight: 650;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .comparison-table td {
-            padding: 11px 15px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-soft);
-        }
-        
-        .comparison-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .comparison-table tr:hover td {
-            background: rgba(88,166,255,0.04);
-        }
-        
-        .flow-diagram {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        
-        .flow-step {
-            background: var(--bg-card);
-            border: 1.5px solid var(--accent);
-            color: var(--text);
-            padding: 12px 22px;
-            border-radius: 10px;
-            min-width: 120px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .flow-arrow {
-            font-size: 20px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            padding: 2px 0;
-        }
-
-        /* callout 样式（如果 style.css 中未定义） */
-        .callout {
-            background: var(--bg-soft);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--accent);
-        }
-
-        .callout-info { border-left-color: #58a6ff; }
-        .callout-tip { border-left-color: var(--green); }
-        .callout-error { border-left-color: #ff6b6b; }
-        .callout-warning { border-left-color: var(--orange); }
-
-        .callout code, .key-point code, .highlight code, .example-case code {
-            background: rgba(255,255,255,0.06);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.9em;
-        }
+        section { margin-bottom: 50px; }
     </style>
 </head>
 <body>
@@ -246,636 +15,148 @@
   <nav class="sidebar" id="sidebar"></nav>
   <main class="main">
     <div class="content">
-            <h1>Skills系统：Agent的能力扩展</h1>
-            <p class="page-subtitle">DeerFlow 学习系列 - 第 11 章</p>
-            
-            <div class="toc">
-                <h2>📖 目录</h2>
-                <ul>
-                    <li><a href="#introduction">简介</a></li>
-                    <li><a href="#skill-vs-tool">Skill vs Tool：核心区别</a></li>
-                    <li><a href="#skill-structure">Skill 的磁盘结构</a></li>
-                    <li><a href="#skill-md">SKILL.md 详解</a></li>
-                    <li><a href="#skill-loading">Skill 的加载机制</a></li>
-                    <li><a href="#skill-invocation">Skill 如何影响 Agent 行为</a></li>
-                    <li><a href="#skill-evolution">Skill 的自我进化</a></li>
-                    <li><a href="#skill-testing">Python 测试基础</a></li>
-                    <li><a href="#summary">总结</a></li>
-                </ul>
-            </div>
-            
-            <section id="introduction">
-                <h2>简介</h2>
-                <p>
-                    在 DeerFlow 中，<strong>Skill</strong> 和 <strong>Tool</strong> 是两个容易混淆但本质完全不同的概念。
-                    理解它们的区别是掌握 DeerFlow 能力扩展体系的关键。
-                </p>
-                <p>
-                    一句话概括：
-                    <strong>Tool 是可执行的 Python 函数</strong>（如搜索网页、执行代码），
-                    <strong>Skill 是 Markdown 格式的工作流指令文档</strong>（如"如何做深度研究"的方法论）。
-                    Agent 通过 Tool 执行动作，通过 Skill 获取"做事的方法论"。
-                </p>
-                <div class="key-point">
-                    <strong>学习目标：</strong>
-                    <ul>
-                        <li>理解 Skill 和 Tool 的本质区别</li>
-                        <li>掌握 SKILL.md 的结构和 YAML frontmatter 元数据</li>
-                        <li>理解 Skill 如何通过系统提示注入影响 Agent 行为</li>
-                        <li>了解 Skill 的加载、启用和自我进化机制</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <section id="skill-vs-tool">
-                <h2>Skill vs Tool：核心区别</h2>
-                <p>
-                    这是本章最重要的部分。很多人（包括之前的版本的本文档）把 Skill 描述为"包装了 Python 函数的能力单元"——
-                    那其实是 <strong>Tool</strong> 的定义，不是 Skill。
-                </p>
-
-                <div class="callout callout-error">
-                    <p>
-                        <strong>常见误解：</strong>Skill 就是 Tool 的另一个名字，都是可执行的函数。<br>
-                        <strong>事实：</strong>Skill <strong>不是</strong>可执行代码。Skill 是 Markdown 文档，
-                        它不包含任何 Python 函数，不能被"调用"或"执行"。
-                    </p>
-                </div>
-
-                <h3>对比表</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>维度</th>
-                            <th>Tool（工具）</th>
-                            <th>Skill（技能）</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>本质</strong></td>
-                            <td>Python 函数（<code>langchain.tools.BaseTool</code>）</td>
-                            <td>Markdown 文档（<code>SKILL.md</code>）</td>
-                        </tr>
-                        <tr>
-                            <td><strong>是否可执行</strong></td>
-                            <td>✅ 是，LLM 直接调用执行</td>
-                            <td>❌ 否，是一段指令文本</td>
-                        </tr>
-                        <tr>
-                            <td><strong>配置位置</strong></td>
-                            <td><code>config.yaml</code> 中的 <code>tools:</code> 列表</td>
-                            <td><code>skills/</code> 目录下的 <code>SKILL.md</code> 文件</td>
-                        </tr>
-                        <tr>
-                            <td><strong>如何加载</strong></td>
-                            <td>Python 动态导入（<code>resolve_variable</code>）</td>
-                            <td>文件系统扫描 + YAML frontmatter 解析</td>
-                        </tr>
-                        <tr>
-                            <td><strong>如何影响 Agent</strong></td>
-                            <td>绑定到 Agent，LLM 可直接调用</td>
-                            <td>注入系统提示，Agent 按需 <code>read_file</code> 读取</td>
-                        </tr>
-                        <tr>
-                            <td><strong>典型示例</strong></td>
-                            <td><code>bash_tool</code>（执行 shell 命令）<br><code>web_search</code>（搜索网页）</td>
-                            <td><code>deep-research</code>（深度研究方法论）<br><code>skill-creator</code>（创建新 Skill 的指南）</td>
-                        </tr>
-                        <tr>
-                            <td><strong>数据模型</strong></td>
-                            <td><code>langchain_core.tools.BaseTool</code></td>
-                            <td><code>@dataclass Skill</code>（见 <code>skills/types.py</code>）</td>
-                        </tr>
-                        <tr>
-                            <td><strong>比喻</strong></td>
-                            <td>手中的工具（锤子、搜索引擎）</td>
-                            <td>脑中的方法论（"如何做调研"的 SOPS）</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h3>用类比理解</h3>
-                <div class="example-case">
-                    <p>
-                        想象你在写一篇学术论文：
-                    </p>
-                    <ul>
-                        <li><strong>Tool</strong> = 你使用的工具：Google Scholar（搜索文献）、Python（分析数据）、Word（排版）</li>
-                        <li><strong>Skill</strong> = 你掌握的方法论："如何系统地做文献综述"——这是一份写在纸上的指南，告诉你先搜什么、再搜什么、怎么筛选、怎么组织，但它<strong>本身不能帮你搜文献</strong></li>
-                    </ul>
-                    <p>
-                        Agent 有了 Tool（搜索工具），但不知道"先搜什么后搜什么、搜到之后怎么交叉验证"。
-                        Skill（方法论文档）告诉它这些步骤，然后 Agent 一步步地<strong>调用 Tool</strong> 来执行。
-                    </p>
-                </div>
-
-                <h3>源码定义对比</h3>
-                <div class="code-block"><code>
-<span class="tok-com"># ━━━ Tool：可执行函数（backend/.../tools/tools.py）━━━</span>
-<span class="tok-com"># Tool 是 LangChain BaseTool 实例，有 _run 方法，可以被 LLM 直接调用</span>
-
-<span class="tok-com"># config.yaml 中配置：</span>
-tools:
-  - use: deerflow.community.ddg_search.tools:web_search_tool   <span class="tok-com"># ← Python 可导入路径</span>
-  - use: deerflow.sandbox.tools:bash_tool
-
-<span class="tok-com"># 加载时通过 resolve_variable 动态导入这些 Python 函数对象</span>
-
-
-<span class="tok-com"># ━━━ Skill：Markdown 文档（backend/.../skills/types.py）━━━</span>
-<span class="tok-com"># Skill 是 dataclass，没有 func 属性，不可执行</span>
-
-<span class="tok-kw">@dataclass</span>
-<span class="tok-kw">class</span> <span class="tok-cls">Skill</span>:
-    name: <span class="tok-str">str</span>                        <span class="tok-com"># 从 SKILL.md frontmatter 读取</span>
-    description: <span class="tok-str">str</span>                 <span class="tok-com"># 从 SKILL.md frontmatter 读取</span>
-    license: <span class="tok-str">str</span> | <span class="tok-kw">None</span>             <span class="tok-com"># 许可证</span>
-    skill_dir: <span class="tok-cls">Path</span>                 <span class="tok-com"># SKILL.md 所在目录</span>
-    skill_file: <span class="tok-cls">Path</span>                <span class="tok-com"># SKILL.md 文件路径</span>
-    relative_path: <span class="tok-cls">Path</span>            <span class="tok-com"># 相对于 skills 目录的路径</span>
-    category: <span class="tok-cls">SkillCategory</span>          <span class="tok-com"># 'public' 或 'custom'</span>
-    allowed_tools: <span class="tok-str">list</span>[<span class="tok-str">str</span>] | <span class="tok-kw">None</span> = <span class="tok-kw">None</span>  <span class="tok-com"># 可选：限制可用工具</span>
-    enabled: <span class="tok-str">bool</span> = <span class="tok-kw">False</span>                                  <span class="tok-com"># 是否启用</span>
-    <span class="tok-com"># 注意：没有 func、没有 execute 方法！</span>
-</code></div>
-            </section>
-
-            <section id="skill-structure">
-                <h2>Skill 的磁盘结构</h2>
-                <p>
-                    Skill 以<strong>文件夹</strong>为单位，每个 Skill 是 <code>skills/</code> 目录下的一个子目录，
-                    必须包含一个 <code>SKILL.md</code> 文件。这是你在项目 <code>skills/</code> 目录中实际看到的结构：
-                </p>
-
-                <div class="code-block"><code>
-skills/                                      <span class="tok-com"># ← Skill 根目录</span>
-├── public/                                  <span class="tok-com"># 内置 Skill（只读，随平台分发）</span>
-│   ├── deep-research/
-│   │   └── SKILL.md                         <span class="tok-com"># 深度研究方法论（最简结构）</span>
-│   │
-│   ├── bootstrap/
-│   │   ├── SKILL.md                         <span class="tok-com"># 核心标识文件</span>
-│   │   ├── templates/SOUL.template.md       <span class="tok-com"># 模板文件</span>
-│   │   └── references/conversation-guide.md <span class="tok-com"># 参考文档</span>
-│   │
-│   ├── skill-creator/                       <span class="tok-com"># 最复杂的 Skill（创建新 Skill 的指南）</span>
-│   │   ├── SKILL.md                         <span class="tok-com"># 32KB 的核心指令文档</span>
-│   │   ├── agents/                          <span class="tok-com"># 子 Agent 角色定义</span>
-│   │   │   ├── analyzer.md                  <span class="tok-com"># 分析角色</span>
-│   │   │   ├── comparator.md                <span class="tok-com"># 比较角色</span>
-│   │   │   └── grader.md                    <span class="tok-com"># 评分角色</span>
-│   │   ├── references/                      <span class="tok-com"># 参考文档</span>
-│   │   │   ├── output-patterns.md</span>
-│   │   │   ├── schemas.md</span>
-│   │   │   └── workflows.md</span>
-│   │   ├── scripts/                         <span class="tok-com"># 辅助脚本</span>
-│   │   │   ├── init_skill.py</span>
-│   │   │   ├── package_skill.py</span>
-│   │   │   └── quick_validate.py</span>
-│   │   ├── assets/                          <span class="tok-com"># 静态资源</span>
-│   │   │   └── eval_review.html</span>
-│   │   └── LICENSE.txt</span>
-│   │
-│   └── ... <span class="tok-com">(共 21 个内置 Skill)</span>
-│
-└── custom/                                  <span class="tok-com"># 用户自定义 Skill（可编辑、可删除）</span>
-    ├── .history/                            <span class="tok-com"># 变更历史（JSONL 格式）</span>
-    │   └── my-skill.jsonl</span>
-    └── my-skill/
-        └── SKILL.md
-</code></div>
-
-                <div class="callout callout-info">
-                    <p>
-                        <strong>支撑文件的允许目录：</strong>Skill 内部除了 <code>SKILL.md</code>，
-                        还可以包含以下子目录中的资源（见 <code>skill_storage.py</code>）：
-                    </p>
-                    <ul>
-                        <li><code>references/</code> — 参考文档，Agent 可按需 <code>read_file</code> 读取</li>
-                        <li><code>templates/</code> — 模板文件</li>
-                        <li><code>scripts/</code> — 辅助脚本（Agent 可通过 <code>bash_tool</code> 执行）</li>
-                        <li><code>assets/</code> — 静态资源（HTML、图片等）</li>
-                    </ul>
-                    <p>
-                        <code>SKILL.md</code> 是<strong>唯一必需的</strong>文件，其他都是可选的。
-                        这正是你平时看到的 Skill 结构——一个 <code>.md</code> 文档做标识，
-                        其他资源文件作为使用过程中的辅助材料。
-                    </p>
-                </div>
-            </section>
-
-            <section id="skill-md">
-                <h2>SKILL.md 详解</h2>
-                <p>
-                    <code>SKILL.md</code> 是每个 Skill 的核心。它由两部分组成：
-                    <strong>YAML frontmatter</strong>（元数据）和 <strong>Markdown 正文</strong>（工作流指令）。
-                </p>
-
-                <h3>实际示例：deep-research 的 SKILL.md</h3>
-                <div class="code-block"><code>
-<span class="tok-com"># ━━━ skills/public/deep-research/SKILL.md ━━━</span>
-
-<span class="tok-kw">---</span>                                    <span class="tok-com"># YAML frontmatter（元数据）</span>
-name: deep-research                      <span class="tok-com"># ← Skill 的唯一标识</span>
-description: >                           <span class="tok-com"># ← LLM 看到的描述（决定何时使用此 Skill）</span>
-  Use this skill instead of WebSearch for ANY question requiring web research.
-  Trigger on queries like "what is X", "explain X", "compare X and Y",
-  "research X". Provides systematic multi-angle research methodology.
-<span class="tok-kw">---</span>
-
-# Deep Research Skill                     <span class="tok-com"># Markdown 正文（工作流指令）</span>
-
-## Overview                                <span class="tok-com"># ← 这部分不被解析，由 Agent 运行时 read_file 读取</span>
-
-This skill provides a systematic methodology for conducting thorough web research.
-Load this skill BEFORE starting any content generation task.
-
-## When to Use This Skill
-
-**Always load this skill when:**
-- User asks "what is X", "explain X", "research X"
-- The question requires current, comprehensive information
-
-## Core Principle
-
-1. Break the research question into sub-questions
-2. Search each sub-question from multiple angles
-3. Cross-validate findings across sources
-4. Synthesize into a coherent answer
-
-...（几百行的方法论指令）
-</code></div>
-
-                <h3>YAML frontmatter 字段</h3>
-                <p>
-                    frontmatter 中 <code>---</code> 之间的部分被 <code>skills/parser.py</code> 解析。
-                    允许的字段（见 <code>skills/validation.py</code>）：
-                </p>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>字段</th>
-                            <th>必需</th>
-                            <th>说明</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>name</code></td>
-                            <td>✅</td>
-                            <td>Skill 的唯一标识，也是目录名</td>
-                        </tr>
-                        <tr>
-                            <td><code>description</code></td>
-                            <td>✅</td>
-                            <td>功能描述，<strong>注入到系统提示中供 LLM 判断何时使用</strong></td>
-                        </tr>
-                        <tr>
-                            <td><code>license</code></td>
-                            <td>❌</td>
-                            <td>开源许可证</td>
-                        </tr>
-                        <tr>
-                            <td><code>allowed-tools</code></td>
-                            <td>❌</td>
-                            <td>限制此 Skill 启用时 Agent 可用的 Tool 列表</td>
-                        </tr>
-                        <tr>
-                            <td><code>version</code></td>
-                            <td>❌</td>
-                            <td>版本号</td>
-                        </tr>
-                        <tr>
-                            <td><code>author</code></td>
-                            <td>❌</td>
-                            <td>作者</td>
-                        </tr>
-                        <tr>
-                            <td><code>metadata</code></td>
-                            <td>❌</td>
-                            <td>自定义元数据</td>
-                        </tr>
-                        <tr>
-                            <td><code>compatibility</code></td>
-                            <td>❌</td>
-                            <td>兼容性信息</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="callout callout-tip">
-                    <p>
-                        <strong>description 是最重要的字段。</strong>
-                        它被注入到 Agent 的系统提示中，LLM 根据它判断"当前用户问题是否需要加载这个 Skill"。
-                        写得越精确，Agent 判断越准确。
-                    </p>
-                </div>
-            </section>
-
-            <section id="skill-loading">
-                <h2>Skill 的加载机制</h2>
-                <p>
-                    DeerFlow 在创建 Agent 时加载 Skills。整个过程涉及扫描目录、解析 frontmatter、
-                    注入系统提示。以下是完整的加载流程：
-                </p>
-
-                <div class="flow-diagram">
-                    <div class="flow-step">扫描 skills/ 目录</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">解析 SKILL.md</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">构建 Skill 对象</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">过滤 enabled</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">注入系统提示</div>
-                </div>
-
-                <h3>关键源码路径</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>文件</th>
-                            <th>职责</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>skills/storage/local_skill_storage.py</code></td>
-                            <td>扫描 <code>skills/public/</code> 和 <code>skills/custom/</code> 目录</td>
-                        </tr>
-                        <tr>
-                            <td><code>skills/parser.py</code></td>
-                            <td>解析 <code>SKILL.md</code> 的 YAML frontmatter，构建 Skill 对象</td>
-                        </tr>
-                        <tr>
-                            <td><code>skills/validation.py</code></td>
-                            <td>验证 frontmatter 字段是否合法</td>
-                        </tr>
-                        <tr>
-                            <td><code>agents/lead_agent/prompt.py</code></td>
-                            <td>将启用的 Skills 注入 Agent 的系统提示</td>
-                        </tr>
-                        <tr>
-                            <td><code>skills/tool_policy.py</code></td>
-                            <td>根据 Skill 的 <code>allowed-tools</code> 过滤可用 Tool</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h3>存储布局</h3>
-                <div class="code-block"><code>
-<span class="tok-com"># 来源：local_skill_storage.py 的 Layout 注释</span>
-
-<span class="tok-str">"""</span>
-Layout:
-&lt;root&gt;/public/&lt;name&gt;/SKILL.md        <span class="tok-com"># 内置 Skill（只读）</span>
-&lt;root&gt;/custom/&lt;name&gt;/SKILL.md        <span class="tok-com"># 用户自定义 Skill（可编辑）</span>
-&lt;root&gt;/custom/.history/&lt;name&gt;.jsonl  <span class="tok-com"># 变更历史</span>
-<span class="tok-str">"""</span>
-
-<span class="tok-com"># 在沙箱容器中，skills 被挂载到：</span>
-<span class="tok-com">#   /mnt/skills/public/&lt;name&gt;/SKILL.md</span>
-<span class="tok-com">#   /mnt/skills/custom/&lt;name&gt;/SKILL.md</span>
-</code></div>
-
-                <h3>Skill 分类</h3>
-                <div class="code-block"><code>
-<span class="tok-com"># 来源：skills/types.py</span>
-
-<span class="tok-kw">class</span> <span class="tok-cls">SkillCategory</span>(<span class="tok-cls">StrEnum</span>):
-    <span class="tok-str">"""Skill 的来源分类"""</span>
-    PUBLIC = <span class="tok-str">"public"</span>    <span class="tok-com"># 内置，随平台分发，只读</span>
-    CUSTOM = <span class="tok-str">"custom"</span>    <span class="tok-com"># 用户创建，可编辑/删除</span>
-</code></div>
-            </section>
-
-            <section id="skill-invocation">
-                <h2>Skill 如何影响 Agent 行为</h2>
-                <p>
-                    Skill <strong>不是被"调用"的</strong>，而是通过两个机制影响 Agent 的行为：
-                </p>
-
-                <h3>机制一：注入系统提示</h3>
-                <p>
-                    当 Agent 启动时，<code>prompt.py</code> 中的 <code>get_skills_prompt_section()</code>
-                    会生成一段 XML，列出所有启用的 Skill，<strong>注入到 Agent 的系统提示中</strong>：
-                </p>
-
-                <div class="code-block"><code>
-<span class="tok-com"># 来源：agents/lead_agent/prompt.py 第 609-623 行</span>
-<span class="tok-com"># 这段 XML 被拼接到 Agent 的 system_prompt 中</span>
-
-&lt;skill_system&gt;
-You have access to skills that provide optimized workflows for specific tasks.
-Each skill contains best practices, frameworks, and references.
-
-**Progressive Loading Pattern:**
-1. When a user query matches a skill's use case, immediately call `read_file`
-   on the skill's main file using the path attribute provided below
-2. Read and understand the skill's workflow and instructions
-
-&lt;available_skills&gt;
-    &lt;skill&gt;
-        &lt;name&gt;deep-research&lt;/name&gt;
-        &lt;description&gt;Use this skill for ANY question requiring web research... [built-in]&lt;/description&gt;
-        &lt;location&gt;/mnt/skills/public/deep-research/SKILL.md&lt;/location&gt;
-    &lt;/skill&gt;
-    &lt;skill&gt;
-        &lt;name&gt;skill-creator&lt;/name&gt;
-        &lt;description&gt;Guide for creating effective skills... [built-in]&lt;/description&gt;
-        &lt;location&gt;/mnt/skills/public/skill-creator/SKILL.md&lt;/location&gt;
-    &lt;/skill&gt;
-&lt;/available_skills&gt;
-&lt;/skill_system&gt;
-</code></div>
-
-                <div class="callout callout-info">
-                    <p>
-                        注意：系统提示中<strong>不包含</strong> <code>SKILL.md</code> 的正文内容，
-                        只包含 name、description 和文件路径。Agent 看到匹配的场景时，
-                        会主动用 <code>read_file</code> <strong>Tool</strong> 去读取完整的 <code>SKILL.md</code>。
-                        这就是"渐进式加载"——避免一次性把所有 Skill 的正文塞满上下文。
-                    </p>
-                </div>
-
-                <h3>机制二：过滤可用 Tool</h3>
-                <p>
-                    如果 Skill 的 frontmatter 中声明了 <code>allowed-tools</code>，当该 Skill 启用时，
-                    Agent 的可用 Tool 列表会被<strong>限制</strong>为这些工具：
-                </p>
-
-                <div class="code-block"><code>
-<span class="tok-com"># 来源：skills/tool_policy.py</span>
-<span class="tok-com"># 核心逻辑只有几行</span>
-
-<span class="tok-kw">def</span> <span class="tok-fn">filter_tools_by_skill_allowed_tools</span>(tools, skills):
-    allowed = <span class="tok-fn">allowed_tool_names_for_skills</span>(skills)
-    <span class="tok-kw">if</span> allowed <span class="tok-kw">is</span> <span class="tok-kw">None</span>:
-        <span class="tok-kw">return</span> tools  <span class="tok-com"># 没有 Skill 声明 allowed-tools → 不过滤</span>
-    <span class="tok-kw">return</span> [tool <span class="tok-kw">for</span> tool <span class="tok-kw">in</span> tools <span class="tok-kw">if</span> tool.name <span class="tok-kw">in</span> allowed]
-
-<span class="tok-com"># SKILL.md 中的用法：</span>
-<span class="tok-com"># ---</span>
-<span class="tok-com"># name: my-restricted-skill</span>
-<span class="tok-com"># allowed-tools:</span>
-<span class="tok-com">#   - web_search</span>
-<span class="tok-com">#   - read_file</span>
-<span class="tok-com"># ---</span>
-<span class="tok-com"># 启用后，Agent 只能用 web_search 和 read_file，不能用 bash_tool 等</span>
-</code></div>
-
-                <h3>完整的运行时流程</h3>
-                <div class="code-block"><code>
-<span class="tok-com"># ━━━━━━━━━━━━ 一个真实场景：用户问"研究一下 2024 年 AI 发展趋势" ━━━━━━━━━━━━</span>
-
-<span class="tok-com"># 步骤 1：Agent 启动时</span>
-<span class="tok-com">#   系统提示中包含了 &lt;skill_system&gt;...&lt;/skill_system&gt; XML</span>
-<span class="tok-com">#   Agent 知道有 deep-research 这个 Skill 可用</span>
-
-<span class="tok-com"># 步骤 2：用户提问 → LLM 推理</span>
-<span class="tok-com">#   LLM 看到 description 匹配："研究" → 需要 web research</span>
-<span class="tok-com">#   LLM 决定："先加载 deep-research Skill"</span>
-
-<span class="tok-com"># 步骤 3：Agent 调用 read_file Tool（注意：read_file 是 Tool，不是 Skill！）</span>
-<span class="tok-com">#   read_file("/mnt/skills/public/deep-research/SKILL.md")</span>
-<span class="tok-com">#   → 返回完整的 Markdown 正文（几百行方法论）</span>
-
-<span class="tok-com"># 步骤 4：Agent 按照 SKILL.md 中的指令一步步执行</span>
-<span class="tok-com">#   - 拆解子问题</span>
-<span class="tok-com">#   - 用 web_search Tool 搜索每个子问题</span>
-<span class="tok-com">#   - 交叉验证</span>
-<span class="tok-com">#   - 综合成答案</span>
-
-<span class="tok-com"># ★ 关键理解：</span>
-<span class="tok-com">#   Skill 提供了"做什么、怎么做的步骤"</span>
-<span class="tok-com">#   Tool 提供了"实际执行动作的能力"</span>
-<span class="tok-com">#   Agent 读 Skill（获取方法论）→ 调 Tool（执行动作）→ 完成任务</span>
-</code></div>
-
-                <div class="callout callout-tip">
-                    <p>
-                        <strong>总结：Skill 和 Tool 是互补的，不是替代关系。</strong><br>
-                        Skill 告诉 Agent "遇到 X 类问题，应该按什么步骤处理"；<br>
-                        Tool 让 Agent 有能力实际执行每一步（搜索、读文件、执行代码等）。
-                    </p>
-                </div>
-            </section>
-
-            <section id="skill-evolution">
-                <h2>Skill 的自我进化</h2>
-                <p>
-                    DeerFlow 的一个独特设计是：Agent 可以<strong>自己创建和修改 Skill</strong>。
-                    这是通过 <code>skill_manage_tool</code>（一个 <strong>Tool</strong>）实现的——
-                    注意这里的有趣关系：用 Tool 来管理 Skill。
-                </p>
-
-                <div class="code-block"><code>
-<span class="tok-com"># 来源：tools/skill_manage_tool.py</span>
-<span class="tok-com"># skill_manage_tool 是一个 LangChain Tool，用来管理 Skill（Markdown 文件）</span>
-
-<span class="tok-com"># Agent 可以执行的操作：</span>
-{
-    <span class="tok-str">"operation"</span>: <span class="tok-str">"create"</span>,       <span class="tok-com"># 创建新 Skill</span>
-    <span class="tok-str">"operation"</span>: <span class="tok-str">"edit"</span>,         <span class="tok-com"># 编辑现有 Skill</span>
-    <span class="tok-str">"operation"</span>: <span class="tok-str">"delete"</span>,       <span class="tok-com"># 删除 Skill</span>
-    <span class="tok-str">"operation"</span>: <span class="tok-str">"patch"</span>,        <span class="tok-com"># 局部修改 Skill</span>
-}
-
-<span class="tok-com"># Agent 发现某种工作流反复有效 → 写成新的 SKILL.md → 下次遇到同类问题自动加载</span>
-<span class="tok-com"># 这就是"自我进化"——Agent 的方法论库会越来越丰富</span>
-</code></div>
-
-                <div class="callout callout-info">
-                    <p>
-                        自定义 Skill 的变更历史保存在 <code>skills/custom/.history/&lt;name&gt;.jsonl</code> 中，
-                        以 JSONL 格式记录每次编辑，支持回溯。
-                    </p>
-                </div>
-            </section>
-
-            <section id="skill-testing">
-                <h2>Python 测试基础（附 assertRaises 详解）</h2>
-                <p>
-                    虽然 Skill 本身是 Markdown 文档不需要测试，但 DeerFlow 的 Tool 和其他 Python 模块
-                    需要单元测试。这里讲解一个常见的测试模式：<code>assertRaises</code>。
-                </p>
-
-                <div class="code-block"><code>
-<span class="tok-kw">import</span> unittest
-
-<span class="tok-kw">class</span> <span class="tok-cls">TestWeatherTool</span>(unittest.<span class="tok-cls">TestCase</span>):
-    <span class="tok-kw">def</span> <span class="tok-fn">test_invalid_city</span>(<span class="tok-kw">self</span>):
-        <span class="tok-str">"""测试无效的城市"""</span>
-        <span class="tok-kw">with</span> <span class="tok-kw">self</span>.<span class="tok-fn">assertRaises</span>(<span class="tok-cls">ValueError</span>):
-            <span class="tok-kw">self</span>.tool.<span class="tok-fn">_run</span>(city=<span class="tok-str">"不存在的城市"</span>)
-</code></div>
-
-                <div class="callout callout-info">
-                    <p>
-                        <strong><code>assertRaises</code> 的逻辑和普通断言相反：</strong><br>
-                        普通 <code>assertEqual(a, b)</code> 验证的是"结果应该等于预期"——<strong>不报错</strong>才算通过。<br>
-                        <code>assertRaises(ValueError)</code> 验证的是"代码<strong>应该报错</strong>"——
-                        <strong>抛出了指定异常才算通过</strong>；如果代码正常跑完没报错，测试<strong>反而失败</strong>。
-                    </p>
-                </div>
-
-                <div class="code-block"><code>
-<span class="tok-com"># assertRaises 的两种用法</span>
-
-<span class="tok-com"># ━━━ 用法 1：上下文管理器（推荐）━━━</span>
-<span class="tok-kw">with</span> <span class="tok-kw">self</span>.<span class="tok-fn">assertRaises</span>(<span class="tok-cls">ValueError</span>):
-    <span class="tok-kw">self</span>.tool.<span class="tok-fn">_run</span>(city=<span class="tok-str">"不存在的城市"</span>)
-<span class="tok-com"># ✅ _run 抛出 ValueError → 测试通过</span>
-<span class="tok-com"># ❌ _run 正常返回 → 测试失败</span>
-
-<span class="tok-com"># ━━━ 用法 2：直接传 callable ━━━</span>
-<span class="tok-kw">self</span>.<span class="tok-fn">assertRaises</span>(<span class="tok-cls">ValueError</span>, <span class="tok-kw">self</span>.tool._run, city=<span class="tok-str">"火星"</span>)
-
-
-<span class="tok-com"># ━━━━━━━━━━━━ 用实际场景理解 ━━━━━━━━━━━━</span>
-
-<span class="tok-com"># 假设 weather_tool 的 _run 内部有参数校验：</span>
-<span class="tok-kw">def</span> <span class="tok-fn">_run</span>(<span class="tok-kw">self</span>, city):
-    valid_cities = [<span class="tok-str">"北京"</span>, <span class="tok-str">"上海"</span>, <span class="tok-str">"广州"</span>]
-    <span class="tok-kw">if</span> city <span class="tok-kw">not</span> <span class="tok-kw">in</span> valid_cities:
-        <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"不支持的城市: {city}"</span>)
-    <span class="tok-kw">return</span> <span class="tok-fn">query_weather</span>(city)
-
-<span class="tok-com"># 测试用例 2：无效城市 → 必须抛 ValueError</span>
-<span class="tok-kw">def</span> <span class="tok-fn">test_invalid_city</span>(<span class="tok-kw">self</span>):
-    <span class="tok-kw">with</span> <span class="tok-kw">self</span>.<span class="tok-fn">assertRaises</span>(<span class="tok-cls">ValueError</span>):
-        <span class="tok-kw">self</span>.tool.<span class="tok-fn">_run</span>(city=<span class="tok-str">"不存在的城市"</span>)  <span class="tok-com"># → 触发 ValueError → 测试通过</span>
-</code></div>
-            </section>
-
-            <section id="summary">
-                <h2>总结</h2>
-                <p>
-                    Skill 和 Tool 是 DeerFlow 能力扩展体系的两大支柱，它们<strong>互补而非等同</strong>。
-                </p>
-                <div class="highlight">
-                    <strong>核心要点总结：</strong>
-                    <ul>
-                        <li><strong>Tool = 可执行 Python 函数</strong>（如 <code>web_search</code>、<code>bash_tool</code>），LLM 直接调用执行</li>
-                        <li><strong>Skill = Markdown 工作流文档</strong>（如 <code>deep-research</code>），注入系统提示，Agent 按需 <code>read_file</code> 读取</li>
-                        <li><strong>SKILL.md 是核心文件</strong>：YAML frontmatter（元数据）+ Markdown 正文（方法论指令）</li>
-                        <li><strong>Skill 不被"调用"</strong>，而是通过注入系统提示和过滤 Tool 两个机制影响 Agent 行为</li>
-                        <li><strong>渐进式加载</strong>：系统提示只含 name + description + 路径，正文由 Agent 按需读取</li>
-                        <li><strong>自我进化</strong>：Agent 通过 <code>skill_manage_tool</code> 创建/编辑/删除 Skill</li>
-                    </ul>
-                </div>
-                
-                <div class="key-point">
-                    <strong>一句话记住：</strong>
-                    Tool 是 Agent 的"手"（执行动作），Skill 是 Agent 的"脑"（做事的方法论）。
-                    Agent 读 Skill 获取步骤 → 调 Tool 执行每一步 → 完成任务。
-                </div>
-            </section>
-            
-            <div id="page-nav"></div>
+      <h1>Skills系统：Agent的能力扩展</h1>
+      <p class="page-subtitle">DeerFlow 学习系列 - 第 11 章</p>
+
+      <div class="deerflow-map">
+        <h3>本章讲的是 DeerFlow 怎样管理“可注入能力面”</h3>
+        <p>在 DeerFlow 里，Skill 不是一个抽象概念标签，而是一套可安装、可启停、可扫描、可注入到 system prompt 的能力包。真正要理解的是：Skill 如何从磁盘被发现，如何通过 Gateway 管理，如何进入 lead agent prompt，以及为什么它和普通 tool、以及第 30 章的“自定义 Skill 编写流程”不是一回事。</p>
+      </div>
+
+      <div class="toc">
+        <h3>目录</h3>
+        <ul>
+          <li><a href="#problem">这项能力在 DeerFlow 中解决什么问题</a></li>
+          <li><a href="#codebase">这项能力在代码库中的位置</a></li>
+          <li><a href="#flow">真实运行链路或数据链路</a></li>
+          <li><a href="#config">配置面与使用方式</a></li>
+          <li><a href="#tradeoffs">关键实现细节与权衡</a></li>
+          <li><a href="#limits">当前限制、边界与非目标</a></li>
+          <li><a href="#relations">它与 DeerFlow 其他能力的关系</a></li>
+        </ul>
+      </div>
+
+      <section id="problem">
+        <h2>这项能力在 DeerFlow 中解决什么问题</h2>
+        <p>DeerFlow 需要一种比“再加一个 tool”更高层的能力扩展机制。原因很直接：很多能力不只是新增某个函数调用，还需要给 agent 补充操作约定、工作流、注意事项、参考模板，甚至告诉它什么时候应该触发某类工具搜索与执行策略。Skill 系统就是为这个问题设计的。</p>
+        <p>因此，本章中的 Skill 主要解决三件事：把一组能力说明和辅助资源组织成可发现目录；让这些目录能够被安装、启停、编辑和安全扫描；把启用中的 Skill 摘要注入到 lead agent 的系统提示中，让 DeerFlow 在运行前就拥有“该如何工作”的额外能力面。</p>
+        <div class="key-point">
+          <strong>一个容易混淆的边界：</strong>
+          Skill 不是 Tool 的别名。Tool 是运行时可调用接口；Skill 更像运行前注入的能力包与工作说明。第 30 章 <code>30-custom-skills-guide.html</code> 讲“用户如何定义和构建自定义 skills”，本章讲“DeerFlow 的 skills 系统本身如何工作”。
         </div>
+      </section>
+
+      <section id="codebase">
+        <h2>这项能力在代码库中的位置</h2>
+        <table class="comparison-table">
+          <tr>
+            <th>路径</th>
+            <th>职责</th>
+            <th>为什么要看</th>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/skills/</code></td>
+            <td>Skill 类型、校验、安装、存储、slash 激活等核心目录</td>
+            <td>理解 DeerFlow skills 系统不能只看某一个文件，这个目录才是主战场</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/skills/installer.py</code></td>
+            <td>安装归档解包、安全提取、扫描和落盘</td>
+            <td>说明 Skill 不是随便把 ZIP 解开，而是经过路径与内容安全约束</td>
+          </tr>
+          <tr>
+            <td><code>backend/app/gateway/routers/skills.py</code></td>
+            <td>Gateway 暴露的 skills 列表、安装、编辑、启停、历史与回滚接口</td>
+            <td>解释外部控制面如何进入 DeerFlow 的 skills 生命周期</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code></td>
+            <td>缓存启用中的 skills，并把它们转成 system prompt 片段</td>
+            <td>这是 Skill 真正影响 agent 行为的入口</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code></td>
+            <td>延迟工具发现机制</td>
+            <td>它不是 Skill 实现，但经常与 Skill 协同，让 agent 先拥有工作方法，再按需发现 MCP 工具</td>
+          </tr>
+        </table>
+      </section>
+
+      <section id="flow">
+        <h2>真实运行链路或数据链路</h2>
+        <p>一个典型的 Skill 生效链路可以分成“管理面”和“运行面”两段：</p>
+        <div class="code-block"><code>管理面：
+backend/app/gateway/routers/skills.py
+  -> get_or_new_skill_storage(...)
+  -> backend/packages/harness/deerflow/skills/installer.py
+  -> scan_skill_content / storage write / history
+  -> refresh_skills_system_prompt_cache_async()
+
+运行面：
+backend/packages/harness/deerflow/agents/lead_agent/prompt.py
+  -> get_or_new_skill_storage().load_skills(enabled_only=True)
+  -> cache enabled skills
+  -> render skills prompt section
+  -> lead agent system prompt receives skill instructions</code></div>
+        <p>这条链说明，Skill 的主要作用不是在运行过程中“像 tool 一样被直接调用”，而是先通过 Gateway 或本地存储进入 skills 仓库，再由 <code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code> 读取启用态并注入 prompt。只有当 agent 开始思考和规划时，这些 Skill 才真正改变它的行为。</p>
+        <p>另外一个经常一起出现的链路，是 Skill 与延迟工具发现的配合。DeerFlow 可以通过 <code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 先只暴露 MCP 工具名称，再让 agent 按需搜索工具 schema。很多 Skill 实际上是在告诉 agent：什么时候应该去搜索哪类工具，而不是替代这些工具本身。</p>
+      </section>
+
+      <section id="config">
+        <h2>配置面与使用方式</h2>
+        <p>从使用者视角看，DeerFlow 的 Skill 系统至少有四个配置和操作面：</p>
+        <ul>
+          <li>通过 <code>backend/app/gateway/routers/skills.py</code> 的 API 列出全部 skills、安装归档、启停单个 skill、读取自定义 skill 内容、查看历史并回滚。</li>
+          <li>通过 <code>ExtensionsConfig</code> 与 skills enabled 状态控制某个 skill 是否进入当前运行时的 prompt 注入。</li>
+          <li>通过 skills storage 决定从哪里加载 skills，本地默认会落到 DeerFlow 配置指定的 skills 根目录，再映射到容器内路径。</li>
+          <li>通过第 30 章中的自定义 Skill 构建流程新增内容，但那一章关注的是“怎么写一个 skill 包”，不是本章的系统运行逻辑。</li>
+        </ul>
+        <div class="highlight">
+          <strong>读代码时要特别注意：</strong>
+          `enable/disable` 并不是只改一个前端勾选状态。它会影响 <code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code> 的缓存内容，进而改变后续新建 run 时 agent 能看到的系统提示。
+        </div>
+      </section>
+
+      <section id="tradeoffs">
+        <h2>关键实现细节与权衡</h2>
+        <ul>
+          <li>DeerFlow 选择把 Skill 作为目录与文档资源集合，而不是数据库里的一段纯文本配置，这让 Skill 可以携带脚本、模板、references 等支持文件。</li>
+          <li><code>backend/packages/harness/deerflow/skills/installer.py</code> 明确加入了 ZIP 路径穿越检测、符号链接跳过、解压体积限制和内容扫描，说明 Skill 安装被当作一个安全边界处理。</li>
+          <li><code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code> 采用后台线程预热与缓存失效机制，而不是每次请求都同步扫描 skills 目录，这是为了避免把磁盘 I/O 和 prompt 组装直接绑死在请求路径上。</li>
+          <li>Skill 与工具发现分离。<code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 只负责延迟暴露 MCP 工具 schema；Skill 负责改变 agent 的工作方法。分开设计让 DeerFlow 不必把“能力说明”和“工具协议”混成一层。</li>
+        </ul>
+        <div class="key-point">
+          <strong>核心取舍：</strong>
+          DeerFlow 并没有把 Skill 设计成“万能插件接口”。它更像“提示词级能力包 + 受控资源目录 + 管理 API”，这样既能扩展 agent 行为，又不必让每个 Skill 都直接嵌入执行引擎。
+        </div>
+      </section>
+
+      <section id="limits">
+        <h2>当前限制、边界与非目标</h2>
+        <ul>
+          <li>Skill 系统当前的主要生效方式仍然是 prompt 注入与资源组织，而不是一个统一的运行时插件总线。</li>
+          <li>安装与编辑路径受安全扫描和存储后端约束，所以不是所有任意文件都能被当成 Skill 支持文件直接执行。</li>
+          <li>Skill 不能替代 Tool、Sub-Agent 或 Middleware。它可以影响 agent 的策略，但不会天然创建新的 runtime orchestration 机制。</li>
+          <li>本章不教你从零写一个自定义 Skill 包。那是 <code>30-custom-skills-guide.html</code> 的职责；本章的重点是 DeerFlow 自己怎样发现、管理和注入 skills。</li>
+        </ul>
+      </section>
+
+      <section id="relations">
+        <h2>它与 DeerFlow 其他能力的关系</h2>
+        <p>Skill 系统在 DeerFlow 里处在一个“承上启下”的位置：</p>
+        <ul>
+          <li>它和第 2 章的模型与工具装配相连，因为 Skill 经常决定 agent 该如何理解工具面，而 <code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 又让这种理解能转成按需工具发现。</li>
+          <li>它和第 10 章执行引擎相连，因为 Skill 最终是通过 <code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code> 进入 lead agent，再在真实运行链路中影响决策。</li>
+          <li>它和第 20 章上下文工程相连，因为 Skill 本质上也是一种结构化上下文注入机制，只不过来源是可管理的能力包，而不是一次性 prompt 拼接。</li>
+          <li>它和第 30 章自定义 Skill 指南互补：本章解释 DeerFlow skills 系统怎么工作，第 30 章再教用户怎样编写、打包和维护属于自己的 skills。</li>
+        </ul>
+        <div class="highlight">
+          如果你要追踪一条最短理解路径，建议把 <code>backend/app/gateway/routers/skills.py</code>、<code>backend/packages/harness/deerflow/skills/installer.py</code>、<code>backend/packages/harness/deerflow/skills/</code>、<code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code> 和 <code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 连起来读。这样能同时看到管理面、存储面、prompt 注入面和工具协同面。
+        </div>
+      </section>
+
+      <div id="page-nav"></div>
+    </div>
   </main>
 </div>
 <script src="assets/nav.js"></script>
