@@ -86,19 +86,238 @@
             <td>避免把两条流式链路混成一个抽象实现</td>
           </tr>
         </table>
+        <p>这些文件在执行引擎里不是并排关系，而是接力关系。<code>backend/app/gateway/routers/thread_runs.py</code> 负责把外部请求转换成 DeerFlow 的 run；<code>backend/packages/harness/deerflow/runtime/runs/worker.py</code> 真正拥有这次 run 的生命周期，安装 runtime context、callbacks、stream bridge 和 run journal；然后它调用 <code>backend/packages/harness/deerflow/agents/lead_agent/agent.py</code> 去构建 agent。agent.py 自己并不“手写主循环”，而是先向 <code>factory.py</code> 要模型，再把 <code>thread_state.py</code>、middlewares 和 tools 全部绑进 LangGraph agent graph 里。</p>
+        <p>换句话说，执行引擎真正值得读的不是某个 while-loop，而是“谁负责构建 graph、谁负责拥有 run、谁负责把中间件插进去”。这正是上面这些文件组合起来承担的职责。</p>
       </section>
 
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>默认 Gateway 路径下，一次典型运行可以压缩成下面这条链：</p>
-        <div class="code-block"><code>backend/app/gateway/routers/thread_runs.py
-  -> runtime/runs/worker.py
-  -> backend/packages/harness/deerflow/agents/lead_agent/agent.py
-  -> build middlewares + bind tools + ThreadState
-  -> agent.astream(stream_mode=["values","messages","custom"])
-  -> stream bridge / SSE
-  -> caller receives events</code></div>
+        <div class="annotated-code">
+          <div class="code-window">
+            <div class="code-window-header">
+              <div class="code-window-dots"><span></span><span></span><span></span></div>
+              <div class="code-window-title">execution flow :: run 请求进入后怎样跑到 agent</div>
+            </div>
+            <div class="code-window-body">
+              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"backend/app/gateway/routers/thread_runs.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"runtime/runs/worker.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/agents/lead_agent/agent.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"build middlewares + bind tools + ThreadState"</span></span></div>
+              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"agent.astream(stream_mode=['values','messages','custom'])"</span></span></div>
+              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"stream bridge / SSE"</span></span></div>
+              <div class="code-line"><span class="code-ln">7</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"caller receives events"</span></span></div>
+            </div>
+          </div>
+        </div>
+        <p>把这条链再拆成“源码里的动作”，会看到很清楚的层次。<code>thread_runs.py</code> 先创建 RunRecord，并通过 service 层触发后台任务；<code>runtime/runs/worker.py</code> 进入 <code>run_agent(...)</code> 后，会先设置 run status、抓取 pre-run checkpoint、向 stream bridge 发送 metadata 事件，再把 <code>thread_id</code>、<code>run_id</code>、<code>app_config</code> 写进 runtime context；只有这些运行态基础设施就位后，才会调用 <code>agent_factory</code> 创建真正的 agent graph。这样后面的 middleware、tool 和 tracing 才能在统一上下文里工作。</p>
+        <p>而 <code>backend/packages/harness/deerflow/agents/lead_agent/agent.py</code> 的重点，是按顺序把 Clarification、DynamicContext、Sandbox、Todo、Title、Memory、Summarization、TokenUsage、SubagentLimit 等中间件装配进去，再把模型和工具绑定给 <code>create_agent(...)</code>。也就是说，DeerFlow 的“执行语义”很多不是写在 worker 里，而是写在 middleware append 顺序里。</p>
         <p>在这条链里，<code>backend/packages/harness/deerflow/agents/factory.py</code> 先提供模型，<code>backend/packages/harness/deerflow/agents/thread_state.py</code> 负责定义扩展状态，而 <code>backend/packages/harness/deerflow/agents/middlewares/</code> 目录下的中间件则逐步插入动态上下文、skills、memory、todo、summarization、subagent limit、loop detection 等 DeerFlow 运行语义。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码 1：lead agent 怎样组装中间件链</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/agents/lead_agent/agent.py</code>。这一段决定 DeerFlow 的运行语义先后顺序。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">lead_agent/agent.py :: build_middlewares(...)</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-fn">middlewares</span> <span class="tok-op">=</span> <span class="tok-fn">build_lead_runtime_middlewares</span>(<span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>, <span class="tok-attr">lazy_init</span><span class="tok-op">=</span><span class="tok-kw">True</span>)</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-com"># 先插入动态上下文，让当前日期和 memory 在本轮模型调用前可见</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-fn">middlewares</span>.<span class="tok-attr">append</span>(<span class="tok-cls">DynamicContextMiddleware</span>(<span class="tok-attr">agent_name</span><span class="tok-op">=</span><span class="tok-attr">agent_name</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>))</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src"><span class="tok-com"># 再插入 /skill-name 激活逻辑，让用户显式激活的技能能抢先进入本轮上下文</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"><span class="tok-fn">middlewares</span>.<span class="tok-attr">append</span>(<span class="tok-cls">SkillActivationMiddleware</span>(<span class="tok-attr">available_skills</span><span class="tok-op">=</span><span class="tok-attr">available_skills</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>))</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-fn">summarization_middleware</span> <span class="tok-op">=</span> <span class="tok-fn">_create_summarization_middleware</span>(<span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-fn">summarization_middleware</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-fn">middlewares</span>.<span class="tok-attr">append</span>(<span class="tok-fn">summarization_middleware</span>)</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-fn">cfg</span> <span class="tok-op">=</span> <span class="tok-fn">_get_runtime_config</span>(<span class="tok-attr">config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src"><span class="tok-fn">is_plan_mode</span> <span class="tok-op">=</span> <span class="tok-fn">cfg</span>.<span class="tok-attr">get</span>(<span class="tok-str">"is_plan_mode"</span>, <span class="tok-kw">False</span>)</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src"><span class="tok-fn">todo_list_middleware</span> <span class="tok-op">=</span> <span class="tok-fn">_create_todo_list_middleware</span>(<span class="tok-fn">is_plan_mode</span>)</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-fn">todo_list_middleware</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-fn">middlewares</span>.<span class="tok-attr">append</span>(<span class="tok-fn">todo_list_middleware</span>)</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">resolved_app_config</span>.<span class="tok-attr">token_usage</span>.<span class="tok-attr">enabled</span>:</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">    <span class="tok-fn">middlewares</span>.<span class="tok-attr">append</span>(<span class="tok-cls">TokenUsageMiddleware</span>())</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src"><span class="tok-fn">middlewares</span>.<span class="tok-attr">append</span>(<span class="tok-cls">TitleMiddleware</span>(<span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>))</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src"><span class="tok-fn">middlewares</span>.<span class="tok-attr">append</span>(<span class="tok-cls">MemoryMiddleware</span>(<span class="tok-attr">agent_name</span><span class="tok-op">=</span><span class="tok-attr">agent_name</span>, <span class="tok-attr">memory_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>.<span class="tok-attr">memory</span>))</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src"><span class="tok-fn">subagent_enabled</span> <span class="tok-op">=</span> <span class="tok-fn">cfg</span>.<span class="tok-attr">get</span>(<span class="tok-str">"subagent_enabled"</span>, <span class="tok-kw">False</span>)</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-fn">subagent_enabled</span>:</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-fn">max_concurrent_subagents</span> <span class="tok-op">=</span> <span class="tok-fn">cfg</span>.<span class="tok-attr">get</span>(<span class="tok-str">"max_concurrent_subagents"</span>, <span class="tok-num">3</span>)</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">    <span class="tok-fn">middlewares</span>.<span class="tok-attr">append</span>(<span class="tok-cls">SubagentLimitMiddleware</span>(<span class="tok-attr">max_concurrent</span><span class="tok-op">=</span><span class="tok-fn">max_concurrent_subagents</span>))</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-com"># ClarificationMiddleware 固定放最后，必要时直接打断执行，要求先问清楚</span></span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src"><span class="tok-fn">middlewares</span>.<span class="tok-attr">append</span>(<span class="tok-cls">ClarificationMiddleware</span>())</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li><code>build_lead_runtime_middlewares(...)</code> 先放入 DeerFlow 运行时基础中间件，像 sandbox、tool error handling 这类底层能力从这里起步。</li>
+            <li><code>DynamicContextMiddleware</code> 紧接着插入，说明 DeerFlow 会在模型真正思考前，先把日期、memory 提醒之类的动态上下文塞进去。</li>
+            <li><code>SkillActivationMiddleware</code> 靠前放置，表示用户显式用 <code>/skill-name</code> 激活的能力，会在本轮 prompt 里优先生效。</li>
+            <li><code>TitleMiddleware</code> 和 <code>MemoryMiddleware</code> 靠后，说明它们更像“本轮回答之后的整理工作”，而不是一开始就改变工具面。</li>
+            <li><code>ClarificationMiddleware</code> 被固定放在最后，意味着任何需要“先问清楚再干活”的动作，都会在整条链收尾阶段拦截并中断执行。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 2：Gateway worker 怎样把 run 变成可执行 graph</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/runtime/runs/worker.py</code>。这一段说明 run ownership 不在 router，而在 worker。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">runtime/runs/worker.py :: run_agent(...)</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># 1. 先把 run 状态推进到 running，确保后续 cancel / join 都有统一状态源</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-kw">await</span> <span class="tok-attr">run_manager</span>.<span class="tok-fn">set_status</span>(<span class="tok-attr">run_id</span>, <span class="tok-cls">RunStatus</span>.<span class="tok-attr">running</span>)</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-com"># 2. 尝试抓一份 pre-run checkpoint，后面 rollback 会依赖它恢复状态</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">checkpointer</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-kw">try</span>:</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-fn">config_for_check</span> <span class="tok-op">=</span> {<span class="tok-str">"configurable"</span>: {<span class="tok-str">"thread_id"</span>: <span class="tok-attr">thread_id</span>, <span class="tok-str">"checkpoint_ns"</span>: <span class="tok-str">""</span>}}</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">        <span class="tok-fn">ckpt_tuple</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-attr">checkpointer</span>.<span class="tok-fn">aget_tuple</span>(<span class="tok-fn">config_for_check</span>)</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-kw">except</span> <span class="tok-cls">Exception</span>:</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">        <span class="tok-attr">snapshot_capture_failed</span> <span class="tok-op">=</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src"><span class="tok-com"># 3. 先向前端发 metadata 事件，让 useStream 一开始就知道 run_id / thread_id</span></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-kw">await</span> <span class="tok-attr">bridge</span>.<span class="tok-fn">publish</span>(</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-attr">run_id</span>,</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-str">"metadata"</span>,</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    {</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-str">"run_id"</span>: <span class="tok-attr">run_id</span>,</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">        <span class="tok-str">"thread_id"</span>: <span class="tok-attr">thread_id</span>,</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">    },</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">)</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src"><span class="tok-com"># 4. 安装 DeerFlow 自己的 runtime context，后面所有中间件和工具都靠它读 thread_id / run_id / app_config</span></span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src"><span class="tok-fn">runtime_ctx</span> <span class="tok-op">=</span> <span class="tok-fn">_build_runtime_context</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">run_id</span>, <span class="tok-attr">config</span>.<span class="tok-attr">get</span>(<span class="tok-str">"context"</span>), <span class="tok-attr">ctx</span>.<span class="tok-attr">app_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">journal</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">    <span class="tok-fn">runtime_ctx</span>[<span class="tok-str">"__run_journal"</span>] <span class="tok-op">=</span> <span class="tok-attr">journal</span></span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src"><span class="tok-fn">_install_runtime_context</span>(<span class="tok-attr">config</span>, <span class="tok-fn">runtime_ctx</span>)</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src"><span class="tok-fn">runtime</span> <span class="tok-op">=</span> <span class="tok-cls">Runtime</span>(<span class="tok-attr">context</span><span class="tok-op">=</span><span class="tok-fn">cast</span>(<span class="tok-cls">Any</span>, <span class="tok-fn">runtime_ctx</span>), <span class="tok-attr">store</span><span class="tok-op">=</span><span class="tok-attr">store</span>)</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src"><span class="tok-attr">config</span>.<span class="tok-fn">setdefault</span>(<span class="tok-str">"configurable"</span>, {})[<span class="tok-str">"__pregel_runtime"</span>] <span class="tok-op">=</span> <span class="tok-fn">runtime</span></span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第一步不是立刻调模型，而是先把 run 状态标记为 <code>running</code>，这样取消、join、状态查询才有一致依据。</li>
+            <li><code>bridge.publish(..., "metadata", ...)</code> 会先把 <code>run_id</code> 和 <code>thread_id</code> 发给前端流，这就是为什么前端一开始就能知道自己连的是哪次运行。</li>
+            <li><code>runtime_ctx</code> 是 DeerFlow 的关键胶水层。后面中间件和工具能拿到 <code>thread_id</code>、<code>run_id</code>、<code>app_config</code>，就是因为 worker 先把它们塞进了 runtime context。</li>
+            <li><code>config["configurable"]["__pregel_runtime"] = runtime</code> 这一句把 DeerFlow 自己准备好的运行时塞回 LangGraph，这样 graph 内部执行时就能读到同一份上下文。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 3：ThreadState 到底往 LangGraph 的 AgentState 里加了什么</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/agents/thread_state.py</code>。这一段能把“为什么 DeerFlow 的状态不只有 messages”讲透。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">agents/thread_state.py :: ThreadState / reducers</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">SandboxState</span>(<span class="tok-cls">TypedDict</span>):</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-attr">sandbox_id</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">ThreadDataState</span>(<span class="tok-cls">TypedDict</span>):</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-attr">workspace_path</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-attr">uploads_path</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-attr">outputs_path</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_artifacts</span>(<span class="tok-attr">existing</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">new</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-type">str</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">existing</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">new</span> <span class="tok-kw">or</span> []</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">new</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">existing</span></span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-com"># 合并并去重，确保多个节点都产出 artifact 时不会互相覆盖</span></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-fn">list</span>(<span class="tok-fn">dict</span>.<span class="tok-fn">fromkeys</span>(<span class="tok-attr">existing</span> <span class="tok-op">+</span> <span class="tok-attr">new</span>))</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_promoted</span>(<span class="tok-attr">existing</span>: <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">new</span>: <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">new</span>:</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">existing</span></span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">existing</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span> <span class="tok-kw">or</span> <span class="tok-attr">existing</span>.<span class="tok-fn">get</span>(<span class="tok-str">"catalog_hash"</span>) <span class="tok-op">!=</span> <span class="tok-attr">new</span>[<span class="tok-str">"catalog_hash"</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">        <span class="tok-kw">return</span> {<span class="tok-str">"catalog_hash"</span>: <span class="tok-attr">new</span>[<span class="tok-str">"catalog_hash"</span>], <span class="tok-str">"names"</span>: <span class="tok-fn">list</span>(<span class="tok-fn">dict</span>.<span class="tok-fn">fromkeys</span>(<span class="tok-attr">new</span>[<span class="tok-str">"names"</span>]))}</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-kw">return</span> {<span class="tok-str">"catalog_hash"</span>: <span class="tok-attr">existing</span>[<span class="tok-str">"catalog_hash"</span>], <span class="tok-str">"names"</span>: <span class="tok-fn">list</span>(<span class="tok-fn">dict</span>.<span class="tok-fn">fromkeys</span>(<span class="tok-attr">existing</span>[<span class="tok-str">"names"</span>] <span class="tok-op">+</span> <span class="tok-attr">new</span>[<span class="tok-str">"names"</span>]))}</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">ThreadState</span>(<span class="tok-cls">AgentState</span>):</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">    <span class="tok-attr">sandbox</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-cls">SandboxState</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">    <span class="tok-attr">thread_data</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-cls">ThreadDataState</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-attr">title</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">    <span class="tok-attr">artifacts</span>: <span class="tok-cls">Annotated</span>[<span class="tok-type">list</span>[<span class="tok-type">str</span>], <span class="tok-fn">merge_artifacts</span>]</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">    <span class="tok-attr">todos</span>: <span class="tok-cls">Annotated</span>[<span class="tok-type">list</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-fn">merge_todos</span>]</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-attr">viewed_images</span>: <span class="tok-cls">Annotated</span>[<span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">ViewedImageData</span>], <span class="tok-fn">merge_viewed_images</span>]</span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">    <span class="tok-attr">promoted</span>: <span class="tok-cls">Annotated</span>[<span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-fn">merge_promoted</span>]</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这段代码直接说明 DeerFlow 为什么不能只用 LangGraph 默认的 <code>messages</code> 状态，因为它还要在图执行过程中持续携带 sandbox、thread_data、artifacts、todos、viewed_images、promoted tools 等运行态信息。</li>
+            <li><code>merge_artifacts(...)</code> 和 <code>merge_promoted(...)</code> 不是普通 helper，而是 graph state reducer。多个节点同时更新这些字段时，最后怎样合并，完全由这里定义。</li>
+            <li><code>merge_promoted(...)</code> 里专门比较 <code>catalog_hash</code>，说明 deferred tools promotion 不是简单“记住某个工具名”这么粗糙，而是要保证工具目录变化后旧名字不会误暴露新工具。</li>
+            <li><code>ThreadState</code> 最后一段就是执行引擎的数据骨架。前面各个 middleware 能互相串起来，靠的就是它们都在读写这同一份扩展状态。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 4：lead agent 工厂为什么要严格控制 tracing 和模型创建位置</h4>
+          <p class="source-caption">继续节选自 <code>backend/packages/harness/deerflow/agents/lead_agent/agent.py</code>。这一段能把“执行引擎为什么不只是把模型丢给 create_agent”讲得更细。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">lead_agent/agent.py :: tracing invariant / summarization model / runtime config</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com">"""INVARIANT — tracing callbacks are attached at the graph invocation root."""</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_get_runtime_config</span>(<span class="tok-attr">config</span>: <span class="tok-cls">RunnableConfig</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>:</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-com"># 把 legacy configurable 和新 context 合并成同一份运行时视图</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-fn">cfg</span> <span class="tok-op">=</span> <span class="tok-fn">dict</span>(<span class="tok-attr">config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"configurable"</span>, {}) <span class="tok-kw">or</span> {})</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-fn">context</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"context"</span>, {}) <span class="tok-kw">or</span> {}</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">isinstance</span>(<span class="tok-fn">context</span>, <span class="tok-type">dict</span>):</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">        <span class="tok-attr">cfg</span>.<span class="tok-fn">update</span>(<span class="tok-fn">context</span>)</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">cfg</span></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_create_summarization_middleware</span>(<span class="tok-op">*</span>, <span class="tok-attr">app_config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">DeerFlowSummarizationMiddleware</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-fn">resolved_app_config</span> <span class="tok-op">=</span> <span class="tok-attr">app_config</span> <span class="tok-kw">or</span> <span class="tok-fn">get_app_config</span>()</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">    <span class="tok-fn">config</span> <span class="tok-op">=</span> <span class="tok-attr">resolved_app_config</span>.<span class="tok-attr">summarization</span></span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">config</span>.<span class="tok-attr">enabled</span>:</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-com"># 注意这里 attach_tracing=False，因为 tracing 必须挂在 graph 根，不然会重复 span</span></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">config</span>.<span class="tok-attr">model_name</span>:</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">        <span class="tok-fn">model</span> <span class="tok-op">=</span> <span class="tok-fn">create_chat_model</span>(<span class="tok-attr">name</span><span class="tok-op">=</span><span class="tok-attr">config</span>.<span class="tok-attr">model_name</span>, <span class="tok-attr">thinking_enabled</span><span class="tok-op">=</span><span class="tok-kw">False</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>, <span class="tok-attr">attach_tracing</span><span class="tok-op">=</span><span class="tok-kw">False</span>)</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">    <span class="tok-kw">else</span>:</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">        <span class="tok-fn">model</span> <span class="tok-op">=</span> <span class="tok-fn">create_chat_model</span>(<span class="tok-attr">thinking_enabled</span><span class="tok-op">=</span><span class="tok-kw">False</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>, <span class="tok-attr">attach_tracing</span><span class="tok-op">=</span><span class="tok-kw">False</span>)</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-fn">model</span> <span class="tok-op">=</span> <span class="tok-attr">model</span>.<span class="tok-fn">with_config</span>(<span class="tok-attr">tags</span><span class="tok-op">=</span>[<span class="tok-str">"middleware:summarize"</span>])</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">    <span class="tok-fn">hooks</span>: <span class="tok-type">list</span>[<span class="tok-cls">BeforeSummarizationHook</span>] <span class="tok-op">=</span> []</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">resolved_app_config</span>.<span class="tok-attr">memory</span>.<span class="tok-attr">enabled</span>:</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">        <span class="tok-attr">hooks</span>.<span class="tok-fn">append</span>(<span class="tok-attr">memory_flush_hook</span>)</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-cls">DeerFlowSummarizationMiddleware</span>(</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">        <span class="tok-attr">model</span><span class="tok-op">=</span><span class="tok-attr">model</span>,</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">        <span class="tok-attr">trigger</span><span class="tok-op">=</span><span class="tok-attr">trigger</span>,</span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">        <span class="tok-attr">keep</span><span class="tok-op">=</span><span class="tok-attr">keep</span>,</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">        <span class="tok-attr">before_summarization</span><span class="tok-op">=</span><span class="tok-attr">hooks</span>,</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">        <span class="tok-attr">skills_container_path</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>.<span class="tok-attr">skills</span>.<span class="tok-attr">container_path</span> <span class="tok-kw">or</span> <span class="tok-str">"/mnt/skills"</span>,</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">    )</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>开头的 invariant 注释很重要，它说明 DeerFlow 执行引擎不是随便在哪一层都能挂 tracing callback，否则一次 run 会出现重复 span 和错误归因。</li>
+            <li>`_get_runtime_config(...)` 的作用是把旧的 `configurable` 和新的 `context` 读法统一起来，所以 lead agent 里的很多运行判断不必到处兼容两套来源。</li>
+            <li>`_create_summarization_middleware(...)` 展示了执行引擎的另一个特点: 中间件自己也可能持有单独模型，但这个模型仍然受 DeerFlow tracing、memory hook 和 config 约束。</li>
+            <li>`memory_flush_hook` 被挂到 summarization 前置钩子里，说明总结阶段不只是压缩消息，还可能顺带推进记忆刷新。</li>
+          </ul>
+        </div>
         <div class="highlight">
           <strong>必须区分的两条流式路径：</strong>
           根据 <code>backend/docs/STREAMING.md</code>，Gateway 路径是 async + SSE + JSON 序列化；嵌入式 client 路径是 sync + in-process + 原生对象流。它们共享执行核心，但不是同一套输出协议。
@@ -126,6 +345,7 @@
           <li>Gateway 通过 <code>runtime/runs/worker.py</code> 拥有 run/stream 生命周期，这让取消、桥接、SSE fan-out 有明确归属，但也带来单进程状态边界。</li>
           <li>流式实现明确区分 <code>values</code>、<code>messages</code>、<code>custom</code> 三类事件，不把它们压平成一种“详细程度不同的流”。</li>
         </ul>
+        <p>源码里还能看到一个很关键的设计选择：tracing callback 不直接挂在每个模型对象上，而是由 graph 根调用统一装配，<code>agent.py</code> 里甚至专门写了 invariant 注释来防止重复挂 tracing。这个细节说明 DeerFlow 的执行引擎不只是关心“能不能跑”，还关心一次 run 的观测边界应该落在哪一层。</p>
         <div class="key-point">
           <strong>要点：</strong>
           DeerFlow 的执行引擎设计重点是“可组合的运行语义”和“可拥有的运行生命周期”，不是最少代码量。

@@ -69,13 +69,163 @@
 
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
-        <div class="code-block"><code>public client / browser / IM
-  -> Gateway API surface
-  -> authenticated thread + run lifecycle
-  -> embedded agent runtime
-  -> sandbox / uploads / artifacts / memory
-  -> results back through Gateway or embedded client</code></div>
+        <div class="annotated-code">
+          <div class="code-window">
+            <div class="code-window-header">
+              <div class="code-window-dots"><span></span><span></span><span></span></div>
+              <div class="code-window-title">from scratch flow :: 一个完整 Agent 系统的主线</div>
+            </div>
+            <div class="code-window-body">
+              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"public client / browser / IM"</span></span></div>
+              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"Gateway API surface"</span></span></div>
+              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"authenticated thread + run lifecycle"</span></span></div>
+              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"embedded agent runtime"</span></span></div>
+              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"sandbox / uploads / artifacts / memory"</span></span></div>
+              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"results back through Gateway or embedded client"</span></span></div>
+            </div>
+          </div>
+        </div>
         <p>如果把 DeerFlow 当作一个“从零构建系统”的样本，最值得学的不是单个算法，而是这条主线：先定义好外部接口与内部运行时的关系，再让文件、记忆、channels、skills、subagents 都围绕同一 thread/user 语义工作。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码：从零做系统时，为什么认证中间件必须是“默认拒绝”</h4>
+          <p class="source-caption">节选自 <code>backend/app/gateway/auth_middleware.py</code>。如果你想抄走 DeerFlow 最有价值的系统设计经验，这段比很多概念图都重要。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">gateway/auth_middleware.py :: AuthMiddleware.dispatch()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_is_public</span>(<span class="tok-attr">path</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">bool</span>:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-fn">stripped</span> <span class="tok-op">=</span> <span class="tok-attr">path</span>.<span class="tok-fn">rstrip</span>(<span class="tok-str">"/"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">stripped</span> <span class="tok-kw">in</span> <span class="tok-attr">_PUBLIC_EXACT_PATHS</span>:</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-fn">any</span>(<span class="tok-attr">path</span>.<span class="tok-fn">startswith</span>(<span class="tok-attr">prefix</span>) <span class="tok-kw">for</span> <span class="tok-attr">prefix</span> <span class="tok-kw">in</span> <span class="tok-attr">_PUBLIC_PATH_PREFIXES</span>)</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">dispatch</span>(<span class="tok-self">self</span>, <span class="tok-attr">request</span>: <span class="tok-cls">Request</span>, <span class="tok-attr">call_next</span>: <span class="tok-type">Callable</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">Response</span>:</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">_is_public</span>(<span class="tok-attr">request</span>.<span class="tok-attr">url</span>.<span class="tok-attr">path</span>):</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-kw">await</span> <span class="tok-fn">call_next</span>(<span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-fn">internal_user</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">is_valid_internal_auth_token</span>(<span class="tok-attr">request</span>.<span class="tok-attr">headers</span>.<span class="tok-fn">get</span>(<span class="tok-attr">INTERNAL_AUTH_HEADER_NAME</span>)):</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-fn">internal_user</span> <span class="tok-op">=</span> <span class="tok-fn">get_internal_user</span>()</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-fn">auth_source</span> <span class="tok-op">=</span> <span class="tok-attr">AUTH_SOURCE_SESSION</span></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-fn">access_token</span> <span class="tok-op">=</span> <span class="tok-attr">request</span>.<span class="tok-attr">cookies</span>.<span class="tok-fn">get</span>(<span class="tok-str">"access_token"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">internal_user</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">        <span class="tok-fn">user</span> <span class="tok-op">=</span> <span class="tok-fn">internal_user</span></span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">        <span class="tok-fn">auth_source</span> <span class="tok-op">=</span> <span class="tok-attr">AUTH_SOURCE_INTERNAL</span></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-kw">elif</span> <span class="tok-fn">access_token</span>:</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">app</span>.<span class="tok-attr">gateway</span>.<span class="tok-attr">deps</span> <span class="tok-kw">import</span> <span class="tok-fn">get_current_user_from_request</span></span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">        <span class="tok-kw">try</span>:</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">            <span class="tok-fn">user</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">get_current_user_from_request</span>(<span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">        <span class="tok-kw">except</span> <span class="tok-cls">HTTPException</span> <span class="tok-kw">as</span> <span class="tok-fn">exc</span>:</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">            <span class="tok-kw">return</span> <span class="tok-cls">JSONResponse</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-attr">exc</span>.<span class="tok-attr">status_code</span>, <span class="tok-attr">content</span><span class="tok-op">=</span>{<span class="tok-str">"detail"</span>: <span class="tok-attr">exc</span>.<span class="tok-attr">detail</span>})</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-kw">elif</span> <span class="tok-fn">is_auth_disabled</span>():</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">        <span class="tok-fn">user</span> <span class="tok-op">=</span> <span class="tok-fn">get_auth_disabled_user</span>()</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">        <span class="tok-fn">auth_source</span> <span class="tok-op">=</span> <span class="tok-attr">AUTH_SOURCE_AUTH_DISABLED</span></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-kw">else</span>:</span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-cls">JSONResponse</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-num">401</span>, <span class="tok-attr">content</span><span class="tok-op">=</span>{<span class="tok-str">"detail"</span>: <span class="tok-cls">AuthErrorResponse</span>(<span class="tok-attr">code</span><span class="tok-op">=</span><span class="tok-cls">AuthErrorCode</span>.<span class="tok-attr">NOT_AUTHENTICATED</span>, <span class="tok-attr">message</span><span class="tok-op">=</span><span class="tok-str">"Authentication required"</span>).<span class="tok-fn">model_dump</span>()})</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">    <span class="tok-attr">request</span>.<span class="tok-attr">state</span>.<span class="tok-attr">user</span> <span class="tok-op">=</span> <span class="tok-fn">user</span></span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">    <span class="tok-attr">request</span>.<span class="tok-attr">state</span>.<span class="tok-attr">auth_source</span> <span class="tok-op">=</span> <span class="tok-fn">auth_source</span></span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src">    <span class="tok-attr">request</span>.<span class="tok-attr">state</span>.<span class="tok-attr">auth</span> <span class="tok-op">=</span> <span class="tok-cls">AuthContext</span>(<span class="tok-attr">user</span><span class="tok-op">=</span><span class="tok-fn">user</span>, <span class="tok-attr">permissions</span><span class="tok-op">=</span><span class="tok-attr">_ALL_PERMISSIONS</span>)</span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src">    <span class="tok-fn">token</span> <span class="tok-op">=</span> <span class="tok-fn">set_current_user</span>(<span class="tok-fn">user</span>)</span></div>
+                <div class="code-line"><span class="code-ln">37</span><span class="code-src">    <span class="tok-kw">try</span>:</span></div>
+                <div class="code-line"><span class="code-ln">38</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-kw">await</span> <span class="tok-fn">call_next</span>(<span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">39</span><span class="code-src">    <span class="tok-kw">finally</span>:</span></div>
+                <div class="code-line"><span class="code-ln">40</span><span class="code-src">        <span class="tok-fn">reset_current_user</span>(<span class="tok-attr">token</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第 1 到 5 行先定义 public path 判断，这是“默认拒绝，只放行少数公开入口”的核心思想。</li>
+            <li>第 11 到 20 行说明 DeerFlow 一开始就考虑了浏览器用户之外的内部调用，例如 channels worker 用 internal token 走系统内调用链。</li>
+            <li>第 21 到 31 行是最值得借鉴的部分: 不是只要有 cookie 就算登录，而是严格校验 token；没有 token 或 token 无效就立即在中间件层返回 401。</li>
+            <li>第 33 到 40 行把用户同时写进 <code>request.state</code> 和 runtime contextvar，这一步非常关键，因为后面的 repository、thread path、memory 隔离都要靠它拿到当前用户。</li>
+            <li>如果你从零做 Agent 系统却忽略了这一层，后面所有 thread、文件、memory、artifact 的“多用户隔离”都会变成补丁式修复。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：从系统入口往下看，ChannelManager 如何把外部 IM 消息拉回统一线程语义</h4>
+          <p class="source-caption">节选自 <code>backend/app/channels/manager.py</code>。如果你想从 DeerFlow 抄“多入口统一到一个运行时”的设计经验，这段源码非常值钱。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">app/channels/manager.py :: channel capabilities / thread metadata / response extraction</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">45</span><span class="code-src"><span class="tok-attr">DEFAULT_RUN_CONFIG</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>] <span class="tok-op">=</span> {<span class="tok-str">"recursion_limit"</span>: <span class="tok-num">100</span>}</span></div>
+                <div class="code-line"><span class="code-ln">46</span><span class="code-src"><span class="tok-attr">DEFAULT_RUN_CONTEXT</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>] <span class="tok-op">=</span> {<span class="tok-str">"thinking_enabled"</span>: <span class="tok-kw">True</span>, <span class="tok-str">"is_plan_mode"</span>: <span class="tok-kw">False</span>, <span class="tok-str">"subagent_enabled"</span>: <span class="tok-kw">False</span>}</span></div>
+                <div class="code-line"><span class="code-ln">54</span><span class="code-src"><span class="tok-attr">CHANNEL_CAPABILITIES</span> <span class="tok-op">=</span> {<span class="tok-str">"feishu"</span>: {<span class="tok-str">"supports_streaming"</span>: <span class="tok-kw">True</span>}, <span class="tok-str">"wecom"</span>: {<span class="tok-str">"supports_streaming"</span>: <span class="tok-kw">True</span>}, <span class="tok-str">"slack"</span>: {<span class="tok-str">"supports_streaming"</span>: <span class="tok-kw">False</span>}}</span></div>
+                <div class="code-line"><span class="code-ln">69</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_slim_metadata</span>(<span class="tok-attr">meta</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>]) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">71</span><span class="code-src">    <span class="tok-kw">return</span> {<span class="tok-attr">k</span>: <span class="tok-attr">v</span> <span class="tok-kw">for</span> <span class="tok-attr">k</span>, <span class="tok-attr">v</span> <span class="tok-kw">in</span> <span class="tok-attr">meta</span>.<span class="tok-fn">items</span>() <span class="tok-kw">if</span> <span class="tok-attr">k</span> <span class="tok-kw">not in</span> <span class="tok-attr">_METADATA_DROP_KEYS</span>}</span></div>
+                <div class="code-line"><span class="code-ln">173</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_extract_response_text</span>(<span class="tok-attr">result</span>: <span class="tok-type">dict</span> <span class="tok-op">|</span> <span class="tok-type">list</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                <div class="code-line"><span class="code-ln">190</span><span class="code-src">    <span class="tok-com"># 倒着找最后一段可返回文本，但遇到本轮 human 之前的消息就停止</span></span></div>
+                <div class="code-line"><span class="code-ln">192</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-attr">msg</span> <span class="tok-kw">in</span> <span class="tok-fn">reversed</span>(<span class="tok-attr">messages</span>):</span></div>
+                <div class="code-line"><span class="code-ln">199</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">msg_type</span> <span class="tok-op">==</span> <span class="tok-str">"human"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">205</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">msg_type</span> <span class="tok-op">==</span> <span class="tok-str">"tool"</span> <span class="tok-kw">and</span> <span class="tok-attr">msg</span>.<span class="tok-fn">get</span>(<span class="tok-str">"name"</span>) <span class="tok-op">==</span> <span class="tok-str">"ask_clarification"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">211</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">msg_type</span> <span class="tok-op">==</span> <span class="tok-str">"ai"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">216</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">content</span>, <span class="tok-type">list</span>):</span></div>
+                <div class="code-line"><span class="code-ln">219</span><span class="code-src">                <span class="tok-kw">if</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">block</span>, <span class="tok-type">dict</span>) <span class="tok-kw">and</span> <span class="tok-attr">block</span>.<span class="tok-fn">get</span>(<span class="tok-str">"type"</span>) <span class="tok-op">==</span> <span class="tok-str">"text"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">270</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_response_metadata</span>(<span class="tok-attr">base_metadata</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>], <span class="tok-op">*</span>, <span class="tok-attr">pending_clarification</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">271</span><span class="code-src">    <span class="tok-attr">metadata</span> <span class="tok-op">=</span> <span class="tok-fn">_slim_metadata</span>(<span class="tok-attr">base_metadata</span>)</span></div>
+                <div class="code-line"><span class="code-ln">272</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">pending_clarification</span>:</span></div>
+                <div class="code-line"><span class="code-ln">273</span><span class="code-src">        <span class="tok-attr">metadata</span>[<span class="tok-attr">PENDING_CLARIFICATION_METADATA_KEY</span>] <span class="tok-op">=</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">277</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_thread_channel_metadata</span>(<span class="tok-attr">msg</span>: <span class="tok-cls">InboundMessage</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">278</span><span class="code-src">    <span class="tok-attr">channel_source</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>] <span class="tok-op">=</span> {<span class="tok-str">"type"</span>: <span class="tok-str">"im_channel"</span>, <span class="tok-str">"provider"</span>: <span class="tok-attr">msg</span>.<span class="tok-attr">channel_name</span>, <span class="tok-str">"chat_id"</span>: <span class="tok-attr">msg</span>.<span class="tok-attr">chat_id</span>}</span></div>
+                <div class="code-line"><span class="code-ln">290</span><span class="code-src">    <span class="tok-kw">return</span> {<span class="tok-str">"channel_source"</span>: <span class="tok-attr">channel_source</span>}</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这一段一上来先定义每个渠道支持不支持 streaming、run context 默认值是什么，说明 DeerFlow 不是给每个 IM 平台单独造一套 agent，而是先压到同一套线程运行语义上。</li>
+            <li><code>_extract_response_text</code> 这段非常关键，它展示了 channel 侧不是直接拿最后一条消息就回传，而是理解 DeerFlow 的消息结构，能区分 AI 回复和 <code>ask_clarification</code> 中断。</li>
+            <li><code>_response_metadata</code> 与 <code>_thread_channel_metadata</code> 则把渠道来源、澄清状态等元数据写回线程，这样后面不管是 Gateway、memory 还是前端，都还看得见“这条消息从哪个外部平台来的”。</li>
+            <li>这就是 DeerFlow 很值得借鉴的一点：多入口系统不是把消息转发进来就结束，而是要在入口层就补齐统一线程语义所需的上下文。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：统一入口的最后一跳，是把不同渠道都收敛成同一套 `runs.wait / runs.stream` 协议</h4>
+          <p class="source-caption">节选自 <code>backend/app/channels/manager.py</code>。这段源码非常适合拿来学习“从零构建系统”时如何把多入口请求最后汇总进一个统一执行面。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">app/channels/manager.py :: _handle_chat() / _handle_streaming_chat()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1034</span><span class="code-src">    <span class="tok-attr">original_text</span> <span class="tok-op">=</span> <span class="tok-attr">msg</span>.<span class="tok-attr">text</span></span></div>
+                <div class="code-line"><span class="code-ln">1035</span><span class="code-src">    <span class="tok-attr">uploaded</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">_ingest_inbound_files</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">msg</span>)</span></div>
+                <div class="code-line"><span class="code-ln">1037</span><span class="code-src">        <span class="tok-attr">msg</span>.<span class="tok-attr">text</span> <span class="tok-op">=</span> <span class="tok-str">f"{_format_uploaded_files_block(uploaded)}\n\n{msg.text}"</span>.<span class="tok-fn">strip</span>()</span></div>
+                <div class="code-line"><span class="code-ln">1038</span><span class="code-src">    <span class="tok-attr">human_message</span> <span class="tok-op">=</span> <span class="tok-fn">_human_input_message</span>(<span class="tok-attr">msg</span>.<span class="tok-attr">text</span>, <span class="tok-attr">original_content</span><span class="tok-op">=</span><span class="tok-attr">original_text</span>)</span></div>
+                <div class="code-line"><span class="code-ln">1040</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-self">self</span>.<span class="tok-fn">_channel_supports_streaming</span>(<span class="tok-attr">msg</span>.<span class="tok-attr">channel_name</span>):</span></div>
+                <div class="code-line"><span class="code-ln">1041</span><span class="code-src">        <span class="tok-kw">await</span> <span class="tok-self">self</span>.<span class="tok-fn">_handle_streaming_chat</span>(<span class="tok-attr">client</span>, <span class="tok-attr">msg</span>, <span class="tok-attr">thread_id</span>, <span class="tok-attr">assistant_id</span>, <span class="tok-attr">run_config</span>, <span class="tok-attr">run_context</span>, <span class="tok-attr">human_message</span>)</span></div>
+                <div class="code-line"><span class="code-ln">1049</span><span class="code-src">    <span class="tok-attr">run_kwargs</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>] <span class="tok-op">=</span> {<span class="tok-str">"input"</span>: {<span class="tok-str">"messages"</span>: [<span class="tok-attr">human_message</span>]}, <span class="tok-str">"config"</span>: <span class="tok-attr">run_config</span>, <span class="tok-str">"context"</span>: <span class="tok-attr">run_context</span>, <span class="tok-str">"multitask_strategy"</span>: <span class="tok-str">"reject"</span>}</span></div>
+                <div class="code-line"><span class="code-ln">1051</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">owner_headers</span> <span class="tok-op">:=</span> <span class="tok-fn">_owner_headers</span>(<span class="tok-attr">msg</span>):</span></div>
+                <div class="code-line"><span class="code-ln">1052</span><span class="code-src">        <span class="tok-attr">run_kwargs</span>[<span class="tok-str">"headers"</span>] <span class="tok-op">=</span> <span class="tok-attr">owner_headers</span></span></div>
+                <div class="code-line"><span class="code-ln">1062</span><span class="code-src">        <span class="tok-attr">result</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-attr">client</span>.<span class="tok-attr">runs</span>.<span class="tok-fn">wait</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">assistant_id</span>, <span class="tok-op">**</span><span class="tok-attr">run_kwargs</span>)</span></div>
+                <div class="code-line"><span class="code-ln">1068</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">_is_thread_busy_error</span>(<span class="tok-attr">exc</span>):</span></div>
+                <div class="code-line"><span class="code-ln">1076</span><span class="code-src">    <span class="tok-attr">pending_clarification</span> <span class="tok-op">=</span> <span class="tok-fn">_has_current_turn_clarification</span>(<span class="tok-attr">result</span>)</span></div>
+                <div class="code-line"><span class="code-ln">1086</span><span class="code-src">    <span class="tok-attr">outbound</span> <span class="tok-op">=</span> <span class="tok-cls">OutboundMessage</span>(<span class="tok-attr">channel_name</span><span class="tok-op">=</span><span class="tok-attr">msg</span>.<span class="tok-attr">channel_name</span>, <span class="tok-attr">chat_id</span><span class="tok-op">=</span><span class="tok-attr">msg</span>.<span class="tok-attr">chat_id</span>, <span class="tok-attr">thread_id</span><span class="tok-op">=</span><span class="tok-attr">thread_id</span>, <span class="tok-attr">text</span><span class="tok-op">=</span><span class="tok-attr">response_text</span>, <span class="tok-attr">artifacts</span><span class="tok-op">=</span><span class="tok-attr">artifacts</span>, <span class="tok-attr">attachments</span><span class="tok-op">=</span><span class="tok-attr">attachments</span>, <span class="tok-attr">metadata</span><span class="tok-op">=</span><span class="tok-fn">_response_metadata</span>(<span class="tok-attr">msg</span>.<span class="tok-attr">metadata</span>, <span class="tok-attr">pending_clarification</span><span class="tok-op">=</span><span class="tok-attr">pending_clarification</span>))</span></div>
+                <div class="code-line"><span class="code-ln">1119</span><span class="code-src">    <span class="tok-attr">stream_kwargs</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>] <span class="tok-op">=</span> {<span class="tok-str">"input"</span>: {<span class="tok-str">"messages"</span>: [<span class="tok-attr">human_message</span>]}, <span class="tok-str">"config"</span>: <span class="tok-attr">run_config</span>, <span class="tok-str">"context"</span>: <span class="tok-attr">run_context</span>, <span class="tok-str">"stream_mode"</span>: [<span class="tok-str">"messages-tuple"</span>, <span class="tok-str">"values"</span>], <span class="tok-str">"multitask_strategy"</span>: <span class="tok-str">"reject"</span>}</span></div>
+                <div class="code-line"><span class="code-ln">1139</span><span class="code-src">            <span class="tok-kw">async for</span> <span class="tok-attr">chunk</span> <span class="tok-kw">in</span> <span class="tok-attr">client</span>.<span class="tok-attr">runs</span>.<span class="tok-fn">stream</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">assistant_id</span>, <span class="tok-op">**</span><span class="tok-attr">stream_kwargs</span>):</span></div>
+                <div class="code-line"><span class="code-ln">1149</span><span class="code-src">                <span class="tok-kw">if</span> <span class="tok-attr">event</span> <span class="tok-op">==</span> <span class="tok-str">"messages-tuple"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">1150</span><span class="code-src">                    <span class="tok-attr">accumulated_text</span>, <span class="tok-attr">current_message_id</span> <span class="tok-op">=</span> <span class="tok-fn">_accumulate_stream_text</span>(<span class="tok-attr">streamed_buffers</span>, <span class="tok-attr">current_message_id</span>, <span class="tok-attr">data</span>)</span></div>
+                <div class="code-line"><span class="code-ln">1160</span><span class="code-src">                <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">latest_text</span> <span class="tok-kw">or</span> <span class="tok-attr">latest_text</span> <span class="tok-op">==</span> <span class="tok-attr">last_published_text</span>:</span></div>
+                <div class="code-line"><span class="code-ln">1168</span><span class="code-src">                <span class="tok-kw">await</span> <span class="tok-self">self</span>.<span class="tok-attr">bus</span>.<span class="tok-fn">publish_outbound</span>(<span class="tok-cls">OutboundMessage</span>(<span class="tok-attr">channel_name</span><span class="tok-op">=</span><span class="tok-attr">msg</span>.<span class="tok-attr">channel_name</span>, <span class="tok-attr">chat_id</span><span class="tok-op">=</span><span class="tok-attr">msg</span>.<span class="tok-attr">chat_id</span>, <span class="tok-attr">thread_id</span><span class="tok-op">=</span><span class="tok-attr">thread_id</span>, <span class="tok-attr">text</span><span class="tok-op">=</span><span class="tok-attr">latest_text</span>, <span class="tok-attr">is_final</span><span class="tok-op">=</span><span class="tok-kw">False</span>, <span class="tok-attr">metadata</span><span class="tok-op">=</span><span class="tok-fn">_response_metadata</span>(<span class="tok-attr">msg</span>.<span class="tok-attr">metadata</span>)))</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这段代码最有代表性的地方在于，不管消息来自哪个 IM 平台，最后都被归一成 `input/messages + config + context`，然后统一走 `runs.wait` 或 `runs.stream`。</li>
+            <li>也就是说，多入口系统的关键不是为每个平台各写一套业务执行器，而是把平台差异消化在入口层，把运行时协议压缩成统一模型。</li>
+            <li>同步渠道走 `runs.wait`，支持流式的渠道走 `runs.stream`，但两边都共享线程 ID、owner headers、clarification 语义和 artifact 回传逻辑，这就是 DeerFlow 当前系统架构的骨架。</li>
+            <li>如果你要从零做类似系统，这一页里最值得抄的不是具体平台适配代码，而是这种“入口归一化 -> 统一执行协议 -> 出口再适配渠道”的结构。</li>
+          </ul>
+        </div>
       </section>
 
       <section id="config">

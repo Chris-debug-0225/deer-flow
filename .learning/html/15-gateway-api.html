@@ -90,20 +90,224 @@
             <td>帮助把路由文件放回真实架构图中理解</td>
           </tr>
         </table>
+        <p>从源码阅读角度看，Gateway 最关键的不是 router 数量，而是 <code>backend/app/gateway/app.py</code> 怎样把它们装到同一个应用里。这个文件在 lifespan 阶段会加载配置、初始化 runtime、处理 admin/bootstrap 相关逻辑、启动 channel service；随后再通过一串 <code>app.include_router(...)</code> 把 models、memory、skills、uploads、threads、thread_runs、channels 等 surface 全挂在同一个 FastAPI 应用上。也正因为如此，Gateway 是 DeerFlow 的运行承载体，不是一个单独的接口层皮肤。</p>
       </section>
 
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>一次典型的 DeerFlow Web 运行链路可以压缩成下面这条主线：</p>
-        <div class="code-block"><code>nginx /api/langgraph/threads/{thread_id}/runs/stream
-  -> rewrite to Gateway-owned /api/* compatibility path
-  -> backend/app/gateway/app.py
-  -> backend/app/gateway/routers/thread_runs.py
-  -> app.gateway.services.start_run(...)
-  -> deerflow runtime worker / stream bridge
-  -> lead agent runtime
-  -> SSE back through Gateway response</code></div>
+        <div class="annotated-code">
+          <div class="code-window">
+            <div class="code-window-header">
+              <div class="code-window-dots"><span></span><span></span><span></span></div>
+              <div class="code-window-title">gateway flow :: 一次 SSE run 请求怎样穿过 Gateway</div>
+            </div>
+            <div class="code-window-body">
+              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"nginx /api/langgraph/threads/{thread_id}/runs/stream"</span></span></div>
+              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"rewrite to Gateway-owned /api/* compatibility path"</span></span></div>
+              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/app/gateway/app.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/app/gateway/routers/thread_runs.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"app.gateway.services.start_run(...)"</span></span></div>
+              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"deerflow runtime worker / stream bridge"</span></span></div>
+              <div class="code-line"><span class="code-ln">7</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"lead agent runtime"</span></span></div>
+              <div class="code-line"><span class="code-ln">8</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"SSE back through Gateway response"</span></span></div>
+            </div>
+          </div>
+        </div>
+        <p>翻到实现层，会看到 <code>thread_runs.py</code> 的职责非常明确：它接收 body，交给 <code>start_run(...)</code> 建立 RunRecord，然后根据是 <code>/runs</code>、<code>/runs/stream</code> 还是 <code>/runs/wait</code> 选择立即返回、SSE StreamingResponse 或阻塞等待 checkpoint 最终状态。真正的 run 任务并不是在 router 里同步跑完，而是由 Gateway service 和 runtime worker 接手。这一点很重要，因为它解释了为什么取消、join、SSE、反馈统计都还能围绕同一条 run 继续工作。</p>
         <p>删除线程时，链路又会回到 <code>backend/app/gateway/routers/threads.py</code>：它不仅会删 checkpoint / thread meta，还会调用 DeerFlow 的路径管理删除线程目录。上传文件时，请求进入 <code>backend/app/gateway/routers/uploads.py</code>，生成 thread uploads、虚拟路径和 artifact URL；读取工件时，再由 <code>backend/app/gateway/routers/artifacts.py</code> 按 thread 虚拟路径解析与返回。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码 1：Gateway 路由是怎样被统一挂进应用的</h4>
+          <p class="source-caption">节选自 <code>backend/app/gateway/app.py</code>。这段代码直接回答“为什么 Gateway 不是薄代理层”。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">gateway/app.py :: create_app()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># Include routers</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-com"># Models API is mounted at /api/models</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">models</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-com"># MCP API is mounted at /api/mcp</span></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">mcp</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-com"># Memory API is mounted at /api/memory</span></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">memory</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">skills</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">artifacts</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">uploads</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src"><span class="tok-com"># Thread cleanup API is mounted at /api/threads/{thread_id}</span></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">threads</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">agents</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">suggestions</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src"><span class="tok-com"># User-facing IM channel connection API is mounted at /api/channels</span></span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">channel_connections</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">channels</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src"><span class="tok-com"># Thread Runs API (LangGraph Platform-compatible runs lifecycle)</span></span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">thread_runs</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src"><span class="tok-com"># Stateless Runs API (stream/wait without a pre-existing thread)</span></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">runs</span>.<span class="tok-attr">router</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这里把 models、memory、skills、uploads、threads、channels、runs 全都挂在同一个 FastAPI app 上，说明这些不是外围插件，而是 Gateway 原生承载的运行面。</li>
+            <li><code>thread_runs.router</code> 和 <code>runs.router</code> 同时存在，意味着 DeerFlow 既支持线程态运行，也支持某些无预建线程的运行入口。</li>
+            <li>课程里常说“Gateway owns the runtime”，看这段挂载代码就很好理解，因为整个外部 surface 都集中在这里。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 2：runs/stream endpoint 为什么一开始就能返回 SSE</h4>
+          <p class="source-caption">节选自 <code>backend/app/gateway/routers/thread_runs.py</code>。这是外部请求进入执行主线的第一站。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">gateway/routers/thread_runs.py :: stream_run(...)</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-dec">@router.post</span>(<span class="tok-str">"/{thread_id}/runs/stream"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-dec">@require_permission</span>(<span class="tok-str">"runs"</span>, <span class="tok-str">"create"</span>, <span class="tok-attr">owner_check</span><span class="tok-op">=</span><span class="tok-kw">True</span>, <span class="tok-attr">require_existing</span><span class="tok-op">=</span><span class="tok-kw">True</span>)</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">stream_run</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">body</span>: <span class="tok-cls">RunCreateRequest</span>, <span class="tok-attr">request</span>: <span class="tok-cls">Request</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">StreamingResponse</span>:</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-com"># 先从 request 依赖里拿到全局 stream bridge 和 run manager</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-fn">bridge</span> <span class="tok-op">=</span> <span class="tok-fn">get_stream_bridge</span>(<span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-fn">run_mgr</span> <span class="tok-op">=</span> <span class="tok-fn">get_run_manager</span>(<span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">    <span class="tok-com"># 真正创建 run record，并把后台执行任务启动起来</span></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-fn">record</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">start_run</span>(<span class="tok-attr">body</span>, <span class="tok-attr">thread_id</span>, <span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-com"># 这里不等待 run 完成，而是立刻把 SSE 消费器返回给浏览器</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-cls">StreamingResponse</span>(</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-fn">sse_consumer</span>(<span class="tok-fn">bridge</span>, <span class="tok-fn">record</span>, <span class="tok-attr">request</span>, <span class="tok-fn">run_mgr</span>),</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">        <span class="tok-attr">media_type</span><span class="tok-op">=</span><span class="tok-str">"text/event-stream"</span>,</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-attr">headers</span><span class="tok-op">=</span>{</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">            <span class="tok-str">"Cache-Control"</span>: <span class="tok-str">"no-cache"</span>,</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">            <span class="tok-str">"Connection"</span>: <span class="tok-str">"keep-alive"</span>,</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">            <span class="tok-str">"X-Accel-Buffering"</span>: <span class="tok-str">"no"</span>,</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">            <span class="tok-str">"Content-Location"</span>: <span class="tok-str">f"/api/threads/{thread_id}/runs/{record.run_id}"</span>,</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">        },</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    )</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li><code>start_run(...)</code> 先把后台任务建起来，router 自己并不阻塞等待 agent 跑完。</li>
+            <li><code>StreamingResponse(...)</code> 立刻把 SSE 管道返回给前端，所以浏览器可以边跑边收事件。</li>
+            <li><code>Content-Location</code> 把这次 run 的资源 URL 明确告诉前端，方便 SDK 后续继续追踪同一次运行。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 3：上传文件为什么会立刻进入 thread 语义，而不是裸落盘</h4>
+          <p class="source-caption">节选自 <code>backend/app/gateway/routers/uploads.py</code>。这段代码能把 Gateway 和 sandbox / artifact 之间的连接看清楚。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">gateway/routers/uploads.py :: upload_files(...)</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-dec">@router.post</span>(<span class="tok-str">""</span>, <span class="tok-attr">response_model</span><span class="tok-op">=</span><span class="tok-cls">UploadResponse</span>)</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-dec">@require_permission</span>(<span class="tok-str">"threads"</span>, <span class="tok-str">"write"</span>, <span class="tok-attr">owner_check</span><span class="tok-op">=</span><span class="tok-kw">True</span>, <span class="tok-attr">require_existing</span><span class="tok-op">=</span><span class="tok-kw">False</span>)</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">upload_files</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">request</span>: <span class="tok-cls">Request</span>, <span class="tok-attr">files</span>: <span class="tok-type">list</span>[<span class="tok-cls">UploadFile</span>] <span class="tok-op">=</span> <span class="tok-cls">File</span>(...), <span class="tok-attr">config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">=</span> <span class="tok-cls">Depends</span>(<span class="tok-fn">get_config</span>)) <span class="tok-op">-&gt;</span> <span class="tok-cls">UploadResponse</span>:</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-fn">user_id</span> <span class="tok-op">=</span> <span class="tok-fn">get_effective_user_id</span>()</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-fn">sandbox_provider</span> <span class="tok-op">=</span> <span class="tok-fn">get_sandbox_provider</span>(<span class="tok-attr">config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-fn">paths</span> <span class="tok-op">=</span> <span class="tok-fn">get_paths</span>()</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-fn">limits</span> <span class="tok-op">=</span> <span class="tok-fn">_get_upload_limits</span>(<span class="tok-attr">config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-com"># 这里不是写到某个全局 tmp 目录，而是按 thread / user 计算真正的 uploads 目录</span></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-fn">uploads_dir</span> <span class="tok-op">=</span> <span class="tok-fn">ensure_uploads_dir</span>(<span class="tok-fn">get_uploads_dir</span>(<span class="tok-fn">paths</span>, <span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span>))</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-fn">file</span> <span class="tok-kw">in</span> <span class="tok-attr">files</span>:</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-fn">display_filename</span> <span class="tok-op">=</span> <span class="tok-fn">normalize_filename</span>(<span class="tok-attr">file</span>.<span class="tok-attr">filename</span> <span class="tok-kw">or</span> <span class="tok-str">"upload"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">        <span class="tok-fn">file_path</span>, <span class="tok-fn">file_size</span>, <span class="tok-fn">total_size</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">_write_upload_file_with_limits</span>(<span class="tok-attr">file</span>, <span class="tok-attr">uploads_dir</span><span class="tok-op">=</span><span class="tok-attr">uploads_dir</span>, <span class="tok-attr">display_filename</span><span class="tok-op">=</span><span class="tok-fn">display_filename</span>, <span class="tok-attr">max_single_file_size</span><span class="tok-op">=</span><span class="tok-attr">limits</span>.<span class="tok-attr">max_file_size</span>, <span class="tok-attr">max_total_size</span><span class="tok-op">=</span><span class="tok-attr">limits</span>.<span class="tok-attr">max_total_size</span>, <span class="tok-attr">total_size</span><span class="tok-op">=</span><span class="tok-attr">total_size</span>)</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">        <span class="tok-com"># 写完以后还要补 sandbox 可读/可写权限，说明上传不是只服务 Gateway 自己</span></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-fn">_make_file_sandbox_readable</span>(<span class="tok-fn">file_path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-fn">_uses_thread_data_mounts</span>(<span class="tok-fn">sandbox_provider</span>):</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">            <span class="tok-fn">_make_file_sandbox_writable</span>(<span class="tok-fn">file_path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">        <span class="tok-com"># 返回给前端的不是裸磁盘路径，而是 thread 语义下的 virtual_path + artifact_url</span></span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-fn">virtual_path</span> <span class="tok-op">=</span> <span class="tok-fn">upload_virtual_path</span>(<span class="tok-attr">thread_id</span>, <span class="tok-fn">display_filename</span>)</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">        <span class="tok-fn">artifact_url</span> <span class="tok-op">=</span> <span class="tok-fn">upload_artifact_url</span>(<span class="tok-attr">thread_id</span>, <span class="tok-fn">display_filename</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>上传入口虽然是 HTTP router，但一进来就先拿 <code>user_id</code>、<code>sandbox_provider</code>、<code>paths</code> 和上传限制，说明它服务的是整个运行时，不是单纯文件服务。</li>
+            <li><code>get_uploads_dir(...)</code> 和 <code>ensure_uploads_dir(...)</code> 让文件直接落到 thread / user 绑定目录下，这就是 DeerFlow 后面能把上传文件和某个会话严格对应起来的原因。</li>
+            <li>真正写文件的过程走的是 <code>_write_upload_file_with_limits(...)</code>，里面会边写边累计单文件大小和总大小，超限立刻失败，不会先全写完再检查。</li>
+            <li>写完以后还要补 sandbox 可读可写权限，说明上传文件后续不是只给 Gateway 自己看，而是要进入 sandbox / agent 的执行链路。</li>
+            <li>最后返回的是 <code>virtual_path</code> 和 <code>artifact_url</code>，不是“宿主机真实路径”。这正是 Gateway 把本地文件转换成 thread 语义资产的关键一步。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 4：Gateway service 层才是 router 和 runtime 之间的真正翻译层</h4>
+          <p class="source-caption">节选自 <code>backend/app/gateway/services.py</code>。这段代码能把“为什么 router 很薄，但 Gateway 仍然不只是代理”讲透。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">gateway/services.py :: normalize_input() / merge_run_context_overrides() / build_run_config()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">normalize_input</span>(<span class="tok-attr">raw_input</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">raw_input</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">        <span class="tok-kw">return</span> {}</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-fn">messages</span> <span class="tok-op">=</span> <span class="tok-attr">raw_input</span>.<span class="tok-fn">get</span>(<span class="tok-str">"messages"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">messages</span> <span class="tok-kw">and</span> <span class="tok-fn">isinstance</span>(<span class="tok-fn">messages</span>, <span class="tok-type">list</span>):</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">        <span class="tok-fn">converted</span>: <span class="tok-type">list</span>[<span class="tok-cls">Any</span>] <span class="tok-op">=</span> []</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-kw">for</span> <span class="tok-fn">index</span>, <span class="tok-fn">msg</span> <span class="tok-kw">in</span> <span class="tok-fn">enumerate</span>(<span class="tok-fn">messages</span>):</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">isinstance</span>(<span class="tok-fn">msg</span>, <span class="tok-cls">BaseMessage</span>):</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">                <span class="tok-attr">converted</span>.<span class="tok-fn">append</span>(<span class="tok-fn">msg</span>)</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">            <span class="tok-kw">elif</span> <span class="tok-fn">isinstance</span>(<span class="tok-fn">msg</span>, <span class="tok-type">dict</span>):</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">                <span class="tok-kw">try</span>:</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">                    <span class="tok-attr">converted</span>.<span class="tok-fn">extend</span>(<span class="tok-fn">convert_to_messages</span>([<span class="tok-fn">msg</span>]))</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">                <span class="tok-kw">except</span> (<span class="tok-cls">ValueError</span>, <span class="tok-cls">TypeError</span>, <span class="tok-cls">NotImplementedError</span>) <span class="tok-kw">as</span> <span class="tok-fn">exc</span>:</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">                    <span class="tok-kw">raise</span> <span class="tok-cls">HTTPException</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-num">400</span>, <span class="tok-attr">detail</span><span class="tok-op">=</span><span class="tok-str">f"Invalid message at input.messages[{index}]: {exc}"</span>) <span class="tok-kw">from</span> <span class="tok-kw">exc</span></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-kw">return</span> {<span class="tok-op">**</span><span class="tok-attr">raw_input</span>, <span class="tok-str">"messages"</span>: <span class="tok-attr">converted</span>}</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">raw_input</span></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_run_context_overrides</span>(<span class="tok-attr">config</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>], <span class="tok-attr">context</span>: <span class="tok-type">Mapping</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">context</span>:</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">        <span class="tok-kw">return</span></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-fn">configurable</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">setdefault</span>(<span class="tok-str">"configurable"</span>, {})</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-fn">runtime_context</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">setdefault</span>(<span class="tok-str">"context"</span>, {})</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-fn">key</span> <span class="tok-kw">in</span> <span class="tok-attr">_CONTEXT_CONFIGURABLE_KEYS</span>:</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-fn">key</span> <span class="tok-kw">in</span> <span class="tok-attr">context</span>:</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">            <span class="tok-attr">configurable</span>.<span class="tok-fn">setdefault</span>(<span class="tok-fn">key</span>, <span class="tok-attr">context</span>[<span class="tok-fn">key</span>])</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">            <span class="tok-attr">runtime_context</span>.<span class="tok-fn">setdefault</span>(<span class="tok-fn">key</span>, <span class="tok-attr">context</span>[<span class="tok-fn">key</span>])</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">build_run_config</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">request_config</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">metadata</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-op">*</span>, <span class="tok-attr">assistant_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">    <span class="tok-fn">config</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">=</span> {<span class="tok-str">"recursion_limit"</span>: <span class="tok-num">100</span>}</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">request_config</span>:</span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-str">"context"</span> <span class="tok-kw">in</span> <span class="tok-attr">request_config</span>:</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">            <span class="tok-fn">context_value</span> <span class="tok-op">=</span> <span class="tok-attr">request_config</span>[<span class="tok-str">"context"</span>]</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">            <span class="tok-attr">config</span>[<span class="tok-str">"context"</span>] <span class="tok-op">=</span> <span class="tok-fn">dict</span>(<span class="tok-fn">context_value</span>) <span class="tok-kw">if</span> <span class="tok-fn">isinstance</span>(<span class="tok-fn">context_value</span>, <span class="tok-cls">Mapping</span>) <span class="tok-kw">else</span> {}</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">        <span class="tok-kw">else</span>:</span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src">            <span class="tok-fn">configurable</span> <span class="tok-op">=</span> {<span class="tok-str">"thread_id"</span>: <span class="tok-attr">thread_id</span>}</span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src">            <span class="tok-attr">configurable</span>.<span class="tok-fn">update</span>(<span class="tok-attr">request_config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"configurable"</span>, {}))</span></div>
+                <div class="code-line"><span class="code-ln">37</span><span class="code-src">            <span class="tok-attr">config</span>[<span class="tok-str">"configurable"</span>] <span class="tok-op">=</span> <span class="tok-attr">configurable</span></span></div>
+                <div class="code-line"><span class="code-ln">38</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">assistant_id</span> <span class="tok-kw">and</span> <span class="tok-attr">assistant_id</span> <span class="tok-op">!=</span> <span class="tok-attr">_DEFAULT_ASSISTANT_ID</span>:</span></div>
+                <div class="code-line"><span class="code-ln">39</span><span class="code-src">        <span class="tok-fn">normalized</span> <span class="tok-op">=</span> <span class="tok-attr">assistant_id</span>.<span class="tok-fn">strip</span>().<span class="tok-fn">lower</span>().<span class="tok-fn">replace</span>(<span class="tok-str">"_"</span>, <span class="tok-str">"-"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">40</span><span class="code-src">        <span class="tok-fn">target</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>[<span class="tok-str">"configurable"</span>] <span class="tok-kw">if</span> <span class="tok-str">"configurable"</span> <span class="tok-kw">in</span> <span class="tok-attr">config</span> <span class="tok-kw">else</span> <span class="tok-attr">config</span>[<span class="tok-str">"context"</span>]</span></div>
+                <div class="code-line"><span class="code-ln">41</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-fn">target</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span> <span class="tok-kw">and</span> <span class="tok-str">"agent_name"</span> <span class="tok-kw">not in</span> <span class="tok-fn">target</span>:</span></div>
+                <div class="code-line"><span class="code-ln">42</span><span class="code-src">            <span class="tok-fn">target</span>[<span class="tok-str">"agent_name"</span>] <span class="tok-op">=</span> <span class="tok-attr">normalized</span></span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>`normalize_input(...)` 把 HTTP body 里的消息字典转换成真正的 LangChain 消息对象，并且在边界层就把坏输入打成 400，而不是拖到 runtime 里炸 500。</li>
+            <li>`merge_run_context_overrides(...)` 很关键，因为 DeerFlow 现在要同时兼容 `configurable` 和 `context` 两套运行时读法，所以同一份覆盖要落到两个容器里。</li>
+            <li>`build_run_config(...)` 说明 Gateway service 不只是组一个字典，而是在这里决定 thread_id 怎样进入运行配置、custom agent 怎样映射成 `agent_name`、metadata 怎样并入 run。</li>
+            <li>这正是 Gateway “拥有 runtime 语义”的证据: 它不是转发原始 HTTP body，而是会主动把外部请求翻译成 DeerFlow 内部能跑的那种配置形状。</li>
+          </ul>
+        </div>
         <div class="highlight">
           <strong>关键理解：</strong>
           Gateway 不是“请求进来转发给别的 DeerFlow 核心”。它自己就拥有 thread、run、upload、artifact 这些核心 runtime surface。
@@ -118,6 +322,7 @@
           <li><code>/api/*</code> 提供 DeerFlow 自己的 models、skills、uploads、artifacts、channels 等 REST surface。</li>
         </ul>
         <p>但从部署面看，这两组能力都在 <code>backend/app/gateway/app.py</code> 里被统一挂载。根据 <code>backend/docs/API.md</code>，nginx 是统一反向代理入口；根据 <code>backend/docs/ARCHITECTURE.md</code>，默认部署并不会额外跑一套独立 LangGraph runtime 来承接浏览器流量。</p>
+        <p>另外一个很重要的源码事实是：请求期配置不是简单缓存死在应用启动时。Gateway 相关依赖会在请求路径上重新读取可热更新的配置，所以模型列表、memory 行为、summarization 等很多运行字段能在下一条消息时生效；但数据库、sandbox、stream bridge、channels 这类基础设施字段则属于 startup-only 边界。这种冷热分层，也是理解 Gateway 行为为什么“有些改配置后立刻生效，有些必须重启”的关键。</p>
         <p>Gateway 还直接暴露了和浏览器安全相关的运行面：<code>backend/app/gateway/app.py</code> 会挂上 CORS、<code>CSRFMiddleware</code> 和 <code>AuthMiddleware</code>。这意味着 thread/run API 不只是“能调用”，还必须通过 DeerFlow 当前定义的 CSRF 和登录态保护。</p>
         <p>实际使用时，前端会先用 thread API 创建会话，再用 run/stream API 发起执行；文件相关能力则通过 <code>backend/app/gateway/routers/uploads.py</code> 和 <code>backend/app/gateway/routers/artifacts.py</code> 进入同一个 thread 语义空间。IM channel 则通过内部认证 token 和匹配 CSRF 头进入同一 Gateway surface，而不是直接调用 runtime 私有函数。</p>
       </section>

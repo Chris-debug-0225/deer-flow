@@ -77,16 +77,174 @@
 
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
-        <div class="code-block"><code>author creates skill folder
-  -> SKILL.md + optional references/templates/scripts
-  -> package as .skill archive
-  -> backend/app/gateway/routers/skills.py
-  -> backend/packages/harness/deerflow/skills/installer.py
-  -> safe_extract + security scan + storage install
-  -> skill enabled in storage / config
-  -> lead agent prompt sees enabled skill in later runs</code></div>
+        <div class="annotated-code">
+          <div class="code-window">
+            <div class="code-window-header">
+              <div class="code-window-dots"><span></span><span></span><span></span></div>
+              <div class="code-window-title">custom skill flow :: 一个 skill 包怎样真正生效</div>
+            </div>
+            <div class="code-window-body">
+              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"author creates skill folder"</span></span></div>
+              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"SKILL.md + optional references/templates/scripts"</span></span></div>
+              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"package as .skill archive"</span></span></div>
+              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/app/gateway/routers/skills.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/skills/installer.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"safe_extract + security scan + storage install"</span></span></div>
+              <div class="code-line"><span class="code-ln">7</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"skill enabled in storage / config"</span></span></div>
+              <div class="code-line"><span class="code-ln">8</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"lead agent prompt sees enabled skill in later runs"</span></span></div>
+            </div>
+          </div>
+        </div>
         <p>如果是浏览器或脚本触发安装，自定义 skill 往往先出现在某个 thread 的 artifact 或输出目录里，再由 <code>backend/app/gateway/routers/skills.py</code> 通过 thread 虚拟路径找到归档并安装。安装后，skills storage 会把它归入 DeerFlow 的可管理 skills 集合，后续 run 才能看到它的 skills 元数据并在需要时再去读取具体内容。</p>
         <p>这条链非常重要，因为它说明“写一个 skill 文件”并不等于“agent 立刻可用”。真正生效之前，还要经过归档、扫描、安装、启用和 prompt 刷新这几步。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码：一个自定义 skill 从 thread 里的 `.skill` 文件变成系统可用能力</h4>
+          <p class="source-caption">节选自 <code>backend/app/gateway/routers/skills.py</code>。这一段能把“上传 skill 包后为什么还要安装、刷新、扫描”讲得非常具体。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">gateway/routers/skills.py :: install_skill() / update_custom_skill()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">SkillInstallRequest</span>(<span class="tok-cls">BaseModel</span>):</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-attr">path</span>: <span class="tok-type">str</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">install_skill</span>(<span class="tok-attr">request</span>: <span class="tok-cls">SkillInstallRequest</span>, <span class="tok-attr">config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">=</span> <span class="tok-fn">Depends</span>(<span class="tok-attr">get_config</span>)) <span class="tok-op">-&gt;</span> <span class="tok-cls">SkillInstallResponse</span>:</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-kw">try</span>:</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-com"># 先把线程里的虚拟路径解析成宿主机真实路径，避免随便给任意文件路径</span></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">        <span class="tok-fn">skill_file_path</span> <span class="tok-op">=</span> <span class="tok-fn">resolve_thread_virtual_path</span>(<span class="tok-attr">request</span>.<span class="tok-attr">thread_id</span>, <span class="tok-attr">request</span>.<span class="tok-attr">path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">        <span class="tok-com"># 真正安装动作交给 storage + installer，router 只负责编排输入输出</span></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">        <span class="tok-fn">result</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">get_or_new_skill_storage</span>(<span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">config</span>).<span class="tok-fn">ainstall_skill_from_archive</span>(<span class="tok-attr">skill_file_path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-com"># 装完以后必须刷新 prompt cache，否则后续 run 里还看不到新 skill</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-kw">await</span> <span class="tok-fn">refresh_skills_system_prompt_cache_async</span>()</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-cls">SkillInstallResponse</span>(<span class="tok-op">**</span><span class="tok-attr">result</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-kw">except</span> <span class="tok-cls">FileNotFoundError</span> <span class="tok-kw">as</span> <span class="tok-fn">e</span>:</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">HTTPException</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-num">404</span>, <span class="tok-attr">detail</span><span class="tok-op">=</span><span class="tok-fn">str</span>(<span class="tok-fn">e</span>))</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-kw">except</span> <span class="tok-cls">SkillAlreadyExistsError</span> <span class="tok-kw">as</span> <span class="tok-fn">e</span>:</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">HTTPException</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-num">409</span>, <span class="tok-attr">detail</span><span class="tok-op">=</span><span class="tok-fn">str</span>(<span class="tok-fn">e</span>))</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-kw">except</span> <span class="tok-cls">ValueError</span> <span class="tok-kw">as</span> <span class="tok-fn">e</span>:</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">HTTPException</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-num">400</span>, <span class="tok-attr">detail</span><span class="tok-op">=</span><span class="tok-fn">str</span>(<span class="tok-fn">e</span>))</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">update_custom_skill</span>(<span class="tok-attr">skill_name</span>: <span class="tok-type">str</span>, <span class="tok-attr">request</span>: <span class="tok-cls">CustomSkillUpdateRequest</span>, <span class="tok-attr">config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">=</span> <span class="tok-fn">Depends</span>(<span class="tok-attr">get_config</span>)) <span class="tok-op">-&gt;</span> <span class="tok-cls">CustomSkillContentResponse</span>:</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-fn">storage</span> <span class="tok-op">=</span> <span class="tok-fn">get_or_new_skill_storage</span>(<span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">    <span class="tok-attr">storage</span>.<span class="tok-fn">ensure_custom_skill_is_editable</span>(<span class="tok-attr">skill_name</span>)</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">    <span class="tok-attr">storage</span>.<span class="tok-fn">validate_skill_markdown_content</span>(<span class="tok-attr">skill_name</span>, <span class="tok-attr">request</span>.<span class="tok-attr">content</span>)</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">    <span class="tok-com"># 编辑不是直接写盘，先做内容安全扫描</span></span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">    <span class="tok-fn">scan</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">scan_skill_content</span>(<span class="tok-attr">request</span>.<span class="tok-attr">content</span>, <span class="tok-attr">executable</span><span class="tok-op">=</span><span class="tok-kw">False</span>, <span class="tok-attr">location</span><span class="tok-op">=</span><span class="tok-str">f"{skill_name}/{SKILL_MD_FILE}"</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">scan</span>.<span class="tok-attr">decision</span> <span class="tok-op">==</span> <span class="tok-str">"block"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">HTTPException</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-num">400</span>, <span class="tok-attr">detail</span><span class="tok-op">=</span><span class="tok-str">f"Security scan blocked the edit: {scan.reason}"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">    <span class="tok-fn">prev_content</span> <span class="tok-op">=</span> <span class="tok-attr">storage</span>.<span class="tok-fn">read_custom_skill</span>(<span class="tok-attr">skill_name</span>)</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-attr">storage</span>.<span class="tok-fn">write_custom_skill</span>(<span class="tok-attr">skill_name</span>, <span class="tok-attr">SKILL_MD_FILE</span>, <span class="tok-attr">request</span>.<span class="tok-attr">content</span>)</span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">    <span class="tok-com"># 写入 history，后面 rollback 才有依据</span></span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">    <span class="tok-attr">storage</span>.<span class="tok-fn">append_history</span>(<span class="tok-attr">skill_name</span>, {<span class="tok-str">"action"</span>: <span class="tok-str">"human_edit"</span>, <span class="tok-str">"prev_content"</span>: <span class="tok-attr">prev_content</span>, <span class="tok-str">"new_content"</span>: <span class="tok-attr">request</span>.<span class="tok-attr">content</span>, <span class="tok-str">"scanner"</span>: {<span class="tok-str">"decision"</span>: <span class="tok-attr">scan</span>.<span class="tok-attr">decision</span>, <span class="tok-str">"reason"</span>: <span class="tok-attr">scan</span>.<span class="tok-attr">reason</span>}})</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">    <span class="tok-kw">await</span> <span class="tok-fn">refresh_skills_system_prompt_cache_async</span>()</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-kw">await</span> <span class="tok-fn">get_custom_skill</span>(<span class="tok-attr">skill_name</span>, <span class="tok-attr">config</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第 8 行先做 <code>resolve_thread_virtual_path(...)</code>，说明安装入口不是信任前端随便传一个宿主机绝对路径，而是严格从 thread 视角把虚拟路径翻译成真实文件。</li>
+            <li>第 10 行真正调用的是 storage 的异步安装逻辑，所以 router 的职责是协议编排，不是自己解压 zip 包。</li>
+            <li>第 11 到 12 行非常关键: 安装成功以后必须刷新 skills prompt cache，否则 lead agent 下一轮还是拿着旧的 enabled skills 提示。</li>
+            <li>编辑 skill 时也不是“改个 markdown 文件就完了”。第 23 到 32 行依次做可编辑性校验、markdown 结构校验、安全扫描、写盘和历史记录。</li>
+            <li>这就解释了为什么 DeerFlow 的自定义 skill 更像受控能力包，而不是一个任意文本片段。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：安装器真正干了什么，为什么一个 `.skill` 包不能直接解压就算完成</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/skills/installer.py</code>。这段源码把“安全解包、扫描文件、落到最终目录”的细节全部展开，读完就能明白 DeerFlow 为什么把自定义 skill 当成受控能力包。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">skills/installer.py :: safe_extract_skill_archive() / _scan_skill_archive_contents_or_raise()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">is_unsafe_zip_member</span>(<span class="tok-attr">info</span>: <span class="tok-cls">zipfile</span>.<span class="tok-cls">ZipInfo</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">bool</span>:</span></div>
+                <div class="code-line"><span class="code-ln">38</span><span class="code-src">    <span class="tok-attr">normalized</span> <span class="tok-op">=</span> <span class="tok-attr">info</span>.<span class="tok-attr">filename</span>.<span class="tok-fn">replace</span>(<span class="tok-str">"\\"</span>, <span class="tok-str">"/"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">39</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">normalized</span>.<span class="tok-fn">startswith</span>(<span class="tok-str">"/"</span>):</span></div>
+                <div class="code-line"><span class="code-ln">40</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">46</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-str">".."</span> <span class="tok-kw">in</span> <span class="tok-attr">path</span>.<span class="tok-attr">parts</span>:</span></div>
+                <div class="code-line"><span class="code-ln">47</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">81</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">safe_extract_skill_archive</span>(<span class="tok-attr">zip_ref</span>, <span class="tok-attr">dest_path</span>, <span class="tok-attr">max_total_size</span>: <span class="tok-type">int</span> <span class="tok-op">=</span> <span class="tok-num">512</span> <span class="tok-op">*</span> <span class="tok-num">1024</span> <span class="tok-op">*</span> <span class="tok-num">1024</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">96</span><span class="code-src">    <span class="tok-attr">dest_root</span> <span class="tok-op">=</span> <span class="tok-attr">dest_path</span>.<span class="tok-fn">resolve</span>()</span></div>
+                <div class="code-line"><span class="code-ln">99</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-attr">info</span> <span class="tok-kw">in</span> <span class="tok-attr">zip_ref</span>.<span class="tok-fn">infolist</span>():</span></div>
+                <div class="code-line"><span class="code-ln">100</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-fn">is_unsafe_zip_member</span>(<span class="tok-attr">info</span>):</span></div>
+                <div class="code-line"><span class="code-ln">101</span><span class="code-src">            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Archive contains unsafe member path: {info.filename!r}"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">103</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-fn">is_symlink_member</span>(<span class="tok-attr">info</span>):</span></div>
+                <div class="code-line"><span class="code-ln">104</span><span class="code-src">            <span class="tok-attr">logger</span>.<span class="tok-fn">warning</span>(<span class="tok-str">"Skipping symlink entry in skill archive: %s"</span>, <span class="tok-attr">info</span>.<span class="tok-attr">filename</span>)</span></div>
+                <div class="code-line"><span class="code-ln">107</span><span class="code-src">        <span class="tok-attr">normalized_name</span> <span class="tok-op">=</span> <span class="tok-attr">posixpath</span>.<span class="tok-fn">normpath</span>(<span class="tok-attr">info</span>.<span class="tok-attr">filename</span>.<span class="tok-fn">replace</span>(<span class="tok-str">"\\"</span>, <span class="tok-str">"/"</span>))</span></div>
+                <div class="code-line"><span class="code-ln">109</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">member_path</span>.<span class="tok-fn">resolve</span>().<span class="tok-fn">is_relative_to</span>(<span class="tok-attr">dest_root</span>):</span></div>
+                <div class="code-line"><span class="code-ln">110</span><span class="code-src">            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Zip entry escapes destination: {info.filename!r}"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">117</span><span class="code-src">        <span class="tok-kw">with</span> <span class="tok-attr">zip_ref</span>.<span class="tok-fn">open</span>(<span class="tok-attr">info</span>) <span class="tok-kw">as</span> <span class="tok-attr">src</span>, <span class="tok-attr">member_path</span>.<span class="tok-fn">open</span>(<span class="tok-str">"wb"</span>) <span class="tok-kw">as</span> <span class="tok-attr">dst</span>:</span></div>
+                <div class="code-line"><span class="code-ln">118</span><span class="code-src">            <span class="tok-kw">while</span> <span class="tok-attr">chunk</span> <span class="tok-op">:=</span> <span class="tok-attr">src</span>.<span class="tok-fn">read</span>(<span class="tok-num">65536</span>):</span></div>
+                <div class="code-line"><span class="code-ln">120</span><span class="code-src">                <span class="tok-kw">if</span> <span class="tok-attr">total_written</span> <span class="tok-op">&gt;</span> <span class="tok-attr">max_total_size</span>:</span></div>
+                <div class="code-line"><span class="code-ln">121</span><span class="code-src">                    <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"Skill archive is too large or appears highly compressed."</span>)</span></div>
+                <div class="code-line"><span class="code-ln">152</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">_scan_skill_file_or_raise</span>(<span class="tok-attr">skill_dir</span>, <span class="tok-attr">path</span>, <span class="tok-attr">skill_name</span>, <span class="tok-op">*</span>, <span class="tok-attr">executable</span>: <span class="tok-type">bool</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">156</span><span class="code-src">        <span class="tok-attr">content</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-attr">asyncio</span>.<span class="tok-fn">to_thread</span>(<span class="tok-attr">path</span>.<span class="tok-fn">read_text</span>, <span class="tok-attr">encoding</span><span class="tok-op">=</span><span class="tok-str">"utf-8"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">161</span><span class="code-src">        <span class="tok-attr">result</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">scan_skill_content</span>(<span class="tok-attr">content</span>, <span class="tok-attr">executable</span><span class="tok-op">=</span><span class="tok-attr">executable</span>, <span class="tok-attr">location</span><span class="tok-op">=</span><span class="tok-attr">location</span>)</span></div>
+                <div class="code-line"><span class="code-ln">167</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">decision</span> <span class="tok-op">==</span> <span class="tok-str">"block"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">171</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">executable</span> <span class="tok-kw">and</span> <span class="tok-attr">decision</span> <span class="tok-op">!=</span> <span class="tok-str">"allow"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">182</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">_scan_skill_archive_contents_or_raise</span>(<span class="tok-attr">skill_dir</span>: <span class="tok-cls">Path</span>, <span class="tok-attr">skill_name</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">184</span><span class="code-src">    <span class="tok-attr">skill_md</span> <span class="tok-op">=</span> <span class="tok-attr">skill_dir</span> <span class="tok-op">/</span> <span class="tok-str">"SKILL.md"</span></span></div>
+                <div class="code-line"><span class="code-ln">185</span><span class="code-src">    <span class="tok-kw">await</span> <span class="tok-fn">_scan_skill_file_or_raise</span>(<span class="tok-attr">skill_dir</span>, <span class="tok-attr">skill_md</span>, <span class="tok-attr">skill_name</span>, <span class="tok-attr">executable</span><span class="tok-op">=</span><span class="tok-kw">False</span>)</span></div>
+                <div class="code-line"><span class="code-ln">187</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-attr">path</span> <span class="tok-kw">in</span> <span class="tok-kw">await</span> <span class="tok-attr">asyncio</span>.<span class="tok-fn">to_thread</span>(<span class="tok-fn">_collect_scannable_files</span>, <span class="tok-attr">skill_dir</span>):</span></div>
+                <div class="code-line"><span class="code-ln">193</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-fn">_should_scan_support_file</span>(<span class="tok-attr">rel_path</span>):</span></div>
+                <div class="code-line"><span class="code-ln">196</span><span class="code-src">        <span class="tok-kw">await</span> <span class="tok-fn">_scan_skill_file_or_raise</span>(<span class="tok-attr">skill_dir</span>, <span class="tok-attr">path</span>, <span class="tok-attr">skill_name</span>, <span class="tok-attr">executable</span><span class="tok-op">=</span><span class="tok-fn">_is_script_support_file</span>(<span class="tok-attr">rel_path</span>))</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第一段先挡住最典型的 zip 攻击面：绝对路径、`..` 穿越、符号链接和超大压缩包，所以 DeerFlow 安装 skill 时考虑的是“系统边界”，不是“方便解包”。</li>
+            <li>第 107 到 121 行可以直接看出它不是一次性 <code>extractall()</code>，而是逐成员写出、逐块累计大小，这样才能防 zip bomb。</li>
+            <li>第二段的扫描不是只看 <code>SKILL.md</code>。`references/`、`templates/` 和 `scripts/` 里能参与运行时的文件都会被挑出来检查，尤其脚本文件必须拿到更严格的 `allow` 结果。</li>
+            <li>把这一段和前面的 router 结合起来看，就能串出完整链路：Gateway 负责找到归档并调用 storage，installer 负责安全落盘，最后 prompt cache 刷新才让 skill 在下一轮 run 中真正可见。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：归档通过扫描之后，SkillStorage 怎么把它正式提交成系统可管理技能</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/skills/storage/local_skill_storage.py</code> 和 <code>skill_storage.py</code>。这一段把“临时目录里的技能”转成“系统里真正存在的自定义技能”的最后一跳讲清楚。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">skills/storage/local_skill_storage.py :: _prepare_skill_archive() / _commit_skill_install()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">SkillStorage</span>(<span class="tok-cls">ABC</span>):</span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src">    <span class="tok-deco">@staticmethod</span></span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">validate_skill_name</span>(<span class="tok-attr">name</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                <div class="code-line"><span class="code-ln">63</span><span class="code-src">    <span class="tok-deco">@staticmethod</span></span></div>
+                <div class="code-line"><span class="code-ln">64</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">validate_skill_markdown_content</span>(<span class="tok-attr">name</span>: <span class="tok-type">str</span>, <span class="tok-attr">content</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">69</span><span class="code-src">        <span class="tok-kw">with</span> <span class="tok-attr">tempfile</span>.<span class="tok-fn">TemporaryDirectory</span>() <span class="tok-kw">as</span> <span class="tok-attr">tmp_dir</span>:</span></div>
+                <div class="code-line"><span class="code-ln">73</span><span class="code-src">            <span class="tok-attr">is_valid</span>, <span class="tok-attr">message</span>, <span class="tok-attr">parsed_name</span> <span class="tok-op">=</span> <span class="tok-fn">_validate_skill_frontmatter</span>(<span class="tok-attr">temp_skill_dir</span>)</span></div>
+                <div class="code-line"><span class="code-ln">76</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-attr">parsed_name</span> <span class="tok-op">!=</span> <span class="tok-attr">name</span>:</span></div>
+                <div class="code-line"><span class="code-ln">135</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">ainstall_skill_from_archive</span>(<span class="tok-self">self</span>, <span class="tok-attr">archive_path</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-cls">Path</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>:</span></div>
+                <div class="code-line"><span class="code-ln">154</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">path</span>.<span class="tok-fn">is_file</span>():</span></div>
+                <div class="code-line"><span class="code-ln">164</span><span class="code-src">        <span class="tok-kw">with</span> <span class="tok-attr">zf</span>:</span></div>
+                <div class="code-line"><span class="code-ln">165</span><span class="code-src">            <span class="tok-fn">safe_extract_skill_archive</span>(<span class="tok-attr">zf</span>, <span class="tok-attr">tmp_path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">167</span><span class="code-src">        <span class="tok-attr">skill_dir</span> <span class="tok-op">=</span> <span class="tok-fn">resolve_skill_dir_from_archive</span>(<span class="tok-attr">tmp_path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">169</span><span class="code-src">        <span class="tok-attr">is_valid</span>, <span class="tok-attr">message</span>, <span class="tok-attr">skill_name</span> <span class="tok-op">=</span> <span class="tok-fn">_validate_skill_frontmatter</span>(<span class="tok-attr">skill_dir</span>)</span></div>
+                <div class="code-line"><span class="code-ln">175</span><span class="code-src">        <span class="tok-attr">target</span> <span class="tok-op">=</span> <span class="tok-attr">custom_dir</span> <span class="tok-op">/</span> <span class="tok-attr">skill_name</span></span></div>
+                <div class="code-line"><span class="code-ln">176</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">target</span>.<span class="tok-fn">exists</span>():</span></div>
+                <div class="code-line"><span class="code-ln">181</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">skill_dir</span>, <span class="tok-attr">skill_name</span>, <span class="tok-attr">target</span></span></div>
+                <div class="code-line"><span class="code-ln">183</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_commit_skill_install</span>(<span class="tok-self">self</span>, <span class="tok-attr">skill_dir</span>: <span class="tok-cls">Path</span>, <span class="tok-attr">skill_name</span>: <span class="tok-type">str</span>, <span class="tok-attr">custom_dir</span>: <span class="tok-cls">Path</span>, <span class="tok-attr">target</span>: <span class="tok-cls">Path</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">187</span><span class="code-src">        <span class="tok-kw">with</span> <span class="tok-attr">tempfile</span>.<span class="tok-fn">TemporaryDirectory</span>(<span class="tok-attr">prefix</span><span class="tok-op">=</span><span class="tok-str">f".installing-{skill_name}-"</span>, <span class="tok-attr">dir</span><span class="tok-op">=</span><span class="tok-attr">custom_dir</span>) <span class="tok-kw">as</span> <span class="tok-attr">staging_root</span>:</span></div>
+                <div class="code-line"><span class="code-ln">188</span><span class="code-src">            <span class="tok-attr">staging_target</span> <span class="tok-op">=</span> <span class="tok-cls">Path</span>(<span class="tok-attr">staging_root</span>) <span class="tok-op">/</span> <span class="tok-attr">skill_name</span></span></div>
+                <div class="code-line"><span class="code-ln">189</span><span class="code-src">            <span class="tok-attr">shutil</span>.<span class="tok-fn">copytree</span>(<span class="tok-attr">skill_dir</span>, <span class="tok-attr">staging_target</span>)</span></div>
+                <div class="code-line"><span class="code-ln">190</span><span class="code-src">            <span class="tok-fn">_move_staged_skill_into_reserved_target</span>(<span class="tok-attr">staging_target</span>, <span class="tok-attr">target</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>前半段在抽象基类里就已经把名字、frontmatter、相对路径这些协议规则固定下来了，所以 DeerFlow 管 skill 不是“碰巧目录这么放”，而是有一套稳定协议。</li>
+            <li>真正安装时不是扫描通过就直接复制到最终目录。它先解析 frontmatter 里的技能名，再确认目标目录不存在，最后进一个 `.installing-*` 临时 staging 目录。</li>
+            <li>第 187 到 190 行非常重要：先复制到 staging，再通过 <code>_move_staged_skill_into_reserved_target()</code> 原子式提交，这样即使中途失败，也不会把半装好的技能留在最终技能目录里。</li>
+            <li>把这一段和前面的 installer、router 连起来，读者就能看到完整闭环：上传归档 -> 安全解压 -> 内容扫描 -> frontmatter 校验 -> staging 提交 -> prompt cache 刷新。</li>
+          </ul>
+        </div>
       </section>
 
       <section id="config">

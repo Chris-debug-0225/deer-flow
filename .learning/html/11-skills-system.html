@@ -80,26 +80,208 @@
             <td>它不是 Skill 实现，但经常与 Skill 协同，让 agent 先拥有工作方法，再按需发现 MCP 工具</td>
           </tr>
         </table>
+        <p>这几处代码刚好对应 Skill 的三个阶段。<code>backend/app/gateway/routers/skills.py</code> 是管理面，处理安装、启停、编辑和回滚；<code>backend/packages/harness/deerflow/skills/installer.py</code> 是落盘与安全边界，负责检查 zip 内容是否安全可接受；而 <code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code> 才是运行面，负责把启用中的 Skill 读成 prompt 片段。也就是说，Skill 不会因为“存在于磁盘上”就生效，必须先进入 storage，再进入 enabled 集合，最后进入 prompt 生成链。</p>
+        <p><code>tool_search.py</code> 放在这里也有意义，因为它说明 Skill 和 Tool 是分层协作关系。Skill 更像“教模型怎么工作”，tool_search 则是“在真正需要时把某类工具 schema 找出来”。</p>
       </section>
 
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>一个典型的 Skill 生效链路可以分成“管理面”和“运行面”两段：</p>
-        <div class="code-block"><code>管理面：
-backend/app/gateway/routers/skills.py
-  -> get_or_new_skill_storage(...)
-  -> backend/packages/harness/deerflow/skills/installer.py
-  -> scan_skill_content / storage write / history
-  -> refresh_skills_system_prompt_cache_async()
-
-运行面：
-backend/packages/harness/deerflow/agents/lead_agent/prompt.py
-  -> get_or_new_skill_storage().load_skills(enabled_only=True)
-  -> cache enabled skills
-  -> render skills prompt section
-  -> lead agent system prompt receives skill instructions</code></div>
+        <div class="annotated-code">
+          <div class="code-window">
+            <div class="code-window-header">
+              <div class="code-window-dots"><span></span><span></span><span></span></div>
+              <div class="code-window-title">skills flow :: 管理面与运行面两段链路</div>
+            </div>
+            <div class="code-window-body">
+              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># 管理面</span></span></div>
+              <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-str">"backend/app/gateway/routers/skills.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"get_or_new_skill_storage(...)"</span></span></div>
+              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/skills/installer.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"scan_skill_content / storage write / history"</span></span></div>
+              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"refresh_skills_system_prompt_cache_async()"</span></span></div>
+              <div class="code-line"><span class="code-ln">7</span><span class="code-src"></span></div>
+              <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-com"># 运行面</span></span></div>
+              <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-str">"backend/packages/harness/deerflow/agents/lead_agent/prompt.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">10</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"get_or_new_skill_storage().load_skills(enabled_only=True)"</span></span></div>
+              <div class="code-line"><span class="code-ln">11</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"cache enabled skills"</span></span></div>
+              <div class="code-line"><span class="code-ln">12</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"render skills prompt section"</span></span></div>
+              <div class="code-line"><span class="code-ln">13</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"lead agent system prompt receives skill instructions"</span></span></div>
+            </div>
+          </div>
+        </div>
+        <p>真实源码里这一段比表面上更细一点。<code>prompt.py</code> 不是每次请求都扫磁盘，而是维护一份 enabled-skills cache；当 skills router 完成安装、启停或编辑后，会主动调用 <code>refresh_skills_system_prompt_cache_async()</code> 让缓存失效并后台重载。这样下一次 run 构建 prompt 时，看到的就是新 Skill 集合。这个设计很重要，因为它解释了“为什么切换 skill 后不需要重启服务，却也不是每次请求都同步读盘”。</p>
         <p>这条链说明，Skill 的主要作用不是在运行过程中“像 tool 一样被直接调用”，而是先通过 Gateway 或本地存储进入 skills 仓库，再由 <code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code> 读取启用态并注入 prompt。只有当 agent 开始思考和规划时，这些 Skill 才真正改变它的行为。</p>
         <p>另外一个经常一起出现的链路，是 Skill 与延迟工具发现的配合。DeerFlow 可以通过 <code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 先只暴露 MCP 工具名称，再让 agent 按需搜索工具 schema。很多 Skill 实际上是在告诉 agent：什么时候应该去搜索哪类工具，而不是替代这些工具本身。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码：skills cache 为什么能热更新但不阻塞请求</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code>。这里直接决定 Skill 是否能高频启停而不拖慢每次 run。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">lead_agent/prompt.py :: enabled skills cache</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">get_cached_enabled_skills</span>() <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-cls">Skill</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com"># 读取内存中的 enabled skills 缓存，避免请求线程直接扫磁盘</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-kw">with</span> <span class="tok-attr">_enabled_skills_lock</span>:</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">        <span class="tok-fn">cached</span> <span class="tok-op">=</span> <span class="tok-attr">_enabled_skills_cache</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">cached</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-fn">list</span>(<span class="tok-fn">cached</span>)</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-com"># 未命中时只启动后台刷新，不在当前请求里阻塞等待目录扫描</span></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-fn">_ensure_enabled_skills_cache</span>()</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-kw">return</span> []</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">get_enabled_skills_for_config</span>(<span class="tok-attr">app_config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-cls">Skill</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">app_config</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-fn">_get_enabled_skills</span>()</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-fn">cache_key</span> <span class="tok-op">=</span> <span class="tok-fn">id</span>(<span class="tok-attr">app_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-kw">with</span> <span class="tok-attr">_enabled_skills_lock</span>:</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">        <span class="tok-fn">cached</span> <span class="tok-op">=</span> <span class="tok-attr">_enabled_skills_by_config_cache</span>.<span class="tok-fn">get</span>(<span class="tok-fn">cache_key</span>)</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-fn">cached</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">            <span class="tok-fn">cached_config</span>, <span class="tok-fn">cached_skills</span> <span class="tok-op">=</span> <span class="tok-fn">cached</span></span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">cached_config</span> <span class="tok-kw">is</span> <span class="tok-attr">app_config</span>:</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">                <span class="tok-kw">return</span> <span class="tok-fn">list</span>(<span class="tok-fn">cached_skills</span>)</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">    <span class="tok-fn">skills</span> <span class="tok-op">=</span> <span class="tok-fn">list</span>(<span class="tok-fn">get_or_new_skill_storage</span>(<span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">app_config</span>).<span class="tok-fn">load_skills</span>(<span class="tok-attr">enabled_only</span><span class="tok-op">=</span><span class="tok-kw">True</span>))</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">    <span class="tok-kw">with</span> <span class="tok-attr">_enabled_skills_lock</span>:</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">        <span class="tok-attr">_enabled_skills_by_config_cache</span>[<span class="tok-fn">cache_key</span>] <span class="tok-op">=</span> (<span class="tok-attr">app_config</span>, <span class="tok-fn">skills</span>)</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-fn">list</span>(<span class="tok-fn">skills</span>)</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">refresh_skills_system_prompt_cache_async</span>() <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">    <span class="tok-com"># 当安装/启停/编辑技能后，主动让缓存失效并在后台完成新一轮加载</span></span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">    <span class="tok-kw">await</span> <span class="tok-attr">asyncio</span>.<span class="tok-fn">to_thread</span>(<span class="tok-fn">_invalidate_enabled_skills_cache</span>().<span class="tok-fn">wait</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li><code>get_cached_enabled_skills()</code> 的策略是“命中缓存就直接返回，未命中就后台启动刷新并先返回空列表”。所以请求路径不会被磁盘扫描卡住。</li>
+            <li><code>get_enabled_skills_for_config(...)</code> 还按 <code>app_config</code> 做了一层缓存，说明 DeerFlow 不只是全局缓存，还考虑了请求级配置注入的场景。</li>
+            <li><code>refresh_skills_system_prompt_cache_async()</code> 会在技能安装、启停、编辑后主动失效缓存并等待后台刷新完成。这样下一轮 run 看到的就是新技能集合。</li>
+            <li>这段代码也解释了一个现象：技能生效点不在“安装完成”那一刻，而在“下一次 prompt 重建时读取到新的 enabled skills”那一刻。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 2：Skill 安装为什么是一条安全链，不是随便解压 ZIP</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/skills/installer.py</code>。这一段能把“DeerFlow 为什么敢让用户装 Skill 包”讲清楚。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">skills/installer.py :: safe_extract_skill_archive()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">safe_extract_skill_archive</span>(<span class="tok-attr">zip_ref</span>: <span class="tok-cls">zipfile</span>.<span class="tok-cls">ZipFile</span>, <span class="tok-attr">dest_path</span>: <span class="tok-cls">Path</span>, <span class="tok-attr">max_total_size</span>: <span class="tok-type">int</span> <span class="tok-op">=</span> <span class="tok-num">512</span> <span class="tok-op">*</span> <span class="tok-num">1024</span> <span class="tok-op">*</span> <span class="tok-num">1024</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-fn">dest_root</span> <span class="tok-op">=</span> <span class="tok-attr">dest_path</span>.<span class="tok-fn">resolve</span>()</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-fn">total_written</span> <span class="tok-op">=</span> <span class="tok-num">0</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-fn">info</span> <span class="tok-kw">in</span> <span class="tok-attr">zip_ref</span>.<span class="tok-fn">infolist</span>():</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-fn">is_unsafe_zip_member</span>(<span class="tok-fn">info</span>):</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Archive contains unsafe member path: {info.filename!r}"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-fn">is_symlink_member</span>(<span class="tok-fn">info</span>):</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">            <span class="tok-attr">logger</span>.<span class="tok-fn">warning</span>(<span class="tok-str">"Skipping symlink entry in skill archive: %s"</span>, <span class="tok-attr">info</span>.<span class="tok-attr">filename</span>)</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">            <span class="tok-kw">continue</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-fn">normalized_name</span> <span class="tok-op">=</span> <span class="tok-attr">posixpath</span>.<span class="tok-fn">normpath</span>(<span class="tok-attr">info</span>.<span class="tok-attr">filename</span>.<span class="tok-fn">replace</span>(<span class="tok-str">"\\"</span>, <span class="tok-str">"/"</span>))</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">        <span class="tok-fn">member_path</span> <span class="tok-op">=</span> <span class="tok-attr">dest_root</span>.<span class="tok-fn">joinpath</span>(<span class="tok-op">*</span><span class="tok-cls">PurePosixPath</span>(<span class="tok-fn">normalized_name</span>).<span class="tok-attr">parts</span>)</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">member_path</span>.<span class="tok-fn">resolve</span>().<span class="tok-fn">is_relative_to</span>(<span class="tok-fn">dest_root</span>):</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Zip entry escapes destination: {info.filename!r}"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-attr">member_path</span>.<span class="tok-attr">parent</span>.<span class="tok-fn">mkdir</span>(<span class="tok-attr">parents</span><span class="tok-op">=</span><span class="tok-kw">True</span>, <span class="tok-attr">exist_ok</span><span class="tok-op">=</span><span class="tok-kw">True</span>)</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">info</span>.<span class="tok-fn">is_dir</span>():</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">            <span class="tok-attr">member_path</span>.<span class="tok-fn">mkdir</span>(<span class="tok-attr">parents</span><span class="tok-op">=</span><span class="tok-kw">True</span>, <span class="tok-attr">exist_ok</span><span class="tok-op">=</span><span class="tok-kw">True</span>)</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">            <span class="tok-kw">continue</span></span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">        <span class="tok-kw">with</span> <span class="tok-attr">zip_ref</span>.<span class="tok-fn">open</span>(<span class="tok-fn">info</span>) <span class="tok-kw">as</span> <span class="tok-fn">src</span>, <span class="tok-attr">member_path</span>.<span class="tok-fn">open</span>(<span class="tok-str">"wb"</span>) <span class="tok-kw">as</span> <span class="tok-fn">dst</span>:</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">            <span class="tok-kw">while</span> <span class="tok-fn">chunk</span> <span class="tok-op">:=</span> <span class="tok-attr">src</span>.<span class="tok-fn">read</span>(<span class="tok-num">65536</span>):</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">                <span class="tok-attr">total_written</span> <span class="tok-op">+=</span> <span class="tok-fn">len</span>(<span class="tok-fn">chunk</span>)</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">                <span class="tok-kw">if</span> <span class="tok-attr">total_written</span> <span class="tok-op">&gt;</span> <span class="tok-attr">max_total_size</span>:</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">                    <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"Skill archive is too large or appears highly compressed."</span>)</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">                <span class="tok-attr">dst</span>.<span class="tok-fn">write</span>(<span class="tok-fn">chunk</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这一段直接表明，Skill 安装不是“上传 ZIP 然后 unzip 完事”，而是一条明确的安全解压链。</li>
+            <li>第一层防护是 <code>is_unsafe_zip_member(...)</code>，会拒绝绝对路径、目录穿越和奇怪的 Windows 绝对路径成员。</li>
+            <li>第二层防护是跳过符号链接，避免压缩包里放一个 symlink 把 DeerFlow 的 skill 目录指到别的地方。</li>
+            <li>第三层防护是 <code>is_relative_to(dest_root)</code> 检查，确保规范化后的目标路径仍然落在预期解压目录之内。</li>
+            <li>最后还有总解压大小上限，专门防 zip bomb。也就是说，Skill 系统在“安装阶段”就已经把很多风险挡掉了，而不是等运行时再补救。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 3：Skill storage 为什么不是“扫目录然后返回字符串列表”</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/skills/storage/skill_storage.py</code>。这段代码能把 Skill 系统的协议层和存储层边界讲得很清楚。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">skills/storage/skill_storage.py :: validation / load_skills() / path helpers</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-attr">_SKILL_NAME_PATTERN</span> <span class="tok-op">=</span> <span class="tok-attr">re</span>.<span class="tok-fn">compile</span>(<span class="tok-str">r"^[a-z0-9]+(?:-[a-z0-9]+)*$"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">SkillStorage</span>(<span class="tok-cls">ABC</span>):</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-com">"""抽象基类：子类只实现存储介质差异，通用协议流程放在这里。"""</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-dec">@staticmethod</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">validate_skill_name</span>(<span class="tok-attr">name</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">        <span class="tok-fn">normalized</span> <span class="tok-op">=</span> <span class="tok-attr">name</span>.<span class="tok-fn">strip</span>()</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">_SKILL_NAME_PATTERN</span>.<span class="tok-fn">fullmatch</span>(<span class="tok-fn">normalized</span>):</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"Skill name must be hyphen-case using lowercase letters, digits, and hyphens only."</span>)</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-fn">len</span>(<span class="tok-fn">normalized</span>) <span class="tok-op">&gt;</span> <span class="tok-num">64</span>:</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"Skill name must be 64 characters or fewer."</span>)</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-fn">normalized</span></span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-dec">@staticmethod</span></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">validate_skill_markdown_content</span>(<span class="tok-attr">name</span>: <span class="tok-type">str</span>, <span class="tok-attr">content</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-kw">with</span> <span class="tok-fn">tempfile</span>.<span class="tok-fn">TemporaryDirectory</span>() <span class="tok-kw">as</span> <span class="tok-attr">tmp_dir</span>:</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">            <span class="tok-fn">temp_skill_dir</span> <span class="tok-op">=</span> <span class="tok-cls">Path</span>(<span class="tok-attr">tmp_dir</span>) <span class="tok-op">/</span> <span class="tok-cls">SkillStorage</span>.<span class="tok-fn">validate_skill_name</span>(<span class="tok-attr">name</span>)</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">            (<span class="tok-fn">temp_skill_dir</span> <span class="tok-op">/</span> <span class="tok-attr">SKILL_MD_FILE</span>).<span class="tok-fn">write_text</span>(<span class="tok-attr">content</span>, <span class="tok-attr">encoding</span><span class="tok-op">=</span><span class="tok-str">"utf-8"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">            <span class="tok-fn">is_valid</span>, <span class="tok-fn">message</span>, <span class="tok-fn">parsed_name</span> <span class="tok-op">=</span> <span class="tok-fn">_validate_skill_frontmatter</span>(<span class="tok-fn">temp_skill_dir</span>)</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-fn">is_valid</span>:</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">                <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-fn">message</span>)</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">parsed_name</span> <span class="tok-op">!=</span> <span class="tok-attr">name</span>:</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">                <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Frontmatter name '{parsed_name}' must match requested skill name '{name}'."</span>)</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">get_custom_skill_dir</span>(<span class="tok-self">self</span>, <span class="tok-attr">name</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">Path</span>:</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">        <span class="tok-fn">normalized_name</span> <span class="tok-op">=</span> <span class="tok-self">self</span>.<span class="tok-fn">validate_skill_name</span>(<span class="tok-attr">name</span>)</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-self">self</span>.<span class="tok-fn">get_skills_root_path</span>() <span class="tok-op">/</span> <span class="tok-cls">SkillCategory</span>.<span class="tok-attr">CUSTOM</span>.<span class="tok-attr">value</span> <span class="tok-op">/</span> <span class="tok-fn">normalized_name</span></span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">load_skills</span>(<span class="tok-self">self</span>, <span class="tok-op">*</span>, <span class="tok-attr">enabled_only</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-cls">Skill</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">deerflow.skills.parser</span> <span class="tok-kw">import</span> <span class="tok-fn">parse_skill_file</span></span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">        <span class="tok-fn">skills_by_name</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Skill</span>] <span class="tok-op">=</span> {}</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">        <span class="tok-kw">for</span> <span class="tok-fn">category</span>, <span class="tok-fn">category_root</span>, <span class="tok-fn">md_path</span> <span class="tok-kw">in</span> <span class="tok-self">self</span>.<span class="tok-fn">_iter_skill_files</span>():</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">            <span class="tok-fn">skill</span> <span class="tok-op">=</span> <span class="tok-fn">parse_skill_file</span>(<span class="tok-fn">md_path</span>, <span class="tok-attr">category</span><span class="tok-op">=</span><span class="tok-fn">category</span>, <span class="tok-attr">relative_path</span><span class="tok-op">=</span><span class="tok-fn">md_path</span>.<span class="tok-attr">parent</span>.<span class="tok-fn">relative_to</span>(<span class="tok-fn">category_root</span>))</span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">skill</span>:</span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src">                <span class="tok-attr">skills_by_name</span>[<span class="tok-fn">skill</span>.<span class="tok-attr">name</span>] <span class="tok-op">=</span> <span class="tok-fn">skill</span></span></div>
+                <div class="code-line"><span class="code-ln">37</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">38</span><span class="code-src">        <span class="tok-fn">skills</span> <span class="tok-op">=</span> <span class="tok-fn">list</span>(<span class="tok-attr">skills_by_name</span>.<span class="tok-fn">values</span>())</span></div>
+                <div class="code-line"><span class="code-ln">39</span><span class="code-src">        <span class="tok-kw">try</span>:</span></div>
+                <div class="code-line"><span class="code-ln">40</span><span class="code-src">            <span class="tok-fn">extensions_config</span> <span class="tok-op">=</span> <span class="tok-cls">ExtensionsConfig</span>.<span class="tok-fn">from_file</span>()</span></div>
+                <div class="code-line"><span class="code-ln">41</span><span class="code-src">            <span class="tok-kw">for</span> <span class="tok-fn">skill</span> <span class="tok-kw">in</span> <span class="tok-fn">skills</span>:</span></div>
+                <div class="code-line"><span class="code-ln">42</span><span class="code-src">                <span class="tok-fn">skill</span>.<span class="tok-attr">enabled</span> <span class="tok-op">=</span> <span class="tok-attr">extensions_config</span>.<span class="tok-fn">is_skill_enabled</span>(<span class="tok-fn">skill</span>.<span class="tok-attr">name</span>, <span class="tok-fn">skill</span>.<span class="tok-attr">category</span>)</span></div>
+                <div class="code-line"><span class="code-ln">43</span><span class="code-src">        <span class="tok-kw">except</span> <span class="tok-cls">Exception</span> <span class="tok-kw">as</span> <span class="tok-fn">e</span>:</span></div>
+                <div class="code-line"><span class="code-ln">44</span><span class="code-src">            <span class="tok-attr">logger</span>.<span class="tok-fn">warning</span>(<span class="tok-str">"Failed to load extensions config: %s"</span>, <span class="tok-fn">e</span>)</span></div>
+                <div class="code-line"><span class="code-ln">45</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">enabled_only</span>:</span></div>
+                <div class="code-line"><span class="code-ln">46</span><span class="code-src">            <span class="tok-fn">skills</span> <span class="tok-op">=</span> [<span class="tok-fn">s</span> <span class="tok-kw">for</span> <span class="tok-fn">s</span> <span class="tok-kw">in</span> <span class="tok-fn">skills</span> <span class="tok-kw">if</span> <span class="tok-fn">s</span>.<span class="tok-attr">enabled</span>]</span></div>
+                <div class="code-line"><span class="code-ln">47</span><span class="code-src">        <span class="tok-fn">skills</span>.<span class="tok-fn">sort</span>(<span class="tok-attr">key</span><span class="tok-op">=</span><span class="tok-kw">lambda</span> <span class="tok-fn">s</span>: <span class="tok-fn">s</span>.<span class="tok-attr">name</span>)</span></div>
+                <div class="code-line"><span class="code-ln">48</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-fn">skills</span></span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>`SkillStorage` 不是简单的文件夹包装器，而是一个“模板方法”基类: 子类只实现介质差异，协议级流程都在这里统一。</li>
+            <li>`validate_skill_name(...)` 和 `validate_skill_markdown_content(...)` 说明 skill 协议从命名和 frontmatter 层面就有硬性约束，不是只要放个 `SKILL.md` 就算有效。</li>
+            <li>`load_skills(...)` 的核心逻辑不是“扫到多少文件就返回多少”，而是先 parse，再按名字去重，再叠加 extensions config 里的启用状态，最后再按 `enabled_only` 过滤。</li>
+            <li>所以 Skill 系统的真实入口不止是文件系统，还包括配置层的 enabled/disabled 状态。这也是为什么一个 skill 文件存在，不代表它已经会进入运行时 prompt。</li>
+          </ul>
+        </div>
       </section>
 
       <section id="config">
@@ -111,6 +293,7 @@ backend/packages/harness/deerflow/agents/lead_agent/prompt.py
           <li>通过 skills storage 决定从哪里加载 skills，本地默认会落到 DeerFlow 配置指定的 skills 根目录，再映射到容器内路径。</li>
           <li>通过第 30 章中的自定义 Skill 构建流程新增内容，但那一章关注的是“怎么写一个 skill 包”，不是本章的系统运行逻辑。</li>
         </ul>
+        <p>读源码时还要留意一个容易忽略的点：启用状态不只是存在某个 storage 记录里，它还会改变后续 prompt 构建时的缓存结果。所以“技能是否生效”这个问题，往往要同时看 router 是否写成功、storage 是否能 load 出 enabled_only 列表、prompt cache 是否已经刷新。</p>
         <div class="highlight">
           <strong>读代码时要特别注意：</strong>
           `enable/disable` 并不是只改一个前端勾选状态。它会影响 <code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code> 的缓存内容，进而改变后续新建 run 时 agent 能看到的系统提示。

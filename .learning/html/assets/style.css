@@ -230,6 +230,117 @@ pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   position: relative;
   z-index: 1;
 }
+
+.source-walkthrough {
+  margin: 22px 0;
+  padding: 18px 20px;
+  background: linear-gradient(180deg, rgba(88,166,255,0.08), rgba(88,166,255,0.03));
+  border: 1px solid rgba(88,166,255,0.18);
+  border-radius: var(--radius);
+}
+
+.source-walkthrough h4 {
+  margin-top: 0;
+  color: var(--accent-2);
+}
+
+.source-caption {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.annotated-code {
+  margin: 16px 0 18px;
+}
+
+.annotated-code pre {
+  margin: 0;
+}
+
+.code-window {
+  border: 1px solid #303846;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #0b1220;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.code-window-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, #182131, #121a27);
+  border-bottom: 1px solid #253041;
+}
+
+.code-window-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.code-window-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.code-window-dots span:nth-child(1) { background: #ff5f57; }
+.code-window-dots span:nth-child(2) { background: #febc2e; }
+.code-window-dots span:nth-child(3) { background: #28c840; }
+
+.code-window-title {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #9db0c7;
+}
+
+.code-window-body {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  line-height: 1.7;
+  padding: 12px 0;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 56px, transparent 56px);
+}
+
+.code-line {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  align-items: start;
+  white-space: pre-wrap;
+}
+
+.code-line:hover {
+  background: rgba(88, 166, 255, 0.06);
+}
+
+.code-ln {
+  user-select: none;
+  text-align: right;
+  padding: 0 14px 0 0;
+  color: #5f7188;
+}
+
+.code-src {
+  padding: 0 18px 0 0;
+  color: #d9e2ec;
+}
+
+.annotation-list {
+  margin: 12px 0 0 0;
+  padding-left: 20px;
+}
+
+.annotation-list li {
+  margin: 10px 0;
+}
+
+.annotation-list code {
+  color: var(--yellow);
+}
 .code-label + pre { border-top-left-radius: 0; }
 
 /* 语法高亮 token */

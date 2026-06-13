@@ -103,12 +103,22 @@
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>从运行时视角看，DeerFlow 的链路不是“用户输入 → 模型 → 工具 → 完成”这么简单，而是“配置解析 → 模型构建 → 工具汇总 → tool policy 过滤 → deferred tool 装配 → prompt 注入 → runtime 执行”。</p>
-        <div class="code-block"><code>config.yaml
-  -> backend/packages/harness/deerflow/agents/factory.py
-  -> backend/packages/harness/deerflow/tools/tools.py
-  -> skills/tool_policy + tool_search deferred setup
-  -> backend/packages/harness/deerflow/agents/lead_agent/prompt.py
-  -> lead agent runtime / DeerFlowClient / Gateway runs</code></div>
+        <div class="annotated-code">
+          <div class="code-window">
+            <div class="code-window-header">
+              <div class="code-window-dots"><span></span><span></span><span></span></div>
+              <div class="code-window-title">LLM + Tools flow :: 从配置到运行时的真实链路</div>
+            </div>
+            <div class="code-window-body">
+              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"config.yaml"</span>                                      <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/agents/factory.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-str">"model construction"</span>                               <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/models/factory.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-str">"tool aggregation"</span>                                 <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/tools/tools.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-str">"allowed-tools policy + deferred tool setup"</span>      <span class="tok-op">-&gt;</span> <span class="tok-str">"skills/tool_policy.py + tool_search.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-str">"prompt injection"</span>                                 <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/agents/lead_agent/prompt.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">6</span><span class="code-src"><span class="tok-str">"runtime execution"</span>                                <span class="tok-op">-&gt;</span> <span class="tok-str">"lead agent runtime / DeerFlowClient / Gateway runs"</span></span></div>
+            </div>
+          </div>
+        </div>
         <p>其中有两个容易忽略的点：</p>
         <ul>
           <li>工具列表不会原封不动地暴露给模型，skills 允许通过 tool policy 收窄能力面。这里的具体落点不是抽象规则名，而是 <code>deerflow.skills.tool_policy.filter_tools_by_skill_allowed_tools</code>，它会在 <code>backend/packages/harness/deerflow/agents/lead_agent/agent.py</code> 和 <code>backend/packages/harness/deerflow/subagents/executor.py</code> 的装配路径里对工具集做运行前过滤。</li>
@@ -117,6 +127,132 @@
         <div class="deerflow-map">
           <h3>为什么说它是联动系统</h3>
           <p>同一份工具目录，在不同的 skills whitelist、不同的 prompt section、不同的 runtime 路径下，对模型来说是不同的“能力世界”。这就是 DeerFlow 和通用“绑几个 tools 给 LLM”教程的根本差异。</p>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：DeerFlow 真正如何把配置工具、内置工具、MCP 工具、ACP 工具装配成一份可执行工具集</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/tools/tools.py</code>。这一段不是概念图，而是 DeerFlow 真正的工具汇总现场，读完后你会明白“工具系统”在仓库里究竟落在哪里。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">tools/tools.py :: get_available_tools(...)</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">44</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">get_available_tools</span>(<span class="tok-attr">groups</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">include_mcp</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">True</span>, <span class="tok-attr">model_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">subagent_enabled</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-op">*</span>, <span class="tok-attr">app_config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-cls">BaseTool</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">66</span><span class="code-src">    <span class="tok-attr">config</span> <span class="tok-op">=</span> <span class="tok-attr">app_config</span> <span class="tok-kw">or</span> <span class="tok-fn">get_app_config</span>()</span></div>
+                <div class="code-line"><span class="code-ln">67</span><span class="code-src">    <span class="tok-attr">tool_configs</span> <span class="tok-op">=</span> [<span class="tok-attr">tool</span> <span class="tok-kw">for</span> <span class="tok-attr">tool</span> <span class="tok-kw">in</span> <span class="tok-attr">config</span>.<span class="tok-attr">tools</span> <span class="tok-kw">if</span> <span class="tok-attr">groups</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span> <span class="tok-kw">or</span> <span class="tok-attr">tool</span>.<span class="tok-attr">group</span> <span class="tok-kw">in</span> <span class="tok-attr">groups</span>]</span></div>
+                <div class="code-line"><span class="code-ln">69</span><span class="code-src">    <span class="tok-com"># LocalSandboxProvider 下默认不暴露宿主机 bash</span></span></div>
+                <div class="code-line"><span class="code-ln">70</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-fn">is_host_bash_allowed</span>(<span class="tok-attr">config</span>):</span></div>
+                <div class="code-line"><span class="code-ln">71</span><span class="code-src">        <span class="tok-attr">tool_configs</span> <span class="tok-op">=</span> [<span class="tok-attr">tool</span> <span class="tok-kw">for</span> <span class="tok-attr">tool</span> <span class="tok-kw">in</span> <span class="tok-attr">tool_configs</span> <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-fn">_is_host_bash_tool</span>(<span class="tok-attr">tool</span>)]</span></div>
+                <div class="code-line"><span class="code-ln">73</span><span class="code-src">    <span class="tok-attr">loaded_tools_raw</span> <span class="tok-op">=</span> [(<span class="tok-attr">cfg</span>, <span class="tok-fn">resolve_variable</span>(<span class="tok-attr">cfg</span>.<span class="tok-attr">use</span>, <span class="tok-cls">BaseTool</span>)) <span class="tok-kw">for</span> <span class="tok-attr">cfg</span> <span class="tok-kw">in</span> <span class="tok-attr">tool_configs</span>]</span></div>
+                <div class="code-line"><span class="code-ln">79</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-attr">cfg</span>, <span class="tok-attr">loaded</span> <span class="tok-kw">in</span> <span class="tok-attr">loaded_tools_raw</span>:</span></div>
+                <div class="code-line"><span class="code-ln">80</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">cfg</span>.<span class="tok-attr">name</span> <span class="tok-op">!=</span> <span class="tok-attr">loaded</span>.<span class="tok-attr">name</span>:</span></div>
+                <div class="code-line"><span class="code-ln">88</span><span class="code-src">    <span class="tok-attr">loaded_tools</span> <span class="tok-op">=</span> [<span class="tok-fn">_ensure_sync_invocable_tool</span>(<span class="tok-attr">t</span>) <span class="tok-kw">for</span> <span class="tok-attr">_</span>, <span class="tok-attr">t</span> <span class="tok-kw">in</span> <span class="tok-attr">loaded_tools_raw</span>]</span></div>
+                <div class="code-line"><span class="code-ln">91</span><span class="code-src">    <span class="tok-attr">builtin_tools</span> <span class="tok-op">=</span> <span class="tok-attr">BUILTIN_TOOLS</span>.<span class="tok-fn">copy</span>()</span></div>
+                <div class="code-line"><span class="code-ln">98</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">subagent_enabled</span>:</span></div>
+                <div class="code-line"><span class="code-ln">99</span><span class="code-src">        <span class="tok-attr">builtin_tools</span>.<span class="tok-fn">extend</span>(<span class="tok-attr">SUBAGENT_TOOLS</span>)</span></div>
+                <div class="code-line"><span class="code-ln">108</span><span class="code-src">    <span class="tok-attr">model_config</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">get_model_config</span>(<span class="tok-attr">model_name</span>) <span class="tok-kw">if</span> <span class="tok-attr">model_name</span> <span class="tok-kw">else</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">109</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">model_config</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span> <span class="tok-kw">and</span> <span class="tok-attr">model_config</span>.<span class="tok-attr">supports_vision</span>:</span></div>
+                <div class="code-line"><span class="code-ln">110</span><span class="code-src">        <span class="tok-attr">builtin_tools</span>.<span class="tok-fn">append</span>(<span class="tok-attr">view_image_tool</span>)</span></div>
+                <div class="code-line"><span class="code-ln">118</span><span class="code-src">    <span class="tok-attr">mcp_tools</span> <span class="tok-op">=</span> []</span></div>
+                <div class="code-line"><span class="code-ln">124</span><span class="code-src">            <span class="tok-attr">extensions_config</span> <span class="tok-op">=</span> <span class="tok-cls">ExtensionsConfig</span>.<span class="tok-fn">from_file</span>()</span></div>
+                <div class="code-line"><span class="code-ln">126</span><span class="code-src">                <span class="tok-attr">mcp_tools</span> <span class="tok-op">=</span> <span class="tok-fn">get_cached_mcp_tools</span>()</span></div>
+                <div class="code-line"><span class="code-ln">130</span><span class="code-src">                    <span class="tok-com"># 给 MCP 工具打标，后面 deferred tool assembly 才认得出来</span></span></div>
+                <div class="code-line"><span class="code-ln">135</span><span class="code-src">                    <span class="tok-kw">for</span> <span class="tok-attr">t</span> <span class="tok-kw">in</span> <span class="tok-attr">mcp_tools</span>:</span></div>
+                <div class="code-line"><span class="code-ln">136</span><span class="code-src">                        <span class="tok-fn">tag_mcp_tool</span>(<span class="tok-attr">t</span>)</span></div>
+                <div class="code-line"><span class="code-ln">143</span><span class="code-src">    <span class="tok-attr">acp_tools</span>: <span class="tok-type">list</span>[<span class="tok-cls">BaseTool</span>] <span class="tok-op">=</span> []</span></div>
+                <div class="code-line"><span class="code-ln">153</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">acp_agents</span>:</span></div>
+                <div class="code-line"><span class="code-ln">154</span><span class="code-src">            <span class="tok-attr">acp_tools</span>.<span class="tok-fn">append</span>(<span class="tok-fn">build_invoke_acp_agent_tool</span>(<span class="tok-attr">acp_agents</span>))</span></div>
+                <div class="code-line"><span class="code-ln">161</span><span class="code-src">    <span class="tok-com"># 最后再按名字去重，避免模型看到重复 schema</span></span></div>
+                <div class="code-line"><span class="code-ln">164</span><span class="code-src">    <span class="tok-attr">all_tools</span> <span class="tok-op">=</span> [<span class="tok-fn">_ensure_sync_invocable_tool</span>(<span class="tok-attr">t</span>) <span class="tok-kw">for</span> <span class="tok-attr">t</span> <span class="tok-kw">in</span> <span class="tok-attr">loaded_tools</span> <span class="tok-op">+</span> <span class="tok-attr">builtin_tools</span> <span class="tok-op">+</span> <span class="tok-attr">mcp_tools</span> <span class="tok-op">+</span> <span class="tok-attr">acp_tools</span>]</span></div>
+                <div class="code-line"><span class="code-ln">167</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-attr">t</span> <span class="tok-kw">in</span> <span class="tok-attr">all_tools</span>:</span></div>
+                <div class="code-line"><span class="code-ln">168</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">t</span>.<span class="tok-attr">name</span> <span class="tok-kw">not in</span> <span class="tok-attr">seen_names</span>:</span></div>
+                <div class="code-line"><span class="code-ln">176</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">unique_tools</span></span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第 66 到 88 行先把配置文件里声明的工具对象解析出来，并补上 sync wrapper，这解释了为什么 DeerFlowClient 这种同步调用方也能使用本来只提供异步实现的工具。</li>
+            <li>第 91 到 110 行再根据运行时条件注入内置工具和视觉工具，所以工具集合并不是一个静态常量，而是和模型能力、是否开启 subagent 等条件联动生成的。</li>
+            <li>第 118 到 154 行是 DeerFlow 很有代表性的设计：MCP 和 ACP 工具不是旁支扩展，而是被汇总进同一份工具列表，只不过 MCP 工具会额外打上 metadata，后面可以进入 deferred tool search 路径。</li>
+            <li>最后的去重很关键。DeerFlow 不是简单拼数组，而是按工具名统一去重，否则模型看到重复 schema，就会出现“工具名相同但行为不确定”的调用歧义。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：工具并不会原封不动暴露给模型，skills 会在装配前先收窄工具边界</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/skills/tool_policy.py</code> 和 <code>backend/packages/harness/deerflow/agents/lead_agent/agent.py</code>。这一段能直接看出 DeerFlow 的工具系统不是“有什么就全给”，而是先过一层技能策略过滤。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">skills/tool_policy.py + lead_agent/agent.py :: allowed-tools filtering</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">allowed_tool_names_for_skills</span>(<span class="tok-attr">skills</span>: <span class="tok-type">list</span>[<span class="tok-cls">Skill</span>]) <span class="tok-op">-&gt;</span> <span class="tok-type">set</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-com"># 没有任何 skill 显式声明 allowed-tools 时，保持 legacy allow-all</span></span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">    <span class="tok-attr">allowed</span>: <span class="tok-type">set</span>[<span class="tok-type">str</span>] <span class="tok-op">=</span> <span class="tok-fn">set</span>()</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-attr">skill</span> <span class="tok-kw">in</span> <span class="tok-attr">skills</span>:</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">skill</span>.<span class="tok-attr">allowed_tools</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">        <span class="tok-attr">has_explicit_declaration</span> <span class="tok-op">=</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">        <span class="tok-attr">allowed</span>.<span class="tok-fn">update</span>(<span class="tok-attr">skill</span>.<span class="tok-attr">allowed_tools</span>)</span></div>
+                <div class="code-line"><span class="code-ln">39</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">filter_tools_by_skill_allowed_tools</span>[<span class="tok-attr">ToolT</span>: <span class="tok-cls">NamedTool</span>](<span class="tok-attr">tools</span>: <span class="tok-type">list</span>[<span class="tok-attr">ToolT</span>], <span class="tok-attr">skills</span>: <span class="tok-type">list</span>[<span class="tok-cls">Skill</span>]) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-attr">ToolT</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">40</span><span class="code-src">    <span class="tok-attr">allowed</span> <span class="tok-op">=</span> <span class="tok-fn">allowed_tool_names_for_skills</span>(<span class="tok-attr">skills</span>)</span></div>
+                <div class="code-line"><span class="code-ln">41</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">allowed</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">42</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">tools</span></span></div>
+                <div class="code-line"><span class="code-ln">44</span><span class="code-src">    <span class="tok-kw">return</span> [<span class="tok-attr">tool</span> <span class="tok-kw">for</span> <span class="tok-attr">tool</span> <span class="tok-kw">in</span> <span class="tok-attr">tools</span> <span class="tok-kw">if</span> <span class="tok-attr">tool</span>.<span class="tok-attr">name</span> <span class="tok-kw">in</span> <span class="tok-attr">allowed</span>]</span></div>
+                <div class="code-line"><span class="code-ln">484</span><span class="code-src"><span class="tok-attr">skills_for_tool_policy</span> <span class="tok-op">=</span> <span class="tok-fn">_load_enabled_skills_for_tool_policy</span>(<span class="tok-attr">available_skills</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">517</span><span class="code-src"><span class="tok-attr">raw_tools</span> <span class="tok-op">=</span> <span class="tok-fn">get_available_tools</span>(<span class="tok-attr">model_name</span><span class="tok-op">=</span><span class="tok-attr">model_name</span>, <span class="tok-attr">groups</span><span class="tok-op">=</span><span class="tok-attr">agent_config</span>.<span class="tok-attr">tool_groups</span> <span class="tok-kw">if</span> <span class="tok-attr">agent_config</span> <span class="tok-kw">else</span> <span class="tok-kw">None</span>, <span class="tok-attr">subagent_enabled</span><span class="tok-op">=</span><span class="tok-attr">subagent_enabled</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">518</span><span class="code-src"><span class="tok-attr">filtered</span> <span class="tok-op">=</span> <span class="tok-fn">filter_tools_by_skill_allowed_tools</span>(<span class="tok-attr">raw_tools</span> <span class="tok-op">+</span> <span class="tok-attr">extra_tools</span>, <span class="tok-attr">skills_for_tool_policy</span>)</span></div>
+                <div class="code-line"><span class="code-ln">519</span><span class="code-src"><span class="tok-attr">final_tools</span>, <span class="tok-attr">setup</span> <span class="tok-op">=</span> <span class="tok-fn">assemble_deferred_tools</span>(<span class="tok-attr">filtered</span>, <span class="tok-attr">enabled</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>.<span class="tok-attr">tool_search</span>.<span class="tok-attr">enabled</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li><code>allowed-tools</code> 的策略不是写在文档里的口头约定，而是真正在 `tool_policy.py` 里变成了一个过滤函数。</li>
+            <li>如果没有任何 skill 显式声明 `allowed-tools`，DeerFlow 走的是 legacy allow-all；一旦有 skill 开始声明，系统就改成显式白名单模式。</li>
+            <li>第 517 到 519 行把这条链彻底串起来了：先拿全量工具，再按 skill policy 过滤，过滤完之后才进入 deferred tool assembly。所以 deferred MCP 工具也必须先通过 skills 能力边界。</li>
+            <li>这就是本章最重要的实现事实：工具系统在 DeerFlow 里不是“静态注册表”，而是“工具聚合 + skills 策略 + deferred 暴露”三段连续装配。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：模型工厂不是“拿个 model name 就完了”，它还要修补 provider 差异、thinking 开关和流式 token 统计</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/models/factory.py</code>。这段代码正好对应本章的另一半主题：DeerFlow 如何把配置里的模型条目变成真正可运行的 LLM 对象。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">models/factory.py :: create_chat_model(...)</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">82</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">create_chat_model</span>(<span class="tok-attr">name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">thinking_enabled</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-op">*</span>, <span class="tok-attr">app_config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">attach_tracing</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">True</span>, <span class="tok-op">**</span><span class="tok-attr">kwargs</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">BaseChatModel</span>:</span></div>
+                <div class="code-line"><span class="code-ln">104</span><span class="code-src">    <span class="tok-attr">config</span> <span class="tok-op">=</span> <span class="tok-attr">app_config</span> <span class="tok-kw">or</span> <span class="tok-fn">get_app_config</span>()</span></div>
+                <div class="code-line"><span class="code-ln">107</span><span class="code-src">    <span class="tok-attr">model_config</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">get_model_config</span>(<span class="tok-attr">name</span>)</span></div>
+                <div class="code-line"><span class="code-ln">110</span><span class="code-src">    <span class="tok-attr">model_class</span> <span class="tok-op">=</span> <span class="tok-fn">resolve_class</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">use</span>, <span class="tok-cls">BaseChatModel</span>)</span></div>
+                <div class="code-line"><span class="code-ln">111</span><span class="code-src">    <span class="tok-attr">model_settings_from_config</span> <span class="tok-op">=</span> <span class="tok-attr">model_config</span>.<span class="tok-fn">model_dump</span>(<span class="tok-attr">exclude_none</span><span class="tok-op">=</span><span class="tok-kw">True</span>, <span class="tok-attr">exclude</span><span class="tok-op">=</span>{<span class="tok-str">"use"</span>, <span class="tok-str">"name"</span>, <span class="tok-str">"display_name"</span>, <span class="tok-str">"description"</span>, <span class="tok-str">"supports_thinking"</span>, <span class="tok-str">"supports_reasoning_effort"</span>, <span class="tok-str">"when_thinking_enabled"</span>, <span class="tok-str">"when_thinking_disabled"</span>, <span class="tok-str">"thinking"</span>, <span class="tok-str">"supports_vision"</span>})</span></div>
+                <div class="code-line"><span class="code-ln">128</span><span class="code-src">    <span class="tok-attr">effective_wte</span>: <span class="tok-type">dict</span> <span class="tok-op">=</span> <span class="tok-fn">dict</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">when_thinking_enabled</span>) <span class="tok-kw">if</span> <span class="tok-attr">model_config</span>.<span class="tok-attr">when_thinking_enabled</span> <span class="tok-kw">else</span> {}</span></div>
+                <div class="code-line"><span class="code-ln">133</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">thinking_enabled</span> <span class="tok-kw">and</span> <span class="tok-attr">has_thinking_settings</span>:</span></div>
+                <div class="code-line"><span class="code-ln">137</span><span class="code-src">            <span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">update</span>(<span class="tok-attr">effective_wte</span>)</span></div>
+                <div class="code-line"><span class="code-ln">142</span><span class="code-src">        <span class="tok-kw">elif</span> <span class="tok-attr">has_thinking_settings</span> <span class="tok-kw">and</span> <span class="tok-attr">effective_wte</span>.<span class="tok-fn">get</span>(<span class="tok-str">"extra_body"</span>, {}).<span class="tok-fn">get</span>(<span class="tok-str">"thinking"</span>, {}).<span class="tok-fn">get</span>(<span class="tok-str">"type"</span>):</span></div>
+                <div class="code-line"><span class="code-ln">144</span><span class="code-src">            <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"extra_body"</span>] <span class="tok-op">=</span> <span class="tok-fn">_deep_merge_dicts</span>(<span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"extra_body"</span>), {<span class="tok-str">"thinking"</span>: {<span class="tok-str">"type"</span>: <span class="tok-str">"disabled"</span>}})</span></div>
+                <div class="code-line"><span class="code-ln">162</span><span class="code-src">    <span class="tok-fn">_enable_stream_usage_by_default</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">use</span>, <span class="tok-attr">model_settings_from_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">163</span><span class="code-src">    <span class="tok-fn">_apply_stream_chunk_timeout_default</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">use</span>, <span class="tok-attr">model_settings_from_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">168</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">issubclass</span>(<span class="tok-attr">model_class</span>, <span class="tok-cls">CodexChatModel</span>):</span></div>
+                <div class="code-line"><span class="code-ln">175</span><span class="code-src">            <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"reasoning_effort"</span>] <span class="tok-op">=</span> <span class="tok-str">"none"</span></span></div>
+                <div class="code-line"><span class="code-ln">183</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">getattr</span>(<span class="tok-attr">model_class</span>, <span class="tok-str">"__name__"</span>, <span class="tok-str">""</span>) <span class="tok-op">==</span> <span class="tok-str">"MindIEChatModel"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">185</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"max_retries"</span>] <span class="tok-op">=</span> <span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"max_retries"</span>, <span class="tok-num">1</span>)</span></div>
+                <div class="code-line"><span class="code-ln">196</span><span class="code-src">    <span class="tok-attr">model_instance</span> <span class="tok-op">=</span> <span class="tok-attr">model_class</span>(<span class="tok-op">**</span><span class="tok-attr">kwargs</span>, <span class="tok-op">**</span><span class="tok-attr">model_settings_from_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">198</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">attach_tracing</span>:</span></div>
+                <div class="code-line"><span class="code-ln">201</span><span class="code-src">            <span class="tok-attr">model_instance</span>.<span class="tok-attr">callbacks</span> <span class="tok-op">=</span> [<span class="tok-op">*</span><span class="tok-attr">existing_callbacks</span>, <span class="tok-op">*</span><span class="tok-attr">callbacks</span>]</span></div>
+                <div class="code-line"><span class="code-ln">204</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">model_instance</span></span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第 104 到 111 行先从配置里找模型，再通过 `resolve_class` 动态解析出真正的 LangChain 模型类，所以 DeerFlow 的模型接入不是写死 provider 分支，而是走反射装配。</li>
+            <li>thinking 开关也不是统一布尔值。不同 provider 对 thinking 的启停方式不同，这里会把它翻译成 `extra_body`、`reasoning_effort` 或特定 provider 的构造参数。</li>
+            <li>第 162 到 185 行又做了一层很实用的运行时修补：默认打开 stream usage、拉长 reasoning 模型的 chunk timeout、对 Codex / MindIE 这种特殊 provider 做额外参数调整。</li>
+            <li>所以本章应该建立的正确心智模型是：DeerFlow 的“模型层”不是裸 LLM SDK，而是一个负责消化 provider 差异、统一追踪与流式统计的模型工厂。</li>
+          </ul>
         </div>
       </section>
 

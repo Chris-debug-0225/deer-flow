@@ -809,6 +809,101 @@
                     5. 10-agent-execution-engine.html：Agent执行引擎深度学习
                 </div>
             </section>
+            <section>
+                <h2>7. 在 DeerFlow 源码里，Agent 概念具体落在哪里</h2>
+                <p>
+                    前面讲的是抽象概念，但在 DeerFlow 里，Agent 并不是一个空泛名词。它最终会落到三层实现：
+                    一层是 <code>ThreadState</code> 这种“Agent 持有的数据结构”，一层是 <code>build_middlewares(...)</code> 这种“Agent 的能力编排”，最后一层是 <code>create_agent(...)</code> / <code>run_agent(...)</code> 这种真正让它跑起来的执行入口。
+                </p>
+                <div class="annotated-code">
+                    <div class="code-window">
+                        <div class="code-window-header">
+                            <div class="code-window-dots"><span></span><span></span><span></span></div>
+                            <div class="code-window-title">Agent concepts :: 对应到 DeerFlow 真实实现层</div>
+                        </div>
+                        <div class="code-window-body">
+                            <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># Agent 概念在 DeerFlow 源码中的真实落点</span></span></div>
+                            <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-str">"State"</span>                <span class="tok-op">-&gt;</span> <span class="tok-str">"deerflow/agents/thread_state.py"</span></span></div>
+                            <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-str">"Capability assembly"</span>  <span class="tok-op">-&gt;</span> <span class="tok-str">"deerflow/agents/lead_agent/agent.py"</span></span></div>
+                            <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-str">"Runtime execution"</span>    <span class="tok-op">-&gt;</span> <span class="tok-str">"deerflow/runtime/runs/worker.py"</span></span></div>
+                            <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-str">"User-visible behavior"</span> <span class="tok-op">-&gt;</span> <span class="tok-str">"Gateway / DeerFlowClient / channels"</span></span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="source-walkthrough">
+                    <h4>核心源码：在 DeerFlow 里，Agent 的“思考 + 记忆 + 工具 + 反思”其实是被拼装出来的</h4>
+                    <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/agents/lead_agent/agent.py</code>。这段代码很适合把抽象 Agent 概念落回真实实现。</p>
+                    <div class="annotated-code">
+                        <div class="code-window">
+                            <div class="code-window-header">
+                                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                                <div class="code-window-title">lead_agent/agent.py :: get_available_tools() -> filter -> create_agent()</div>
+                            </div>
+                            <div class="code-window-body">
+                                <div class="code-line"><span class="code-ln">484</span><span class="code-src"><span class="tok-attr">skills_for_tool_policy</span> <span class="tok-op">=</span> <span class="tok-fn">_load_enabled_skills_for_tool_policy</span>(<span class="tok-attr">available_skills</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>)</span></div>
+                                <div class="code-line"><span class="code-ln">517</span><span class="code-src"><span class="tok-attr">raw_tools</span> <span class="tok-op">=</span> <span class="tok-fn">get_available_tools</span>(<span class="tok-attr">model_name</span><span class="tok-op">=</span><span class="tok-attr">model_name</span>, <span class="tok-attr">groups</span><span class="tok-op">=</span><span class="tok-attr">agent_config</span>.<span class="tok-attr">tool_groups</span> <span class="tok-kw">if</span> <span class="tok-attr">agent_config</span> <span class="tok-kw">else</span> <span class="tok-kw">None</span>, <span class="tok-attr">subagent_enabled</span><span class="tok-op">=</span><span class="tok-attr">subagent_enabled</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>)</span></div>
+                                <div class="code-line"><span class="code-ln">518</span><span class="code-src"><span class="tok-attr">filtered</span> <span class="tok-op">=</span> <span class="tok-fn">filter_tools_by_skill_allowed_tools</span>(<span class="tok-attr">raw_tools</span> <span class="tok-op">+</span> <span class="tok-attr">extra_tools</span>, <span class="tok-attr">skills_for_tool_policy</span>)</span></div>
+                                <div class="code-line"><span class="code-ln">519</span><span class="code-src"><span class="tok-attr">final_tools</span>, <span class="tok-attr">setup</span> <span class="tok-op">=</span> <span class="tok-fn">assemble_deferred_tools</span>(<span class="tok-attr">filtered</span>, <span class="tok-attr">enabled</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>.<span class="tok-attr">tool_search</span>.<span class="tok-attr">enabled</span>)</span></div>
+                                <div class="code-line"><span class="code-ln">520</span><span class="code-src"><span class="tok-kw">return</span> <span class="tok-fn">create_agent</span>(</span></div>
+                                <div class="code-line"><span class="code-ln">521</span><span class="code-src">    <span class="tok-attr">model</span><span class="tok-op">=</span><span class="tok-fn">create_chat_model</span>(<span class="tok-attr">name</span><span class="tok-op">=</span><span class="tok-attr">model_name</span>, <span class="tok-attr">thinking_enabled</span><span class="tok-op">=</span><span class="tok-attr">thinking_enabled</span>, <span class="tok-attr">reasoning_effort</span><span class="tok-op">=</span><span class="tok-attr">reasoning_effort</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>, <span class="tok-attr">attach_tracing</span><span class="tok-op">=</span><span class="tok-kw">False</span>),</span></div>
+                                <div class="code-line"><span class="code-ln">522</span><span class="code-src">    <span class="tok-attr">tools</span><span class="tok-op">=</span><span class="tok-attr">final_tools</span>,</span></div>
+                                <div class="code-line"><span class="code-ln">523</span><span class="code-src">    <span class="tok-attr">middleware</span><span class="tok-op">=</span><span class="tok-fn">build_middlewares</span>(<span class="tok-attr">config</span>, <span class="tok-attr">model_name</span><span class="tok-op">=</span><span class="tok-attr">model_name</span>, <span class="tok-attr">agent_name</span><span class="tok-op">=</span><span class="tok-attr">agent_name</span>, <span class="tok-attr">available_skills</span><span class="tok-op">=</span><span class="tok-attr">available_skills</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>, <span class="tok-attr">deferred_setup</span><span class="tok-op">=</span><span class="tok-attr">setup</span>),</span></div>
+                                <div class="code-line"><span class="code-ln">531</span><span class="code-src">    <span class="tok-attr">system_prompt</span><span class="tok-op">=</span><span class="tok-fn">apply_prompt_template</span>(<span class="tok-attr">subagent_enabled</span><span class="tok-op">=</span><span class="tok-attr">subagent_enabled</span>, <span class="tok-attr">max_concurrent_subagents</span><span class="tok-op">=</span><span class="tok-attr">max_concurrent_subagents</span>, <span class="tok-attr">agent_name</span><span class="tok-op">=</span><span class="tok-attr">agent_name</span>, <span class="tok-attr">available_skills</span><span class="tok-op">=</span><span class="tok-attr">available_skills</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>, <span class="tok-attr">deferred_names</span><span class="tok-op">=</span><span class="tok-attr">setup</span>.<span class="tok-attr">deferred_names</span>),</span></div>
+                                <div class="code-line"><span class="code-ln">539</span><span class="code-src">    <span class="tok-attr">state_schema</span><span class="tok-op">=</span><span class="tok-cls">ThreadState</span>,</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="annotation-list">
+                        <li>这段代码直接说明，DeerFlow 的 Agent 不是一个独立神秘对象，而是由模型、工具、中间件、系统提示词和状态结构一起拼出来的。</li>
+                        <li>如果你回头看前面“Agent = LLM + 工具 + 记忆 + 反思能力”这句定义，会发现它在这里几乎是一一对应落地的：模型进 <code>create_chat_model</code>，工具进 <code>final_tools</code>，记忆和反思等能力进 <code>build_middlewares</code>，全局行为约束进 <code>apply_prompt_template</code>。</li>
+                        <li>所以学 DeerFlow 的 Agent，不应该只背概念，而要知道概念在源码里最终会汇合到哪一个装配点。</li>
+                    </ul>
+                </div>
+                <div class="source-walkthrough">
+                    <h4>核心源码：Agent 的“记忆”和“工作区”在 DeerFlow 里不是抽象名词，而是 ThreadState 上的正式字段</h4>
+                    <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/agents/thread_state.py</code>。这一段能把前面讲的“Agent 持有状态”落到真正的数据契约上。</p>
+                    <div class="annotated-code">
+                        <div class="code-window">
+                            <div class="code-window-header">
+                                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                                <div class="code-window-title">agents/thread_state.py :: ThreadState / reducers</div>
+                            </div>
+                            <div class="code-window-body">
+                                <div class="code-line"><span class="code-ln">6</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">SandboxState</span>(<span class="tok-cls">TypedDict</span>):</span></div>
+                                <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-attr">sandbox_id</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                                <div class="code-line"><span class="code-ln">10</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">ThreadDataState</span>(<span class="tok-cls">TypedDict</span>):</span></div>
+                                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-attr">workspace_path</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-attr">uploads_path</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                                <div class="code-line"><span class="code-ln">13</span><span class="code-src">    <span class="tok-attr">outputs_path</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                                <div class="code-line"><span class="code-ln">21</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_artifacts</span>(<span class="tok-attr">existing</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">new</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-type">str</span>]:</span></div>
+                                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-com"># dict.fromkeys 一边保序一边去重，适合 artifact 列表</span></span></div>
+                                <div class="code-line"><span class="code-ln">28</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-type">list</span>(<span class="tok-fn">dict</span>.<span class="tok-fn">fromkeys</span>(<span class="tok-attr">existing</span> <span class="tok-op">+</span> <span class="tok-attr">new</span>))</span></div>
+                                <div class="code-line"><span class="code-ln">31</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_viewed_images</span>(<span class="tok-attr">existing</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">ViewedImageData</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">new</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">ViewedImageData</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">ViewedImageData</span>]:</span></div>
+                                <div class="code-line"><span class="code-ln">34</span><span class="code-src">    <span class="tok-com"># new == {} 时清空，允许 middleware 主动重置图片上下文</span></span></div>
+                                <div class="code-line"><span class="code-ln">42</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">len</span>(<span class="tok-attr">new</span>) <span class="tok-op">==</span> <span class="tok-num">0</span>:</span></div>
+                                <div class="code-line"><span class="code-ln">43</span><span class="code-src">        <span class="tok-kw">return</span> {}</span></div>
+                                <div class="code-line"><span class="code-ln">61</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">PromotedTools</span>(<span class="tok-cls">TypedDict</span>):</span></div>
+                                <div class="code-line"><span class="code-ln">62</span><span class="code-src">    <span class="tok-attr">catalog_hash</span>: <span class="tok-type">str</span></span></div>
+                                <div class="code-line"><span class="code-ln">63</span><span class="code-src">    <span class="tok-attr">names</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>]</span></div>
+                                <div class="code-line"><span class="code-ln">66</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_promoted</span>(<span class="tok-attr">existing</span>: <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">new</span>: <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
+                                <div class="code-line"><span class="code-ln">70</span><span class="code-src">    <span class="tok-com"># catalog_hash 变化时整体替换，避免旧 promoted 名字误映射到新 catalog</span></span></div>
+                                <div class="code-line"><span class="code-ln">76</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">existing</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span> <span class="tok-kw">or</span> <span class="tok-attr">existing</span>.<span class="tok-fn">get</span>(<span class="tok-str">"catalog_hash"</span>) <span class="tok-op">!=</span> <span class="tok-attr">new</span>[<span class="tok-str">"catalog_hash"</span>]:</span></div>
+                                <div class="code-line"><span class="code-ln">87</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">ThreadState</span>(<span class="tok-cls">AgentState</span>):</span></div>
+                                <div class="code-line"><span class="code-ln">88</span><span class="code-src">    <span class="tok-attr">sandbox</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-cls">SandboxState</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                                <div class="code-line"><span class="code-ln">89</span><span class="code-src">    <span class="tok-attr">thread_data</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-cls">ThreadDataState</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                                <div class="code-line"><span class="code-ln">91</span><span class="code-src">    <span class="tok-attr">artifacts</span>: <span class="tok-cls">Annotated</span>[<span class="tok-type">list</span>[<span class="tok-type">str</span>], <span class="tok-fn">merge_artifacts</span>]</span></div>
+                                <div class="code-line"><span class="code-ln">94</span><span class="code-src">    <span class="tok-attr">viewed_images</span>: <span class="tok-cls">Annotated</span>[<span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">ViewedImageData</span>], <span class="tok-fn">merge_viewed_images</span>]</span></div>
+                                <div class="code-line"><span class="code-ln">95</span><span class="code-src">    <span class="tok-attr">promoted</span>: <span class="tok-cls">Annotated</span>[<span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-fn">merge_promoted</span>]</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="annotation-list">
+                        <li>这段代码说明，Agent 在 DeerFlow 里不是只持有对话消息。工作目录、上传目录、输出目录、artifact、已查看图片、deferred tools 提升状态，全都正式挂在统一的线程状态上。</li>
+                        <li>更重要的是 reducer。像 <code>merge_artifacts</code>、<code>merge_viewed_images</code>、<code>merge_promoted</code> 这些函数决定了多个节点同时更新状态时，LangGraph 应该如何合并它们。</li>
+                        <li>所以“Agent 有记忆”在 DeerFlow 里并不只是口头说法，而是落实成了一套可以被图执行器持续传递和合并的状态契约。</li>
+                    </ul>
+                </div>
+            </section>
       <div id="page-nav"></div>
     </div>
   </main>

@@ -81,20 +81,196 @@
             <td>这是理解源码前后的关键配套文档</td>
           </tr>
         </table>
+        <p>这里真正值得精读的核心文件其实是模型工厂：<code>backend/packages/harness/deerflow/models/factory.py</code>。虽然当前表格主要从配置视角列了文件，但真正把“一个配置项”变成“一个能工作的 LangChain chat model”的，是 <code>create_chat_model(...)</code>。它会读取模型配置、清理不该透传的字段、处理 thinking on/off 的差异、补齐 OpenAI-compatible provider 的 stream usage 和 timeout 默认值，还会对 Codex、MindIE 这类特定 provider 做额外 patch。</p>
+        <p>所以 DeerFlow 的模型集成不是“配置文件 + 前端下拉框”这么简单，中间还隔着一层非常实在的运行时归一化逻辑。</p>
       </section>
 
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>主运行时和 embedded client 的模型解析链大致如下：</p>
-        <div class="code-block"><code>config.yaml
-  -> backend/packages/harness/deerflow/config/app_config.py
-  -> AppConfig.models / get_model_config(...)
-  -> Gateway path: backend/app/gateway/routers/models.py for listing
-  -> runtime path: create_chat_model(name=..., thinking_enabled=...)
-  -> backend/packages/harness/deerflow/client.py or Gateway lead agent build
-  -> optional subagent override via backend/packages/harness/deerflow/subagents/config.py
-  -> effective model instance used in agent execution</code></div>
+        <div class="annotated-code">
+          <div class="code-window">
+            <div class="code-window-header">
+              <div class="code-window-dots"><span></span><span></span><span></span></div>
+              <div class="code-window-title">model flow :: 配置项怎样变成真正的模型实例</div>
+            </div>
+            <div class="code-window-body">
+              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"config.yaml"</span></span></div>
+              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/config/app_config.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"AppConfig.models / get_model_config(...)"</span></span></div>
+              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"Gateway path: backend/app/gateway/routers/models.py for listing"</span></span></div>
+              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"runtime path: create_chat_model(name=..., thinking_enabled=...)"</span></span></div>
+              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/client.py or Gateway lead agent build"</span></span></div>
+              <div class="code-line"><span class="code-ln">7</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"optional subagent override via subagents/config.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">8</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"effective model instance used in agent execution"</span></span></div>
+            </div>
+          </div>
+        </div>
+        <p>把这条链落到函数级别，就是：<code>AppConfig.get_model_config(...)</code> 先取到声明；<code>create_chat_model(...)</code> 再决定 thinking_enabled 时要不要合并 <code>when_thinking_enabled</code>，thinking 关闭时要不要注入 disable payload，provider 是否需要默认开启 <code>stream_usage</code> 或加长 <code>stream_chunk_timeout</code>；最后才实例化真正的 model class。也就是说，“同一个模型名字”在 DeerFlow 里不只是查配置那么简单，而是会经过一轮 provider-aware 的运行时加工。</p>
         <p>如果当前执行的是 subagent，那么 <code>backend/packages/harness/deerflow/config/subagents_config.py</code> 会先读取全局和 per-agent override，再由 <code>backend/packages/harness/deerflow/subagents/config.py</code> 的 <code>resolve_subagent_model_name</code> 决定究竟是继承父模型、使用显式覆盖，还是回退到 <code>backend/packages/harness/deerflow/config/app_config.py</code> 中的默认首个模型。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码：create_chat_model 怎样把配置变成真正可调用的模型对象</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/models/factory.py</code>。这段代码就是 DeerFlow 模型集成的核心实现。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">models/factory.py :: create_chat_model(...)</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-fn">config</span> <span class="tok-op">=</span> <span class="tok-attr">app_config</span> <span class="tok-kw">or</span> <span class="tok-fn">get_app_config</span>()</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">name</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-attr">name</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-attr">models</span>[<span class="tok-num">0</span>].<span class="tok-attr">name</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-fn">model_config</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">get_model_config</span>(<span class="tok-attr">name</span>)</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-fn">model_config</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Model {name} not found in config"</span>) <span class="tok-kw">from</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"><span class="tok-fn">model_class</span> <span class="tok-op">=</span> <span class="tok-fn">resolve_class</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">use</span>, <span class="tok-cls">BaseChatModel</span>)</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-fn">model_settings_from_config</span> <span class="tok-op">=</span> <span class="tok-attr">model_config</span>.<span class="tok-fn">model_dump</span>(</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-attr">exclude_none</span><span class="tok-op">=</span><span class="tok-kw">True</span>,</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-attr">exclude</span><span class="tok-op">=</span>{<span class="tok-str">"use"</span>, <span class="tok-str">"name"</span>, <span class="tok-str">"display_name"</span>, <span class="tok-str">"description"</span>, <span class="tok-str">"supports_thinking"</span>, <span class="tok-str">"supports_reasoning_effort"</span>, <span class="tok-str">"when_thinking_enabled"</span>, <span class="tok-str">"when_thinking_disabled"</span>, <span class="tok-str">"thinking"</span>, <span class="tok-str">"supports_vision"</span>},</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">)</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-fn">has_thinking_settings</span> <span class="tok-op">=</span> (<span class="tok-attr">model_config</span>.<span class="tok-attr">when_thinking_enabled</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>) <span class="tok-kw">or</span> (<span class="tok-attr">model_config</span>.<span class="tok-attr">thinking</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src"><span class="tok-fn">effective_wte</span>: <span class="tok-type">dict</span> <span class="tok-op">=</span> <span class="tok-fn">dict</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">when_thinking_enabled</span>) <span class="tok-kw">if</span> <span class="tok-attr">model_config</span>.<span class="tok-attr">when_thinking_enabled</span> <span class="tok-kw">else</span> {}</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">model_config</span>.<span class="tok-attr">thinking</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-fn">merged_thinking</span> <span class="tok-op">=</span> {<span class="tok-op">**</span>(<span class="tok-attr">effective_wte</span>.<span class="tok-fn">get</span>(<span class="tok-str">"thinking"</span>) <span class="tok-kw">or</span> {}), <span class="tok-op">**</span><span class="tok-attr">model_config</span>.<span class="tok-attr">thinking</span>}</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-attr">effective_wte</span> <span class="tok-op">=</span> {<span class="tok-op">**</span><span class="tok-attr">effective_wte</span>, <span class="tok-str">"thinking"</span>: <span class="tok-fn">merged_thinking</span>}</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">thinking_enabled</span> <span class="tok-kw">and</span> <span class="tok-fn">has_thinking_settings</span>:</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">model_config</span>.<span class="tok-attr">supports_thinking</span>:</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Model {name} does not support thinking. Set `supports_thinking` to true in the `config.yaml` to enable thinking."</span>) <span class="tok-kw">from</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">effective_wte</span>:</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">update</span>(<span class="tok-fn">effective_wte</span>)</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">thinking_enabled</span>:</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">model_config</span>.<span class="tok-attr">when_thinking_disabled</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">update</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">when_thinking_disabled</span>)</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">    <span class="tok-kw">elif</span> <span class="tok-fn">has_thinking_settings</span> <span class="tok-kw">and</span> <span class="tok-attr">effective_wte</span>.<span class="tok-fn">get</span>(<span class="tok-str">"extra_body"</span>, {}).<span class="tok-fn">get</span>(<span class="tok-str">"thinking"</span>, {}).<span class="tok-fn">get</span>(<span class="tok-str">"type"</span>):</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"extra_body"</span>] <span class="tok-op">=</span> <span class="tok-fn">_deep_merge_dicts</span>(<span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"extra_body"</span>), {<span class="tok-str">"thinking"</span>: {<span class="tok-str">"type"</span>: <span class="tok-str">"disabled"</span>}})</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"reasoning_effort"</span>] <span class="tok-op">=</span> <span class="tok-str">"minimal"</span></span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src"><span class="tok-fn">_enable_stream_usage_by_default</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">use</span>, <span class="tok-attr">model_settings_from_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src"><span class="tok-fn">_apply_stream_chunk_timeout_default</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">use</span>, <span class="tok-attr">model_settings_from_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src"><span class="tok-fn">model_instance</span> <span class="tok-op">=</span> <span class="tok-fn">model_class</span>(<span class="tok-op">**</span><span class="tok-attr">kwargs</span>, <span class="tok-op">**</span><span class="tok-attr">model_settings_from_config</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这段代码的第一个阶段是“取配置并校验存在性”。如果模型名在配置里根本找不到，DeerFlow 不会兜底乱猜，而是直接抛错终止。</li>
+            <li><code>resolve_class(...)</code> 说明配置中的 <code>use</code> 字段不是简单 provider 名，而是最终要被解析成真正的模型类。</li>
+            <li><code>model_dump(..., exclude=...)</code> 非常关键，它把展示字段、能力描述字段和 thinking 配置字段先剥掉，只保留准备喂给构造器的核心参数。</li>
+            <li>接下来 DeerFlow 会额外计算 <code>effective_wte</code>，把 <code>when_thinking_enabled</code> 和 <code>thinking</code> 这两套来源合并成一份真正运行时配置。</li>
+            <li>当 <code>thinking_enabled=True</code> 时，如果模型配置没声明支持 thinking，会直接报错；这保证了“前端开了 thinking”不会静默变成假开关。</li>
+            <li>当 <code>thinking_enabled=False</code> 时，又会按 provider 差异走不同分支，有的改 <code>when_thinking_disabled</code>，有的改 <code>extra_body</code>，有的顺手把 <code>reasoning_effort</code> 降成 minimal。这正是 DeerFlow 模型工厂最实在的 provider patch 层。</li>
+            <li>最后才是统一补流式 usage、chunk timeout，再实例化 <code>model_class</code>。也就是说，一个“模型名字”要经过配置清洗、thinking 补丁、provider 默认值注入三轮加工，才会变成真正可调用的对象。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 2：Gateway 为什么只把“安全的模型信息”暴露给前端</h4>
+          <p class="source-caption">节选自 <code>backend/app/gateway/routers/models.py</code>。这段代码能把“配置里有很多字段，为什么前端只看见一小部分”讲清楚。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">gateway/routers/models.py :: list_models() / get_model()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">ModelResponse</span>(<span class="tok-cls">BaseModel</span>):</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-attr">name</span>: <span class="tok-type">str</span> <span class="tok-op">=</span> <span class="tok-cls">Field</span>(..., <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-str">"Unique identifier for the model"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-attr">model</span>: <span class="tok-type">str</span> <span class="tok-op">=</span> <span class="tok-cls">Field</span>(..., <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-str">"Actual provider model identifier"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-attr">display_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-cls">Field</span>(<span class="tok-kw">None</span>, <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-str">"Human-readable name"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-attr">description</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-cls">Field</span>(<span class="tok-kw">None</span>, <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-str">"Model description"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-attr">supports_thinking</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-cls">Field</span>(<span class="tok-attr">default</span><span class="tok-op">=</span><span class="tok-kw">False</span>, <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-str">"Whether model supports thinking mode"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-attr">supports_reasoning_effort</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-cls">Field</span>(<span class="tok-attr">default</span><span class="tok-op">=</span><span class="tok-kw">False</span>, <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-str">"Whether model supports reasoning effort"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-dec">@router.get</span>(<span class="tok-str">"/models"</span>, <span class="tok-attr">response_model</span><span class="tok-op">=</span><span class="tok-cls">ModelsListResponse</span>)</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">list_models</span>(<span class="tok-attr">config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">=</span> <span class="tok-cls">Depends</span>(<span class="tok-fn">get_config</span>)) <span class="tok-op">-&gt;</span> <span class="tok-cls">ModelsListResponse</span>:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-fn">models</span> <span class="tok-op">=</span> [</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-cls">ModelResponse</span>(</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">            <span class="tok-attr">name</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">name</span>,</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">            <span class="tok-attr">model</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">model</span>,</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">            <span class="tok-attr">display_name</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">display_name</span>,</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">            <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">description</span>,</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">            <span class="tok-attr">supports_thinking</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">supports_thinking</span>,</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">            <span class="tok-attr">supports_reasoning_effort</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">supports_reasoning_effort</span>,</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">        )</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">        <span class="tok-kw">for</span> <span class="tok-attr">model</span> <span class="tok-kw">in</span> <span class="tok-attr">config</span>.<span class="tok-attr">models</span></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    ]</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-cls">ModelsListResponse</span>(<span class="tok-attr">models</span><span class="tok-op">=</span><span class="tok-attr">models</span>, <span class="tok-attr">token_usage</span><span class="tok-op">=</span><span class="tok-cls">TokenUsageResponse</span>(<span class="tok-attr">enabled</span><span class="tok-op">=</span><span class="tok-attr">config</span>.<span class="tok-attr">token_usage</span>.<span class="tok-attr">enabled</span>))</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src"><span class="tok-dec">@router.get</span>(<span class="tok-str">"/models/{model_name}"</span>, <span class="tok-attr">response_model</span><span class="tok-op">=</span><span class="tok-cls">ModelResponse</span>)</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">get_model</span>(<span class="tok-attr">model_name</span>: <span class="tok-type">str</span>, <span class="tok-attr">config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">=</span> <span class="tok-cls">Depends</span>(<span class="tok-fn">get_config</span>)) <span class="tok-op">-&gt;</span> <span class="tok-cls">ModelResponse</span>:</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">    <span class="tok-fn">model</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">get_model_config</span>(<span class="tok-attr">model_name</span>)</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">model</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">HTTPException</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-num">404</span>, <span class="tok-attr">detail</span><span class="tok-op">=</span><span class="tok-str">f"Model '{model_name}' not found"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-cls">ModelResponse</span>(<span class="tok-attr">name</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">name</span>, <span class="tok-attr">model</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">model</span>, <span class="tok-attr">display_name</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">display_name</span>, <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">description</span>, <span class="tok-attr">supports_thinking</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">supports_thinking</span>, <span class="tok-attr">supports_reasoning_effort</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">supports_reasoning_effort</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这里的关键点不是“又写了一个列表接口”，而是它显式定义了一个安全裁剪过的 `ModelResponse`，前端只能看到名字、展示名、描述和能力开关。</li>
+            <li>你在 `config.yaml` 里配置的很多内部字段，比如 `api_key`、`base_url`、thinking patch 细节、provider class，都不会在这里透出给浏览器。</li>
+            <li><code>list_models()</code> 做的事情其实很直接：遍历 `config.models`，把每个完整模型配置投影成一个更安全、更适合 UI 的响应对象。</li>
+            <li><code>get_model()</code> 走的则是按名字查单个配置的路径，没找到就明确返回 404。这说明 Gateway 的模型暴露层既是“展示层”，也是“配置存在性校验层”。</li>
+            <li>因此模型集成这一章不能只看工厂函数，还要看这一层，因为它解释了“前端切模型”究竟是基于哪一套公开模型元信息工作的。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 3：provider patch 不是抽象理论，而是工厂里的真实兼容逻辑</h4>
+          <p class="source-caption">继续节选自 <code>backend/packages/harness/deerflow/models/factory.py</code>。这一段更适合回答“为什么同样叫 thinking，不同模型后端却要不同处理”的问题。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">models/factory.py :: stream usage / timeout / Codex / MindIE patches</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_enable_stream_usage_by_default</span>(<span class="tok-attr">model_use_path</span>: <span class="tok-type">str</span>, <span class="tok-attr">model_settings_from_config</span>: <span class="tok-type">dict</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">model_use_path</span> <span class="tok-op">!=</span> <span class="tok-str">"langchain_openai:ChatOpenAI"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">        <span class="tok-kw">return</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-str">"stream_usage"</span> <span class="tok-kw">in</span> <span class="tok-attr">model_settings_from_config</span>:</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">        <span class="tok-kw">return</span></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-str">"base_url"</span> <span class="tok-kw">in</span> <span class="tok-attr">model_settings_from_config</span> <span class="tok-kw">or</span> <span class="tok-str">"openai_api_base"</span> <span class="tok-kw">in</span> <span class="tok-attr">model_settings_from_config</span>:</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"stream_usage"</span>] <span class="tok-op">=</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_apply_stream_chunk_timeout_default</span>(<span class="tok-attr">model_use_path</span>: <span class="tok-type">str</span>, <span class="tok-attr">model_settings_from_config</span>: <span class="tok-type">dict</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">model_use_path</span> <span class="tok-op">!=</span> <span class="tok-str">"langchain_openai:ChatOpenAI"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">pop</span>(<span class="tok-str">"stream_chunk_timeout"</span>, <span class="tok-kw">None</span>)</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-kw">return</span></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-str">"stream_chunk_timeout"</span> <span class="tok-kw">in</span> <span class="tok-attr">model_settings_from_config</span>:</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">        <span class="tok-kw">return</span></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"stream_chunk_timeout"</span>] <span class="tok-op">=</span> <span class="tok-attr">_DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS</span></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src"><span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">models</span>.<span class="tok-attr">openai_codex_provider</span> <span class="tok-kw">import</span> <span class="tok-cls">CodexChatModel</span></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-fn">issubclass</span>(<span class="tok-attr">model_class</span>, <span class="tok-cls">CodexChatModel</span>):</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">    <span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">pop</span>(<span class="tok-str">"max_tokens"</span>, <span class="tok-kw">None</span>)</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">    <span class="tok-fn">explicit_effort</span> <span class="tok-op">=</span> <span class="tok-attr">kwargs</span>.<span class="tok-fn">pop</span>(<span class="tok-str">"reasoning_effort"</span>, <span class="tok-kw">None</span>)</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">thinking_enabled</span>:</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"reasoning_effort"</span>] <span class="tok-op">=</span> <span class="tok-str">"none"</span></span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">    <span class="tok-kw">elif</span> <span class="tok-attr">explicit_effort</span> <span class="tok-kw">and</span> <span class="tok-attr">explicit_effort</span> <span class="tok-kw">in</span> (<span class="tok-str">"low"</span>, <span class="tok-str">"medium"</span>, <span class="tok-str">"high"</span>, <span class="tok-str">"xhigh"</span>):</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"reasoning_effort"</span>] <span class="tok-op">=</span> <span class="tok-attr">explicit_effort</span></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">    <span class="tok-kw">elif</span> <span class="tok-str">"reasoning_effort"</span> <span class="tok-kw">not in</span> <span class="tok-attr">model_settings_from_config</span>:</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"reasoning_effort"</span>] <span class="tok-op">=</span> <span class="tok-str">"medium"</span></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-fn">getattr</span>(<span class="tok-attr">model_class</span>, <span class="tok-str">"__name__"</span>, <span class="tok-str">""</span>) <span class="tok-op">==</span> <span class="tok-str">"MindIEChatModel"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">    <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"max_retries"</span>] <span class="tok-op">=</span> <span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"max_retries"</span>, <span class="tok-num">1</span>)</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-str">"stream_usage"</span> <span class="tok-kw">not in</span> <span class="tok-attr">model_settings_from_config</span> <span class="tok-kw">and</span> <span class="tok-str">"stream_usage"</span> <span class="tok-kw">not in</span> <span class="tok-attr">kwargs</span>:</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-str">"stream_usage"</span> <span class="tok-kw">in</span> <span class="tok-fn">getattr</span>(<span class="tok-attr">model_class</span>, <span class="tok-str">"model_fields"</span>, {}):</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"stream_usage"</span>] <span class="tok-op">=</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src"><span class="tok-fn">model_instance</span> <span class="tok-op">=</span> <span class="tok-attr">model_class</span>(<span class="tok-op">**</span><span class="tok-attr">kwargs</span>, <span class="tok-op">**</span><span class="tok-attr">model_settings_from_config</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第 1 到 15 行说明 DeerFlow 并不相信所有 OpenAI-compatible 后端都会自动给出合理的流式统计和 timeout，所以工厂会主动补默认值。</li>
+            <li>这里最有代表性的是 `stream_chunk_timeout`。对 reasoning 模型来说，首个 chunk 很可能很慢，如果沿用默认超时，系统会误判模型挂住。</li>
+            <li>第 17 到 26 行则展示了 Codex 的特殊处理: 去掉不兼容参数、把 thinking 模式翻译成 `reasoning_effort`，并给出默认档位。</li>
+            <li>第 28 到 29 行的 MindIE patch 更直接，说明 DeerFlow 模型工厂不是只做“统一构造”，还会兜一些真实 provider 的稳定性参数。</li>
+            <li>所以模型工厂的价值不只是创建对象，更重要的是把“同一个 DeerFlow 运行语义”翻译成各个模型后端真能接受的参数组合。</li>
+          </ul>
+        </div>
         <div class="highlight">
           <strong>重点不是“模型很多”：</strong>
           重点是 DeerFlow 有一条统一解析链，让 Gateway、client 和 subagent 最终都落到同一套配置来源上。
@@ -124,6 +300,7 @@
           <li>DeerFlow 还区分“主对话模型”和部分派生任务的模型语义。例如 memory 更新链路会通过专门的 memory update prompt 与 token counting 策略工作，这提醒我们：模型集成不只影响主聊天，还影响记忆提炼等旁路 LLM 调用。</li>
           <li><code>backend/docs/CONFIGURATION.md</code> 明确支持 provider-specific patched model 类，这说明 DeerFlow 的模型层并不假装所有 OpenAI-compatible provider 都能完全共享同一实现。</li>
         </ul>
+        <p>模型工厂的源码还透露出 DeerFlow 的一个现实主义取向：它不试图掩盖 provider 差异，而是把差异显式编码进工厂逻辑里。例如 reasoning_effort、thinking disable payload、stream chunk timeout 都是针对不同后端单独调整的。这让抽象层看起来没那么“纯”，但换来了真正可运行的多模型支持。</p>
         <div class="key-point">
           <strong>核心取舍：</strong>
           DeerFlow 选择把模型集成做成“配置驱动 + 运行时解析 + provider patch”，而不是写死几家供应商分支。这提高了可扩展性，但也要求读者同时理解配置文档和解析链。

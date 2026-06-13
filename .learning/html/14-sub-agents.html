@@ -80,22 +80,189 @@
             <td>帮助理解 timeout、tools、skills、model 等字段如何进入执行器</td>
           </tr>
         </table>
+        <p>这些文件在 subagent 系统里也形成了清晰分工。<code>task_tool.py</code> 是父 agent 唯一能碰到的入口，它负责把一次委派请求包装成后台任务；<code>executor.py</code> 才是真正运行子 agent 的地方，里面维护状态机、独立 event loop、超时和取消逻辑；<code>registry.py</code> 与配置文件则负责把“bash”“general-purpose”或自定义名字，解析成具体能运行的 SubagentConfig。也就是说，task tool 负责发车，executor 负责开车，registry/config 负责决定这辆车能装什么。</p>
       </section>
 
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>DeerFlow 的 subagent 委派链很清晰，入口固定是 <code>backend/packages/harness/deerflow/tools/builtins/task_tool.py</code>：</p>
-        <div class="code-block"><code>parent agent decides to delegate
-  -> task tool call
-  -> backend/packages/harness/deerflow/tools/builtins/task_tool.py
-  -> registry/config resolve subagent type
-  -> create SubagentExecutor(...)
-  -> execute_async(prompt, task_id=tool_call_id)
-  -> backend/packages/harness/deerflow/subagents/executor.py
-  -> background execution + polling
-  -> terminal status / usage summary / cleanup
-  -> result returned to parent agent</code></div>
+        <div class="annotated-code">
+          <div class="code-window">
+            <div class="code-window-header">
+              <div class="code-window-dots"><span></span><span></span><span></span></div>
+              <div class="code-window-title">subagent flow :: 从父 agent 委派到子执行器完成</div>
+            </div>
+            <div class="code-window-body">
+              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"parent agent decides to delegate"</span></span></div>
+              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"task tool call"</span></span></div>
+              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/tools/builtins/task_tool.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"registry/config resolve subagent type"</span></span></div>
+              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"create SubagentExecutor(...)"</span></span></div>
+              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"execute_async(prompt, task_id=tool_call_id)"</span></span></div>
+              <div class="code-line"><span class="code-ln">7</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/subagents/executor.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">8</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"background execution + polling"</span></span></div>
+              <div class="code-line"><span class="code-ln">9</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"terminal status / usage summary / cleanup"</span></span></div>
+              <div class="code-line"><span class="code-ln">10</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"result returned to parent agent"</span></span></div>
+            </div>
+          </div>
+        </div>
+        <p>源码细节里有两个特别值得读的点。第一，<code>task_tool.py</code> 会从父 runtime 里提取 <code>sandbox_state</code>、<code>thread_data</code>、<code>thread_id</code>、trace 信息和父模型名，再结合 subagent config 计算出这次子任务的有效模型与技能/工具白名单。第二，<code>executor.py</code> 不是简单地“开个线程跑一下”，而是维护独立的 background task registry、持久 event loop 和可竞争的 terminal status 更新，确保超时、取消和正常完成不会互相覆盖状态。</p>
         <p>这条链有几个非常 DeerFlow-specific 的细节。第一，父运行时会把 <code>sandbox_state</code>、<code>thread_data</code>、<code>thread_id</code>、<code>trace_id</code>、父模型名和可用 skill/tool 限制传给 subagent。第二，<code>task_tool.py</code> 会持续轮询后台结果并向流式 writer 发出 <code>task_started</code>、<code>task_running</code>、<code>task_completed</code> 等事件。第三，token usage 会在 subagent 侧收集，再回写到父运行时的 usage 记录与 cache 中。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码 1：task tool 怎样继承父上下文再创建子执行器</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/tools/builtins/task_tool.py</code>。这段代码最能说明 DeerFlow 的 subagent 不是凭空创建的。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">tools/builtins/task_tool.py :: task(...)</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># 1. 先从父 runtime 抽上下文，子 agent 不是凭空出生的</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-fn">sandbox_state</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-fn">thread_data</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-fn">thread_id</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-fn">parent_model</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src"><span class="tok-fn">trace_id</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"><span class="tok-fn">metadata</span>: <span class="tok-type">dict</span> <span class="tok-op">=</span> {}</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">runtime</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-fn">sandbox_state</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">state</span>.<span class="tok-fn">get</span>(<span class="tok-str">"sandbox"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-fn">thread_data</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">state</span>.<span class="tok-fn">get</span>(<span class="tok-str">"thread_data"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-fn">thread_id</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">context</span>.<span class="tok-fn">get</span>(<span class="tok-str">"thread_id"</span>) <span class="tok-kw">if</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">context</span> <span class="tok-kw">else</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">thread_id</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">        <span class="tok-fn">thread_id</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"configurable"</span>, {}).<span class="tok-fn">get</span>(<span class="tok-str">"thread_id"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-fn">metadata</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"metadata"</span>, {})</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-fn">parent_model</span> <span class="tok-op">=</span> <span class="tok-attr">metadata</span>.<span class="tok-fn">get</span>(<span class="tok-str">"model_name"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-fn">trace_id</span> <span class="tok-op">=</span> <span class="tok-attr">metadata</span>.<span class="tok-fn">get</span>(<span class="tok-str">"trace_id"</span>) <span class="tok-kw">or</span> <span class="tok-fn">str</span>(<span class="tok-fn">uuid4</span>())[:<span class="tok-num">8</span>]</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src"><span class="tok-fn">parent_available_skills</span> <span class="tok-op">=</span> <span class="tok-attr">metadata</span>.<span class="tok-fn">get</span>(<span class="tok-str">"available_skills"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-fn">parent_available_skills</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-attr">overrides</span>[<span class="tok-str">"skills"</span>] <span class="tok-op">=</span> <span class="tok-fn">_merge_skill_allowlists</span>(<span class="tok-fn">list</span>(<span class="tok-fn">parent_available_skills</span>), <span class="tok-attr">config</span>.<span class="tok-attr">skills</span>)</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">overrides</span>:</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">    <span class="tok-attr">config</span> <span class="tok-op">=</span> <span class="tok-fn">replace</span>(<span class="tok-attr">config</span>, <span class="tok-op">**</span><span class="tok-attr">overrides</span>)</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src"><span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">tools</span> <span class="tok-kw">import</span> <span class="tok-fn">get_available_tools</span></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src"><span class="tok-fn">parent_tool_groups</span> <span class="tok-op">=</span> <span class="tok-attr">metadata</span>.<span class="tok-fn">get</span>(<span class="tok-str">"tool_groups"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src"><span class="tok-fn">effective_model</span> <span class="tok-op">=</span> <span class="tok-fn">resolve_subagent_model_name</span>(<span class="tok-attr">config</span>, <span class="tok-fn">parent_model</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-com"># 2. 工具集不是继承全部父工具，而是重新按限制生成，并显式禁掉再次委派</span></span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src"><span class="tok-fn">available_tools_kwargs</span> <span class="tok-op">=</span> {</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">    <span class="tok-str">"model_name"</span>: <span class="tok-fn">effective_model</span>,</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">    <span class="tok-str">"groups"</span>: <span class="tok-fn">parent_tool_groups</span>,</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">    <span class="tok-str">"subagent_enabled"</span>: <span class="tok-kw">False</span>,</span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src">}</span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">resolved_app_config</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">37</span><span class="code-src">    <span class="tok-attr">available_tools_kwargs</span>[<span class="tok-str">"app_config"</span>] <span class="tok-op">=</span> <span class="tok-attr">resolved_app_config</span></span></div>
+                <div class="code-line"><span class="code-ln">38</span><span class="code-src"><span class="tok-fn">tools</span> <span class="tok-op">=</span> <span class="tok-fn">get_available_tools</span>(<span class="tok-op">**</span><span class="tok-attr">available_tools_kwargs</span>)</span></div>
+                <div class="code-line"><span class="code-ln">39</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">40</span><span class="code-src"><span class="tok-com"># 3. 直到这里才真正造 SubagentExecutor，把继承下来的上下文一起塞进去</span></span></div>
+                <div class="code-line"><span class="code-ln">41</span><span class="code-src"><span class="tok-fn">executor</span> <span class="tok-op">=</span> <span class="tok-cls">SubagentExecutor</span>(<span class="tok-attr">config</span><span class="tok-op">=</span><span class="tok-attr">config</span>, <span class="tok-attr">tools</span><span class="tok-op">=</span><span class="tok-fn">tools</span>, <span class="tok-attr">parent_model</span><span class="tok-op">=</span><span class="tok-fn">parent_model</span>, <span class="tok-attr">sandbox_state</span><span class="tok-op">=</span><span class="tok-fn">sandbox_state</span>, <span class="tok-attr">thread_data</span><span class="tok-op">=</span><span class="tok-fn">thread_data</span>, <span class="tok-attr">thread_id</span><span class="tok-op">=</span><span class="tok-fn">thread_id</span>, <span class="tok-attr">trace_id</span><span class="tok-op">=</span><span class="tok-fn">trace_id</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这段代码的第一层含义是“抽父上下文”。子 agent 在创建之前，已经继承了父运行时里的 <code>sandbox_state</code>、<code>thread_data</code>、<code>thread_id</code>、<code>metadata</code> 和 <code>trace_id</code>。</li>
+            <li>如果父级在 metadata 里限制了可用 skills，<code>_merge_skill_allowlists(...)</code> 会再做一次交集过滤，所以 subagent 继承的是受限能力，不是无限放权。</li>
+            <li><code>effective_model</code> 是在真正生成工具之前就算好的，因为 DeerFlow 要按模型能力决定可用工具集合。</li>
+            <li><code>subagent_enabled: False</code> 是整段代码里最关键的安全阀。它确保 subagent 不会再拿到 <code>task</code> 工具，从源码层面切断递归委派。</li>
+            <li>只有配置、工具、父上下文都准备好以后，才创建 <code>SubagentExecutor</code>。这说明 subagent 在 DeerFlow 里更像“一次完整的小运行时”，不是一个简单函数调用。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 2：subagent 模型继承规则其实非常直接</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/subagents/config.py</code>。这一小段代码把模型回退顺序说得很清楚。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">subagents/config.py :: resolve_subagent_model_name()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">resolve_subagent_model_name</span>(<span class="tok-attr">config</span>: <span class="tok-cls">SubagentConfig</span>, <span class="tok-attr">parent_model</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-op">*</span>, <span class="tok-attr">app_config</span>: <span class="tok-str">"AppConfig | None"</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com"># 规则 1：只要子 agent 明确写了模型，就尊重它自己的配置</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">config</span>.<span class="tok-attr">model</span> <span class="tok-op">!=</span> <span class="tok-str">"inherit"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">config</span>.<span class="tok-attr">model</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-com"># 规则 2：没显式指定时，优先继承父 agent 当前正在使用的模型</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">parent_model</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">parent_model</span></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-com"># 规则 3：父模型也缺失时，才去全局配置里找默认模型</span></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">app_config</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">config</span> <span class="tok-kw">import</span> <span class="tok-fn">get_app_config</span></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">        <span class="tok-attr">app_config</span> <span class="tok-op">=</span> <span class="tok-fn">get_app_config</span>()</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-fn">_default_model_name</span>(<span class="tok-attr">app_config</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这段实现虽然短，但它把 subagent 的模型选择顺序完全写死了，所以运行结果非常可预测。</li>
+            <li>第一优先级永远是子 agent 自己显式声明的模型；只要不是 <code>inherit</code>，父模型就完全不会参与。</li>
+            <li>第二优先级才是父模型，这让“继承父模型”变成一个显式配置行为，而不是默认偷偷发生。</li>
+            <li>最后才回退到全局默认模型，保证就算父上下文缺失、独立测试 subagent，也仍然能有一个可运行的兜底值。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 3：SubagentExecutor 自己就是一个小型后台执行引擎</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/subagents/executor.py</code>。这一段能把“subagent 不是简单线程池任务”讲得很清楚。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">subagents/executor.py :: SubagentStatus / SubagentResult / isolated loop</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">SubagentStatus</span>(<span class="tok-cls">Enum</span>):</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-attr">PENDING</span> <span class="tok-op">=</span> <span class="tok-str">"pending"</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-attr">RUNNING</span> <span class="tok-op">=</span> <span class="tok-str">"running"</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-attr">COMPLETED</span> <span class="tok-op">=</span> <span class="tok-str">"completed"</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-attr">FAILED</span> <span class="tok-op">=</span> <span class="tok-str">"failed"</span></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-attr">CANCELLED</span> <span class="tok-op">=</span> <span class="tok-str">"cancelled"</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-attr">TIMED_OUT</span> <span class="tok-op">=</span> <span class="tok-str">"timed_out"</span></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-dec">@property</span></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">is_terminal</span>(<span class="tok-self">self</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">bool</span>:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-self">self</span> <span class="tok-kw">in</span> {<span class="tok-fn">type</span>(<span class="tok-self">self</span>).<span class="tok-attr">COMPLETED</span>, <span class="tok-fn">type</span>(<span class="tok-self">self</span>).<span class="tok-attr">FAILED</span>, <span class="tok-fn">type</span>(<span class="tok-self">self</span>).<span class="tok-attr">CANCELLED</span>, <span class="tok-fn">type</span>(<span class="tok-self">self</span>).<span class="tok-attr">TIMED_OUT</span>}</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-dec">@dataclass</span></span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">SubagentResult</span>:</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-attr">task_id</span>: <span class="tok-type">str</span></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-attr">trace_id</span>: <span class="tok-type">str</span></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-attr">status</span>: <span class="tok-cls">SubagentStatus</span></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-attr">cancel_event</span>: <span class="tok-attr">threading</span>.<span class="tok-cls">Event</span> <span class="tok-op">=</span> <span class="tok-fn">field</span>(<span class="tok-attr">default_factory</span><span class="tok-op">=</span><span class="tok-attr">threading</span>.<span class="tok-cls">Event</span>, <span class="tok-attr">repr</span><span class="tok-op">=</span><span class="tok-kw">False</span>)</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">    <span class="tok-attr">_state_lock</span>: <span class="tok-attr">threading</span>.<span class="tok-cls">Lock</span> <span class="tok-op">=</span> <span class="tok-fn">field</span>(<span class="tok-attr">default_factory</span><span class="tok-op">=</span><span class="tok-attr">threading</span>.<span class="tok-cls">Lock</span>, <span class="tok-attr">init</span><span class="tok-op">=</span><span class="tok-kw">False</span>, <span class="tok-attr">repr</span><span class="tok-op">=</span><span class="tok-kw">False</span>)</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">try_set_terminal</span>(<span class="tok-self">self</span>, <span class="tok-attr">status</span>: <span class="tok-cls">SubagentStatus</span>, <span class="tok-op">*</span>, <span class="tok-attr">result</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">error</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">bool</span>:</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">status</span>.<span class="tok-attr">is_terminal</span>:</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Status {status} is not terminal"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">        <span class="tok-kw">with</span> <span class="tok-self">self</span>.<span class="tok-attr">_state_lock</span>:</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-self">self</span>.<span class="tok-attr">status</span>.<span class="tok-attr">is_terminal</span>:</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">                <span class="tok-kw">return</span> <span class="tok-kw">False</span></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">            <span class="tok-self">self</span>.<span class="tok-attr">status</span> <span class="tok-op">=</span> <span class="tok-attr">status</span></span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">            <span class="tok-kw">return</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-attr">_scheduler_pool</span> <span class="tok-op">=</span> <span class="tok-cls">ThreadPoolExecutor</span>(<span class="tok-attr">max_workers</span><span class="tok-op">=</span><span class="tok-num">3</span>, <span class="tok-attr">thread_name_prefix</span><span class="tok-op">=</span><span class="tok-str">"subagent-scheduler-"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src"><span class="tok-attr">_isolated_subagent_loop</span>: <span class="tok-cls">asyncio</span>.<span class="tok-cls">AbstractEventLoop</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_get_isolated_subagent_loop</span>() <span class="tok-op">-&gt;</span> <span class="tok-cls">asyncio</span>.<span class="tok-cls">AbstractEventLoop</span>:</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">    <span class="tok-kw">with</span> <span class="tok-attr">_isolated_subagent_loop_lock</span>:</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-fn">loop_is_usable</span>:</span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src">            <span class="tok-fn">loop</span> <span class="tok-op">=</span> <span class="tok-attr">asyncio</span>.<span class="tok-fn">new_event_loop</span>()</span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src">            <span class="tok-fn">thread</span> <span class="tok-op">=</span> <span class="tok-attr">threading</span>.<span class="tok-cls">Thread</span>(<span class="tok-attr">target</span><span class="tok-op">=</span><span class="tok-attr">_run_isolated_subagent_loop</span>, <span class="tok-attr">args</span><span class="tok-op">=</span>(<span class="tok-attr">loop</span>, <span class="tok-attr">started_event</span>), <span class="tok-attr">name</span><span class="tok-op">=</span><span class="tok-str">"subagent-persistent-loop"</span>, <span class="tok-attr">daemon</span><span class="tok-op">=</span><span class="tok-kw">True</span>)</span></div>
+                <div class="code-line"><span class="code-ln">37</span><span class="code-src">            <span class="tok-attr">thread</span>.<span class="tok-fn">start</span>()</span></div>
+                <div class="code-line"><span class="code-ln">38</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">_isolated_subagent_loop</span></span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>`SubagentStatus` 已经说明这不是简单 future，而是一套完整的状态机，连 `timed_out` 都是显式终态。</li>
+            <li>`SubagentResult.try_set_terminal(...)` 非常关键，它用锁保证终态只会被设置一次，专门处理“执行线程、超时线程、取消线程互相抢状态”的竞争问题。</li>
+            <li>执行器还单独维护 `_scheduler_pool` 和持久化的 isolated event loop，说明 DeerFlow 不想为每次 subagent 都临时起停事件循环。</li>
+            <li>所以 subagent executor 的真实角色不是“帮 task_tool 开个后台线程”，而是“维护一个可超时、可取消、可回收、可并发的独立小运行时”。</li>
+          </ul>
+        </div>
         <div class="highlight">
           <strong>这里不是消息总线群聊：</strong>
           subagent 并不会和主 agent 长时间共享同一消息列表。它是在 <code>backend/packages/harness/deerflow/subagents/executor.py</code> 中构建自己的初始 state、技能消息和工具集合，然后独立执行。
@@ -111,6 +278,7 @@
           <li><code>backend/packages/harness/deerflow/subagents/config.py</code> 中的 <code>SubagentConfig</code> 与 <code>resolve_subagent_model_name</code> 决定 subagent 是否继承父模型、最多运行多少轮以及允许哪些工具。</li>
           <li><code>backend/packages/harness/deerflow/tools/builtins/task_tool.py</code> 会继承父级的 tool groups 与部分 skill allowlist，并显式关闭 subagent 再次拥有 subagent tools，避免递归嵌套失控。</li>
         </ul>
+        <p>这里很能体现 DeerFlow 的“受控委派”思路：父级权限不是原封不动传给子级，而是要经过一轮再过滤。例如 skill allowlist 会做父子交集，subagent 模型名会通过 <code>resolve_subagent_model_name</code> 再解析一次，递归 task 还会被直接禁用。也就是说，subagent 继承的是运行上下文，不是无限制的父级权力。</p>
         <p>换句话说，DeerFlow 并不是让任何 agent 随便“spawn 另一个 agent”。委派能力受注册表、配置、父级策略和执行器规则共同限制。</p>
       </section>
 

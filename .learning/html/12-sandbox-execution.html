@@ -85,20 +85,193 @@
             <td>帮助把实现细节放回 DeerFlow 的部署与安全模型中理解</td>
           </tr>
         </table>
+        <p>如果按“谁真正干活”来读，<code>backend/packages/harness/deerflow/sandbox/tools.py</code> 是最核心的，因为 agent 看到的读文件、列目录、bash 等能力最终都在这里实现。<code>backend/packages/harness/deerflow/sandbox/middleware.py</code> 负责把 sandbox 句柄挂到运行时 state 上，但它本身不直接执行文件操作；<code>local_sandbox_provider.py</code> 和 <code>aio_sandbox_provider.py</code> 则分别决定这些工具背后到底操作宿主机路径，还是容器里的挂载路径。</p>
+        <p>这意味着 sandbox 相关源码要从“工具层 -> provider 层 -> 安全策略层”往下读，而不是只盯着 provider 文件。因为对用户来说真正可见的是工具行为，不是 provider 类名。</p>
       </section>
 
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>DeerFlow 默认不是“run 开始就先启动 sandbox”。它采用 lazy sandbox acquisition：只有当运行真的触碰到文件/命令工具时，sandbox 才通过 middleware 和 provider 被获取。这一点在 <code>backend/packages/harness/deerflow/sandbox/middleware.py</code> 与 <code>backend/packages/harness/deerflow/agents/factory.py</code> 的 lazy init 组合里非常明确。</p>
-        <div class="code-block"><code>lead agent / subagent runtime
-  -> sandbox middleware (lazy_init=True)
-  -> first sandbox-backed tool call
-  -> backend/packages/harness/deerflow/sandbox/tools.py
-  -> get_sandbox_provider().acquire(thread_id)
-  -> LocalSandboxProvider 或 AioSandboxProvider
-  -> path mapping + bounds check + tool execution
-  -> 返回虚拟路径视角下的结果</code></div>
+        <div class="annotated-code">
+          <div class="code-window">
+            <div class="code-window-header">
+              <div class="code-window-dots"><span></span><span></span><span></span></div>
+              <div class="code-window-title">sandbox flow :: lazy sandbox acquisition</div>
+            </div>
+            <div class="code-window-body">
+              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"lead agent / subagent runtime"</span></span></div>
+              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"sandbox middleware (lazy_init=True)"</span></span></div>
+              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"first sandbox-backed tool call"</span></span></div>
+              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/sandbox/tools.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"get_sandbox_provider().acquire(thread_id)"</span></span></div>
+              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"LocalSandboxProvider or AioSandboxProvider"</span></span></div>
+              <div class="code-line"><span class="code-ln">7</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"path mapping + bounds check + tool execution"</span></span></div>
+              <div class="code-line"><span class="code-ln">8</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"return result in virtual-path view"</span></span></div>
+            </div>
+          </div>
+        </div>
+        <p>源码层面更具体一点，是 <code>sandbox/tools.py</code> 先拿到用户传来的虚拟路径，再根据 provider 暴露的 path mapping 把它解析成真实路径，然后检查是否落在当前 thread 允许的边界内；只有边界通过之后，才真正执行读写或 shell 操作。所以“路径契约”不是写在文档里的口头约定，而是工具函数里反复参与解析和校验的实际逻辑。</p>
         <p>如果当前 provider 是 <code>backend/packages/harness/deerflow/sandbox/local/local_sandbox_provider.py</code>，那么它会为每个线程建立独立的 path mappings，把真实宿主目录映射成统一的 <code>/mnt/user-data/workspace</code>、<code>/mnt/user-data/uploads</code>、<code>/mnt/user-data/outputs</code> 和 <code>/mnt/acp-workspace</code>。如果当前 provider 是 <code>AioSandboxProvider</code>，这些路径则会在容器内以 bind mount 形式呈现。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码：虚拟 skills 路径怎样解析成宿主机路径</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/sandbox/tools.py</code>。这一段很能说明 DeerFlow 的路径契约不是写在文档里，而是写在工具实现里。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">sandbox/tools.py :: _get_skills_host_path() / _resolve_skills_path()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_get_skills_host_path</span>() <span class="tok-op">-&gt;</span> <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com">"""从配置里拿真实 skills 目录；只有成功时才缓存。"""</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-fn">cached</span> <span class="tok-op">=</span> <span class="tok-fn">getattr</span>(<span class="tok-fn">_get_skills_host_path</span>, <span class="tok-str">"_cached"</span>, <span class="tok-kw">None</span>)</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">cached</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-fn">cached</span></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-kw">try</span>:</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">config</span> <span class="tok-kw">import</span> <span class="tok-fn">get_app_config</span></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">        <span class="tok-fn">config</span> <span class="tok-op">=</span> <span class="tok-fn">get_app_config</span>()</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">        <span class="tok-fn">skills_path</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-attr">skills</span>.<span class="tok-fn">get_skills_path</span>()</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-com"># 只有真实目录存在，才允许 agent 通过虚拟路径读它</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">skills_path</span>.<span class="tok-fn">exists</span>():</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">            <span class="tok-fn">value</span> <span class="tok-op">=</span> <span class="tok-fn">str</span>(<span class="tok-fn">skills_path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">            <span class="tok-fn">_get_skills_host_path</span>.<span class="tok-attr">_cached</span> <span class="tok-op">=</span> <span class="tok-fn">value</span></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">            <span class="tok-kw">return</span> <span class="tok-fn">value</span></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-kw">except</span> <span class="tok-cls">Exception</span>:</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-kw">pass</span></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_resolve_skills_path</span>(<span class="tok-attr">path</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-com"># path 是 agent 看到的虚拟路径，例如 /mnt/skills/public/bootstrap/SKILL.md</span></span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-fn">skills_container</span> <span class="tok-op">=</span> <span class="tok-fn">_get_skills_container_path</span>()</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">    <span class="tok-fn">skills_host</span> <span class="tok-op">=</span> <span class="tok-fn">_get_skills_host_path</span>()</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">skills_host</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">FileNotFoundError</span>(<span class="tok-str">f"Skills directory not available for path: {path}"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">path</span> <span class="tok-op">==</span> <span class="tok-fn">skills_container</span>:</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-fn">skills_host</span></span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-com"># 去掉虚拟前缀以后，剩下的相对路径再拼回宿主机真实目录</span></span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">    <span class="tok-fn">relative</span> <span class="tok-op">=</span> <span class="tok-attr">path</span>[<span class="tok-fn">len</span>(<span class="tok-fn">skills_container</span>) :].<span class="tok-fn">lstrip</span>(<span class="tok-str">"/"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-fn">_join_path_preserving_style</span>(<span class="tok-fn">skills_host</span>, <span class="tok-fn">relative</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第一步先查函数级缓存，而不是每次都重新读配置。这说明 DeerFlow 把“路径解析”当成高频运行时逻辑来优化。</li>
+            <li>真正读取的是 <code>config.skills.get_skills_path()</code>，所以 skills 目录来自配置，不是工具层写死的固定目录。</li>
+            <li>只有 <code>skills_path.exists()</code> 为真时才缓存成功值，失败不会缓存。这一点很重要，因为临时不可用不会把系统永久锁死在错误状态。</li>
+            <li><code>_resolve_skills_path(...)</code> 接收的仍然是虚拟路径，不是宿主机路径。也就是说 agent 从头到尾都不知道真实磁盘布局。</li>
+            <li>最后一行的 <code>_join_path_preserving_style(...)</code> 才是真正把“容器视角路径”翻译成“宿主机视角路径”的位置，文件工具后续读写都依赖这一步结果。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：Local provider 为什么要拒绝保留前缀挂载</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/sandbox/local/local_sandbox_provider.py</code>。这段代码体现了 sandbox 的边界控制不是口头约定。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">sandbox/local/local_sandbox_provider.py :: _build_static_path_mappings()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">try</span>:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">config</span> <span class="tok-kw">import</span> <span class="tok-fn">get_app_config</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-fn">config</span> <span class="tok-op">=</span> <span class="tok-fn">get_app_config</span>()</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-fn">skills_path</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-attr">skills</span>.<span class="tok-fn">get_skills_path</span>()</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-fn">container_path</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-attr">skills</span>.<span class="tok-attr">container_path</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">skills_path</span>.<span class="tok-fn">exists</span>():</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">        <span class="tok-attr">mappings</span>.<span class="tok-fn">append</span>(<span class="tok-cls">PathMapping</span>(<span class="tok-attr">container_path</span><span class="tok-op">=</span><span class="tok-fn">container_path</span>, <span class="tok-attr">local_path</span><span class="tok-op">=</span><span class="tok-fn">str</span>(<span class="tok-fn">skills_path</span>), <span class="tok-attr">read_only</span><span class="tok-op">=</span><span class="tok-kw">True</span>))</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-fn">_RESERVED_CONTAINER_PREFIXES</span> <span class="tok-op">=</span> [</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-fn">container_path</span>,</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-attr">_ACP_WORKSPACE_VIRTUAL_PREFIX</span>,</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">        <span class="tok-attr">_USER_DATA_VIRTUAL_PREFIX</span>,</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    ]</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-fn">sandbox_config</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-attr">sandbox</span></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">sandbox_config</span> <span class="tok-kw">and</span> <span class="tok-attr">sandbox_config</span>.<span class="tok-attr">mounts</span>:</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">        <span class="tok-kw">for</span> <span class="tok-fn">mount</span> <span class="tok-kw">in</span> <span class="tok-attr">sandbox_config</span>.<span class="tok-attr">mounts</span>:</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">            <span class="tok-fn">host_path</span> <span class="tok-op">=</span> <span class="tok-cls">Path</span>(<span class="tok-attr">mount</span>.<span class="tok-attr">host_path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">            <span class="tok-fn">container_path</span> <span class="tok-op">=</span> <span class="tok-attr">mount</span>.<span class="tok-attr">container_path</span>.<span class="tok-fn">rstrip</span>(<span class="tok-str">"/"</span>) <span class="tok-kw">or</span> <span class="tok-str">"/"</span></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">            <span class="tok-com"># 这一段在保护 DeerFlow 自己的虚拟路径协议不被外部 mount 覆盖</span></span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">any</span>(<span class="tok-fn">container_path</span> <span class="tok-op">==</span> <span class="tok-fn">p</span> <span class="tok-kw">or</span> <span class="tok-fn">container_path</span>.<span class="tok-fn">startswith</span>(<span class="tok-fn">p</span> <span class="tok-op">+</span> <span class="tok-str">"/"</span>) <span class="tok-kw">for</span> <span class="tok-fn">p</span> <span class="tok-kw">in</span> <span class="tok-fn">_RESERVED_CONTAINER_PREFIXES</span>):</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">                <span class="tok-attr">logger</span>.<span class="tok-fn">warning</span>(<span class="tok-str">"Mount container_path conflicts with reserved prefix, skipping: %s"</span>, <span class="tok-attr">mount</span>.<span class="tok-attr">container_path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">                <span class="tok-kw">continue</span></span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-attr">host_path</span>.<span class="tok-fn">exists</span>():</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">                <span class="tok-attr">mappings</span>.<span class="tok-fn">append</span>(<span class="tok-cls">PathMapping</span>(<span class="tok-attr">container_path</span><span class="tok-op">=</span><span class="tok-fn">container_path</span>, <span class="tok-attr">local_path</span><span class="tok-op">=</span><span class="tok-fn">str</span>(<span class="tok-attr">host_path</span>.<span class="tok-fn">resolve</span>()), <span class="tok-attr">read_only</span><span class="tok-op">=</span><span class="tok-attr">mount</span>.<span class="tok-attr">read_only</span>))</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">            <span class="tok-kw">else</span>:</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">                <span class="tok-attr">logger</span>.<span class="tok-fn">error</span>(<span class="tok-str">"sandbox.mounts entry %s -> %s ignored: host_path %s does not exist"</span>, <span class="tok-attr">mount</span>.<span class="tok-attr">host_path</span>, <span class="tok-attr">mount</span>.<span class="tok-attr">container_path</span>, <span class="tok-attr">mount</span>.<span class="tok-attr">host_path</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这段代码不是“顺便做一下防御”，而是在 provider 建立映射时就先定义了保留前缀白名单边界。</li>
+            <li><code>skills</code>、<code>/mnt/acp-workspace</code>、<code>/mnt/user-data</code> 被集中收进 <code>_RESERVED_CONTAINER_PREFIXES</code>，表示这些前缀属于 DeerFlow runtime 自己管理。</li>
+            <li>后续每一条自定义 mount 都会先做冲突判断；一旦想覆盖保留路径，直接 <code>continue</code>，连映射都不会加进去。</li>
+            <li>即使前缀不冲突，也还要检查 <code>host_path.exists()</code>。不存在的宿主目录不会静默接受，而是打 error，避免“看起来挂载成功，实际上读到空目录”的隐性故障。</li>
+            <li>所以 Local provider 的真实工作不是“给本地 shell 开个口子”，而是严格维护一张线程级、前缀受保护的路径映射表。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 3：thread data middleware 才是 thread 目录和消息元信息真正进入运行时的入口</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/agents/middlewares/thread_data_middleware.py</code>。这一段能把 sandbox 和执行引擎之间的连接讲得非常具体。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">agents/middlewares/thread_data_middleware.py :: before_agent()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">ThreadDataMiddleware</span>(<span class="tok-cls">AgentMiddleware</span>[<span class="tok-cls">ThreadDataMiddlewareState</span>]):</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com">"""为每个线程执行准备 workspace / uploads / outputs 三个目录。"""</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">_get_thread_paths</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">str</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">        <span class="tok-kw">return</span> {</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">            <span class="tok-str">"workspace_path"</span>: <span class="tok-fn">str</span>(<span class="tok-self">self</span>.<span class="tok-attr">_paths</span>.<span class="tok-fn">sandbox_work_dir</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)),</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">            <span class="tok-str">"uploads_path"</span>: <span class="tok-fn">str</span>(<span class="tok-self">self</span>.<span class="tok-attr">_paths</span>.<span class="tok-fn">sandbox_uploads_dir</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)),</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">            <span class="tok-str">"outputs_path"</span>: <span class="tok-fn">str</span>(<span class="tok-self">self</span>.<span class="tok-attr">_paths</span>.<span class="tok-fn">sandbox_outputs_dir</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)),</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">        }</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">_create_thread_directories</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">str</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_paths</span>.<span class="tok-fn">ensure_thread_dirs</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-self">self</span>.<span class="tok-fn">_get_thread_paths</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-dec">@override</span></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">before_agent</span>(<span class="tok-self">self</span>, <span class="tok-attr">state</span>: <span class="tok-cls">ThreadDataMiddlewareState</span>, <span class="tok-attr">runtime</span>: <span class="tok-cls">Runtime</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-fn">context</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">context</span> <span class="tok-kw">or</span> {}</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">        <span class="tok-fn">thread_id</span> <span class="tok-op">=</span> <span class="tok-attr">context</span>.<span class="tok-fn">get</span>(<span class="tok-str">"thread_id"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">thread_id</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">            <span class="tok-fn">config</span> <span class="tok-op">=</span> <span class="tok-fn">get_config</span>()</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">            <span class="tok-attr">thread_id</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"configurable"</span>, {}).<span class="tok-fn">get</span>(<span class="tok-str">"thread_id"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">thread_id</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"Thread ID is required in runtime context or config.configurable"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">        <span class="tok-fn">user_id</span> <span class="tok-op">=</span> <span class="tok-fn">get_effective_user_id</span>()</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-self">self</span>.<span class="tok-attr">_lazy_init</span>:</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">            <span class="tok-fn">paths</span> <span class="tok-op">=</span> <span class="tok-self">self</span>.<span class="tok-fn">_get_thread_paths</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">        <span class="tok-kw">else</span>:</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">            <span class="tok-fn">paths</span> <span class="tok-op">=</span> <span class="tok-self">self</span>.<span class="tok-fn">_create_thread_directories</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">        <span class="tok-fn">messages</span> <span class="tok-op">=</span> <span class="tok-fn">list</span>(<span class="tok-attr">state</span>.<span class="tok-fn">get</span>(<span class="tok-str">"messages"</span>, []))</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">        <span class="tok-fn">last_message</span> <span class="tok-op">=</span> <span class="tok-attr">messages</span>[-<span class="tok-num">1</span>] <span class="tok-kw">if</span> <span class="tok-attr">messages</span> <span class="tok-kw">else</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">last_message</span> <span class="tok-kw">and</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">last_message</span>, <span class="tok-cls">HumanMessage</span>):</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">            <span class="tok-attr">messages</span>[-<span class="tok-num">1</span>] <span class="tok-op">=</span> <span class="tok-cls">HumanMessage</span>(<span class="tok-attr">content</span><span class="tok-op">=</span><span class="tok-attr">last_message</span>.<span class="tok-attr">content</span>, <span class="tok-attr">id</span><span class="tok-op">=</span><span class="tok-attr">last_message</span>.<span class="tok-attr">id</span>, <span class="tok-attr">name</span><span class="tok-op">=</span><span class="tok-attr">last_message</span>.<span class="tok-attr">name</span> <span class="tok-kw">or</span> <span class="tok-str">"user-input"</span>, <span class="tok-attr">additional_kwargs</span><span class="tok-op">=</span>{<span class="tok-op">**</span><span class="tok-attr">last_message</span>.<span class="tok-attr">additional_kwargs</span>, <span class="tok-str">"run_id"</span>: <span class="tok-attr">runtime</span>.<span class="tok-attr">context</span>.<span class="tok-fn">get</span>(<span class="tok-str">"run_id"</span>), <span class="tok-str">"timestamp"</span>: <span class="tok-fn">datetime</span>.<span class="tok-fn">now</span>(<span class="tok-attr">UTC</span>).<span class="tok-fn">isoformat</span>()})</span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src">        <span class="tok-kw">return</span> {<span class="tok-str">"thread_data"</span>: {<span class="tok-op">**</span><span class="tok-attr">paths</span>}, <span class="tok-str">"messages"</span>: <span class="tok-attr">messages</span>}</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>`ThreadDataMiddleware` 是 DeerFlow thread 目录模型真正进入 graph state 的第一站。没有它，后面 sandbox、uploads、artifacts 都拿不到统一的线程路径。</li>
+            <li>第 17 到 23 行体现了一个现实问题: `thread_id` 既可能来自新的 `runtime.context`，也可能来自旧的 `configurable`。这个中间件自己就在做兼容桥接。</li>
+            <li>`lazy_init=True` 时只计算路径不建目录，这和 DeerFlow 整体的 lazy sandbox acquisition 思路是一致的，避免每次 run 都提前创建大量目录。</li>
+            <li>最后还会回写最后一条 `HumanMessage` 的 `run_id` 和 `timestamp`，说明 thread middleware 不只是路径层，也顺手给消息补了运行元信息。</li>
+          </ul>
+        </div>
         <div class="highlight">
           <strong>必须记住的运行语义：</strong>
           对 agent 来说，看到的是稳定的虚拟路径；对 DeerFlow 来说，真正的隔离能力取决于 provider。路径契约是一致的，隔离强度并不一致。
@@ -126,6 +299,7 @@
           <li><code>AioSandboxProvider</code> 提供更接近强隔离的容器化边界，因此 DeerFlow 文档明确把它作为需要隔离 shell 访问时的优先方案。</li>
           <li><code>allow_host_bash: false</code> 默认值不是保守过度，而是显式承认“本地模式不是安全 shell 边界”的设计现实。</li>
         </ul>
+        <p><code>backend/packages/harness/deerflow/sandbox/security.py</code> 的价值也在这里体现出来了。它不只是给出警告文案，而是在代码层明确区分“LocalSandboxProvider + host bash”是一种需要显式信任的模式。这让文档里的安全边界和实际运行开关保持一致。</p>
         <div class="key-point">
           <strong>核心取舍：</strong>
           DeerFlow 优先保证统一的虚拟路径与工具接口，再通过 provider 分层提供不同隔离强度，而不是假装所有运行模式都具有相同安全属性。

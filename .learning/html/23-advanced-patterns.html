@@ -76,27 +76,198 @@
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>DeerFlow 当前最值得掌握的组合模式，可以概括成下面几条链：</p>
-        <div class="code-block"><code>模式 1：MCP 工具体积控制
-tool policy filtering
-  -> backend/packages/harness/deerflow/tools/builtins/tool_search.py
-  -> only deferred names in prompt
-  -> model calls tool_search when needed
-  -> schema promoted into state
-
-模式 2：复杂任务隔离
-lead agent decides to delegate
-  -> backend/packages/harness/deerflow/tools/builtins/task_tool.py
-  -> SubagentExecutor background run
-  -> poll / usage summarize / cleanup
-  -> parent agent continues with result
-
-模式 3：双消费端流式输出
-same agent core
-  -> Gateway path for HTTP/SSE
-  -> DeerFlowClient path for sync in-process streaming
+        <div class="annotated-code">
+          <div class="code-window">
+            <div class="code-window-header">
+              <div class="code-window-dots"><span></span><span></span><span></span></div>
+              <div class="code-window-title">advanced patterns :: DeerFlow 里常见的 3 条高级组合链</div>
+            </div>
+            <div class="code-window-body">
+              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># 模式 1：MCP 工具体积控制</span></span></div>
+              <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-str">"tool policy filtering"</span></span></div>
+              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/tools/builtins/tool_search.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"only deferred names in prompt"</span></span></div>
+              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"model calls tool_search when needed"</span></span></div>
+              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"schema promoted into state"</span></span></div>
+              <div class="code-line"><span class="code-ln">7</span><span class="code-src"></span></div>
+              <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-com"># 模式 2：复杂任务隔离</span></span></div>
+              <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-str">"lead agent decides to delegate"</span></span></div>
+              <div class="code-line"><span class="code-ln">10</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/tools/builtins/task_tool.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">11</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"SubagentExecutor background run"</span></span></div>
+              <div class="code-line"><span class="code-ln">12</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"poll / usage summarize / cleanup"</span></span></div>
+              <div class="code-line"><span class="code-ln">13</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"parent agent continues with result"</span></span></div>
+              <div class="code-line"><span class="code-ln">14</span><span class="code-src"></span></div>
+              <div class="code-line"><span class="code-ln">15</span><span class="code-src"><span class="tok-com"># 模式 3：双消费端流式输出</span></span></div>
+              <div class="code-line"><span class="code-ln">16</span><span class="code-src"><span class="tok-str">"same agent core"</span></span></div>
+              <div class="code-line"><span class="code-ln">17</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"Gateway path for HTTP/SSE"</span></span></div>
+              <div class="code-line"><span class="code-ln">18</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"DeerFlowClient path for sync in-process streaming"</span></span></div>
+            </div>
+          </div>
+        </div>
   -> backend/docs/STREAMING.md defines why they cannot be collapsed</code></div>
         <p>这些链路之所以能成立，是因为 <code>backend/packages/harness/deerflow/agents/middlewares/</code> 提供了大量护栏：例如错误处理、loop detection、subagent 限流、summary 压缩、tool output budget 等。也就是说，高级模式不是再发明一个新框架，而是把现有能力编排出更稳定的运行行为。</p>
         <p>除此之外，还有几种同样重要但更“系统级”的组合：Gateway-embedded runtime 让浏览器、API 和 IM 渠道共享同一执行主线；channel adapters 让外部消息平台复用 thread/run/auth 语义；sandbox-aware execution 让文件、artifact 和命令路径都围绕 <code>/mnt/user-data</code> 契约工作；memory/summarization 协作则让长期记忆和即时上下文压缩各司其职。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码：高级模式真正落地在“中间件链怎么拼”</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/agents/factory.py</code>。这段代码能直接看出 DeerFlow 的“高级能力”不是凭空存在，而是被装配成一个有顺序的 middleware / tool 组合。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">agents/factory.py :: _assemble_from_features(...)</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_assemble_from_features</span>(<span class="tok-attr">feat</span>: <span class="tok-cls">RuntimeFeatures</span>, <span class="tok-op">*</span>, <span class="tok-attr">name</span>: <span class="tok-type">str</span> <span class="tok-op">=</span> <span class="tok-str">"default"</span>, <span class="tok-attr">plan_mode</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-attr">extra_middleware</span>: <span class="tok-type">list</span>[<span class="tok-cls">AgentMiddleware</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">tuple</span>[<span class="tok-type">list</span>[<span class="tok-cls">AgentMiddleware</span>], <span class="tok-type">list</span>[<span class="tok-cls">BaseTool</span>]]:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-fn">chain</span>: <span class="tok-type">list</span>[<span class="tok-cls">AgentMiddleware</span>] <span class="tok-op">=</span> []</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-fn">extra_tools</span>: <span class="tok-type">list</span>[<span class="tok-cls">BaseTool</span>] <span class="tok-op">=</span> []</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-com"># 1) 先挂最底层的线程数据 / 上传 / sandbox 基础设施</span></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">feat</span>.<span class="tok-attr">sandbox</span> <span class="tok-kw">is not</span> <span class="tok-kw">False</span>:</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">feat</span>.<span class="tok-attr">sandbox</span>, <span class="tok-cls">AgentMiddleware</span>):</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">            <span class="tok-attr">chain</span>.<span class="tok-fn">append</span>(<span class="tok-attr">feat</span>.<span class="tok-attr">sandbox</span>)</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">        <span class="tok-kw">else</span>:</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">            <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">agents</span>.<span class="tok-attr">middlewares</span>.<span class="tok-attr">thread_data_middleware</span> <span class="tok-kw">import</span> <span class="tok-cls">ThreadDataMiddleware</span></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">            <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">agents</span>.<span class="tok-attr">middlewares</span>.<span class="tok-attr">uploads_middleware</span> <span class="tok-kw">import</span> <span class="tok-cls">UploadsMiddleware</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">            <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">sandbox</span>.<span class="tok-attr">middleware</span> <span class="tok-kw">import</span> <span class="tok-cls">SandboxMiddleware</span></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">            <span class="tok-attr">chain</span>.<span class="tok-fn">append</span>(<span class="tok-cls">ThreadDataMiddleware</span>(<span class="tok-attr">lazy_init</span><span class="tok-op">=</span><span class="tok-kw">True</span>))</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">            <span class="tok-attr">chain</span>.<span class="tok-fn">append</span>(<span class="tok-cls">UploadsMiddleware</span>())</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">            <span class="tok-attr">chain</span>.<span class="tok-fn">append</span>(<span class="tok-cls">SandboxMiddleware</span>(<span class="tok-attr">lazy_init</span><span class="tok-op">=</span><span class="tok-kw">True</span>))</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-com"># 2) 这些护栏是高级模式的前提，不是“可有可无的装饰”</span></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-attr">chain</span>.<span class="tok-fn">append</span>(<span class="tok-cls">DanglingToolCallMiddleware</span>())</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">    <span class="tok-attr">chain</span>.<span class="tok-fn">append</span>(<span class="tok-cls">ToolErrorHandlingMiddleware</span>())</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">feat</span>.<span class="tok-attr">summarization</span> <span class="tok-kw">is not</span> <span class="tok-kw">False</span>:</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">feat</span>.<span class="tok-attr">summarization</span>, <span class="tok-cls">AgentMiddleware</span>):</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">            <span class="tok-attr">chain</span>.<span class="tok-fn">append</span>(<span class="tok-attr">feat</span>.<span class="tok-attr">summarization</span>)</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">        <span class="tok-kw">else</span>:</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"summarization=True requires a custom AgentMiddleware instance"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">plan_mode</span>:</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">agents</span>.<span class="tok-attr">middlewares</span>.<span class="tok-attr">todo_middleware</span> <span class="tok-kw">import</span> <span class="tok-cls">TodoMiddleware</span></span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">        <span class="tok-attr">chain</span>.<span class="tok-fn">append</span>(<span class="tok-cls">TodoMiddleware</span>(<span class="tok-attr">system_prompt</span><span class="tok-op">=</span><span class="tok-attr">_TODO_SYSTEM_PROMPT</span>, <span class="tok-attr">tool_description</span><span class="tok-op">=</span><span class="tok-attr">_TODO_TOOL_DESCRIPTION</span>))</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">    <span class="tok-com"># 3) 自动标题、记忆、视觉、subagent、循环检测，都是按 feature 动态插入</span></span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">feat</span>.<span class="tok-attr">memory</span> <span class="tok-kw">is not</span> <span class="tok-kw">False</span>:</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">agents</span>.<span class="tok-attr">middlewares</span>.<span class="tok-attr">memory_middleware</span> <span class="tok-kw">import</span> <span class="tok-cls">MemoryMiddleware</span></span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">        <span class="tok-attr">chain</span>.<span class="tok-fn">append</span>(<span class="tok-cls">MemoryMiddleware</span>(<span class="tok-attr">agent_name</span><span class="tok-op">=</span><span class="tok-attr">name</span>))</span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">feat</span>.<span class="tok-attr">vision</span> <span class="tok-kw">is not</span> <span class="tok-kw">False</span>:</span></div>
+                <div class="code-line"><span class="code-ln">37</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">agents</span>.<span class="tok-attr">middlewares</span>.<span class="tok-attr">view_image_middleware</span> <span class="tok-kw">import</span> <span class="tok-cls">ViewImageMiddleware</span></span></div>
+                <div class="code-line"><span class="code-ln">38</span><span class="code-src">        <span class="tok-attr">chain</span>.<span class="tok-fn">append</span>(<span class="tok-cls">ViewImageMiddleware</span>())</span></div>
+                <div class="code-line"><span class="code-ln">39</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">feat</span>.<span class="tok-attr">sandbox</span> <span class="tok-kw">is not</span> <span class="tok-kw">False</span>:</span></div>
+                <div class="code-line"><span class="code-ln">40</span><span class="code-src">            <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">tools</span>.<span class="tok-attr">builtins</span> <span class="tok-kw">import</span> <span class="tok-attr">view_image_tool</span></span></div>
+                <div class="code-line"><span class="code-ln">41</span><span class="code-src">            <span class="tok-attr">extra_tools</span>.<span class="tok-fn">append</span>(<span class="tok-attr">view_image_tool</span>)</span></div>
+                <div class="code-line"><span class="code-ln">42</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">43</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">feat</span>.<span class="tok-attr">subagent</span> <span class="tok-kw">is not</span> <span class="tok-kw">False</span>:</span></div>
+                <div class="code-line"><span class="code-ln">44</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">agents</span>.<span class="tok-attr">middlewares</span>.<span class="tok-attr">subagent_limit_middleware</span> <span class="tok-kw">import</span> <span class="tok-cls">SubagentLimitMiddleware</span></span></div>
+                <div class="code-line"><span class="code-ln">45</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">tools</span>.<span class="tok-attr">builtins</span> <span class="tok-kw">import</span> <span class="tok-attr">task_tool</span></span></div>
+                <div class="code-line"><span class="code-ln">46</span><span class="code-src">        <span class="tok-attr">chain</span>.<span class="tok-fn">append</span>(<span class="tok-cls">SubagentLimitMiddleware</span>())</span></div>
+                <div class="code-line"><span class="code-ln">47</span><span class="code-src">        <span class="tok-attr">extra_tools</span>.<span class="tok-fn">append</span>(<span class="tok-attr">task_tool</span>)</span></div>
+                <div class="code-line"><span class="code-ln">48</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">49</span><span class="code-src">    <span class="tok-attr">chain</span>.<span class="tok-fn">append</span>(<span class="tok-cls">ClarificationMiddleware</span>())</span></div>
+                <div class="code-line"><span class="code-ln">50</span><span class="code-src">    <span class="tok-attr">extra_tools</span>.<span class="tok-fn">append</span>(<span class="tok-attr">ask_clarification_tool</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这段代码把高级模式的本质暴露得很彻底: DeerFlow 不是写一个“万能 Agent 类”把所有能力塞进去，而是根据 feature 一层层拼出运行链。</li>
+            <li>第 6 到 15 行先放的是线程目录、上传和 sandbox，这说明文件路径契约与执行边界是所有高级功能的地基。</li>
+            <li>第 18 到 25 行的 dangling tool call 和错误处理中间件，是为了让复杂工具调用不会轻易把主链路打断。</li>
+            <li>第 27 到 47 行展示了真正的“能力编排”: plan mode 注入 todo，memory 注入长期记忆，vision 同时注入 middleware 和工具，subagent 同时注入限流和 task_tool。</li>
+            <li>这就是 DeerFlow 的一个非常重要的设计取向: 高级能力不是单点功能，而是一组按顺序进入 graph 的护栏与工具。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：任务委派不是一句 tool call，而是一整套后台执行与清理协议</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/tools/builtins/task_tool.py</code>。这一段补上了高级模式里最容易被忽略的下半段：主 agent 决定委派之后，子任务如何继承上下文、如何跑在后台、如何把 usage 和状态再带回来。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">tools/builtins/task_tool.py :: runtime inheritance / background task / polling</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">229</span><span class="code-src">    <span class="tok-attr">runtime_app_config</span> <span class="tok-op">=</span> <span class="tok-fn">_get_runtime_app_config</span>(<span class="tok-attr">runtime</span>)</span></div>
+                <div class="code-line"><span class="code-ln">230</span><span class="code-src">    <span class="tok-attr">cache_token_usage</span> <span class="tok-op">=</span> <span class="tok-fn">_token_usage_cache_enabled</span>(<span class="tok-attr">runtime_app_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">231</span><span class="code-src">    <span class="tok-attr">available_subagent_names</span> <span class="tok-op">=</span> <span class="tok-fn">get_available_subagent_names</span>(<span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">runtime_app_config</span>) <span class="tok-kw">if</span> <span class="tok-attr">runtime_app_config</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span> <span class="tok-kw">else</span> <span class="tok-fn">get_available_subagent_names</span>()</span></div>
+                <div class="code-line"><span class="code-ln">234</span><span class="code-src">    <span class="tok-attr">config</span> <span class="tok-op">=</span> <span class="tok-fn">get_subagent_config</span>(<span class="tok-attr">subagent_type</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">runtime_app_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">235</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">config</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">236</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-str">f"Error: Unknown subagent type '{subagent_type}'. Available: {', '.join(available_subagent_names)}"</span></span></div>
+                <div class="code-line"><span class="code-ln">238</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">subagent_type</span> <span class="tok-op">==</span> <span class="tok-str">"bash"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">239</span><span class="code-src">        <span class="tok-attr">host_bash_allowed</span> <span class="tok-op">=</span> <span class="tok-fn">is_host_bash_allowed</span>(<span class="tok-attr">runtime_app_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">240</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">host_bash_allowed</span>:</span></div>
+                <div class="code-line"><span class="code-ln">241</span><span class="code-src">            <span class="tok-kw">return</span> <span class="tok-str">f"Error: {LOCAL_BASH_SUBAGENT_DISABLED_MESSAGE}"</span></span></div>
+                <div class="code-line"><span class="code-ln">258</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">runtime</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">259</span><span class="code-src">        <span class="tok-attr">sandbox_state</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">state</span>.<span class="tok-fn">get</span>(<span class="tok-str">"sandbox"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">260</span><span class="code-src">        <span class="tok-attr">thread_data</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">state</span>.<span class="tok-fn">get</span>(<span class="tok-str">"thread_data"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">261</span><span class="code-src">        <span class="tok-attr">thread_id</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">context</span>.<span class="tok-fn">get</span>(<span class="tok-str">"thread_id"</span>) <span class="tok-kw">if</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">context</span> <span class="tok-kw">else</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">266</span><span class="code-src">        <span class="tok-attr">metadata</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"metadata"</span>, {})</span></div>
+                <div class="code-line"><span class="code-ln">267</span><span class="code-src">        <span class="tok-attr">parent_model</span> <span class="tok-op">=</span> <span class="tok-attr">metadata</span>.<span class="tok-fn">get</span>(<span class="tok-str">"model_name"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">268</span><span class="code-src">        <span class="tok-attr">trace_id</span> <span class="tok-op">=</span> <span class="tok-attr">metadata</span>.<span class="tok-fn">get</span>(<span class="tok-str">"trace_id"</span>) <span class="tok-kw">or</span> <span class="tok-fn">str</span>(<span class="tok-fn">uuid</span>.<span class="tok-fn">uuid4</span>())[:<span class="tok-num">8</span>]</span></div>
+                <div class="code-line"><span class="code-ln">271</span><span class="code-src">    <span class="tok-attr">parent_available_skills</span> <span class="tok-op">=</span> <span class="tok-attr">metadata</span>.<span class="tok-fn">get</span>(<span class="tok-str">"available_skills"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">273</span><span class="code-src">        <span class="tok-attr">overrides</span>[<span class="tok-str">"skills"</span>] <span class="tok-op">=</span> <span class="tok-fn">_merge_skill_allowlists</span>(<span class="tok-fn">list</span>(<span class="tok-attr">parent_available_skills</span>), <span class="tok-attr">config</span>.<span class="tok-attr">skills</span>)</span></div>
+                <div class="code-line"><span class="code-ln">286</span><span class="code-src">    <span class="tok-attr">effective_model</span> <span class="tok-op">=</span> <span class="tok-fn">resolve_subagent_model_name</span>(<span class="tok-attr">config</span>, <span class="tok-attr">parent_model</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">290</span><span class="code-src">    <span class="tok-attr">available_tools_kwargs</span> <span class="tok-op">=</span> {<span class="tok-str">"model_name"</span>: <span class="tok-attr">effective_model</span>, <span class="tok-str">"groups"</span>: <span class="tok-attr">parent_tool_groups</span>, <span class="tok-str">"subagent_enabled"</span>: <span class="tok-kw">False</span>}</span></div>
+                <div class="code-line"><span class="code-ln">295</span><span class="code-src">    <span class="tok-attr">tools</span> <span class="tok-op">=</span> <span class="tok-fn">get_available_tools</span>(<span class="tok-op">**</span><span class="tok-attr">available_tools_kwargs</span>)</span></div>
+                <div class="code-line"><span class="code-ln">298</span><span class="code-src">    <span class="tok-attr">executor</span> <span class="tok-op">=</span> <span class="tok-cls">SubagentExecutor</span>(<span class="tok-op">**</span>{<span class="tok-str">"config"</span>: <span class="tok-attr">config</span>, <span class="tok-str">"tools"</span>: <span class="tok-attr">tools</span>, <span class="tok-str">"parent_model"</span>: <span class="tok-attr">parent_model</span>, <span class="tok-str">"sandbox_state"</span>: <span class="tok-attr">sandbox_state</span>, <span class="tok-str">"thread_data"</span>: <span class="tok-attr">thread_data</span>, <span class="tok-str">"thread_id"</span>: <span class="tok-attr">thread_id</span>, <span class="tok-str">"trace_id"</span>: <span class="tok-attr">trace_id</span>})</span></div>
+                <div class="code-line"><span class="code-ln">301</span><span class="code-src">    <span class="tok-com"># 关键点：真正执行始终走后台，主 agent 不会卡死在子任务里</span></span></div>
+                <div class="code-line"><span class="code-ln">302</span><span class="code-src">    <span class="tok-attr">task_id</span> <span class="tok-op">=</span> <span class="tok-attr">executor</span>.<span class="tok-fn">execute_async</span>(<span class="tok-attr">prompt</span>, <span class="tok-attr">task_id</span><span class="tok-op">=</span><span class="tok-attr">tool_call_id</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>前半段先做的不是“立刻执行”，而是读取父 runtime 的 sandbox、thread_data、thread_id、metadata，这说明 subagent 不是孤立新世界，而是受父任务运行语义约束的隔离执行器。</li>
+            <li>第 271 到 273 行把父级可用 skills 与子 agent 自己声明的 skills 做交集，这一步很关键，它保证 subagent 不能偷偷越过父 agent 的能力边界。</li>
+            <li>第 286 到 295 行重新解析 model 和 tools，而且显式把 <code>subagent_enabled=False</code> 传进去，目的是禁止任务无限递归套娃。</li>
+            <li>第 298 到 302 行才真正构造 <code>SubagentExecutor</code> 并异步开跑，所以 task_tool 的本质不是帮模型“直接做事”，而是开启一个带清理、带限流、带继承上下文的后台运行协议。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：deferred tool search 真正厉害的地方，是它把“发现工具”和“提升可调用权限”拆开了</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code>。这一段能直接看懂 DeerFlow 如何在不暴露完整 schema 的前提下，让模型按需把工具提升成可调用状态。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">tools/builtins/tool_search.py :: search() / tool_search() / assemble_deferred_tools()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">72</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">search</span>(<span class="tok-self">self</span>, <span class="tok-attr">query</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-cls">BaseTool</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">77</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">query</span>.<span class="tok-fn">startswith</span>(<span class="tok-str">"select:"</span>):</span></div>
+                <div class="code-line"><span class="code-ln">78</span><span class="code-src">        <span class="tok-attr">wanted</span> <span class="tok-op">=</span> {<span class="tok-attr">n</span>.<span class="tok-fn">strip</span>() <span class="tok-kw">for</span> <span class="tok-attr">n</span> <span class="tok-kw">in</span> <span class="tok-attr">query</span>[<span class="tok-num">7</span>:].<span class="tok-fn">split</span>(<span class="tok-str">","</span>)}</span></div>
+                <div class="code-line"><span class="code-ln">81</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">query</span>.<span class="tok-fn">startswith</span>(<span class="tok-str">"+"</span>):</span></div>
+                <div class="code-line"><span class="code-ln">85</span><span class="code-src">        <span class="tok-attr">required</span> <span class="tok-op">=</span> <span class="tok-attr">parts</span>[<span class="tok-num">0</span>].<span class="tok-fn">lower</span>()</span></div>
+                <div class="code-line"><span class="code-ln">86</span><span class="code-src">        <span class="tok-attr">candidates</span> <span class="tok-op">=</span> [<span class="tok-attr">t</span> <span class="tok-kw">for</span> <span class="tok-attr">t</span> <span class="tok-kw">in</span> <span class="tok-self">self</span>.<span class="tok-attr">tools</span> <span class="tok-kw">if</span> <span class="tok-attr">required</span> <span class="tok-kw">in</span> <span class="tok-attr">t</span>.<span class="tok-attr">name</span>.<span class="tok-fn">lower</span>()]</span></div>
+                <div class="code-line"><span class="code-ln">91</span><span class="code-src">    <span class="tok-attr">regex</span> <span class="tok-op">=</span> <span class="tok-fn">_compile_catalog_regex</span>(<span class="tok-attr">query</span>)</span></div>
+                <div class="code-line"><span class="code-ln">93</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-attr">t</span> <span class="tok-kw">in</span> <span class="tok-self">self</span>.<span class="tok-attr">tools</span>:</span></div>
+                <div class="code-line"><span class="code-ln">94</span><span class="code-src">        <span class="tok-attr">searchable</span> <span class="tok-op">=</span> <span class="tok-str">f"{t.name} {t.description or ''}"</span></span></div>
+                <div class="code-line"><span class="code-ln">130</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">build_tool_search_tool</span>(<span class="tok-attr">catalog</span>: <span class="tok-cls">DeferredToolCatalog</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">BaseTool</span>:</span></div>
+                <div class="code-line"><span class="code-ln">133</span><span class="code-src">    <span class="tok-deco">@tool</span></span></div>
+                <div class="code-line"><span class="code-ln">134</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">tool_search</span>(<span class="tok-attr">query</span>: <span class="tok-type">str</span>, <span class="tok-attr">tool_call_id</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">Command</span>:</span></div>
+                <div class="code-line"><span class="code-ln">147</span><span class="code-src">        <span class="tok-attr">matched</span> <span class="tok-op">=</span> <span class="tok-attr">catalog</span>.<span class="tok-fn">search</span>(<span class="tok-attr">query</span>)[:<span class="tok-attr">MAX_RESULTS</span>]</span></div>
+                <div class="code-line"><span class="code-ln">151</span><span class="code-src">            <span class="tok-attr">content</span> <span class="tok-op">=</span> <span class="tok-attr">json</span>.<span class="tok-fn">dumps</span>([<span class="tok-fn">convert_to_openai_function</span>(<span class="tok-attr">t</span>) <span class="tok-kw">for</span> <span class="tok-attr">t</span> <span class="tok-kw">in</span> <span class="tok-attr">matched</span>], <span class="tok-attr">indent</span><span class="tok-op">=</span><span class="tok-num">2</span>, <span class="tok-attr">ensure_ascii</span><span class="tok-op">=</span><span class="tok-kw">False</span>)</span></div>
+                <div class="code-line"><span class="code-ln">153</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-cls">Command</span>(<span class="tok-attr">update</span><span class="tok-op">=</span>{</span></div>
+                <div class="code-line"><span class="code-ln">155</span><span class="code-src">            <span class="tok-str">"promoted"</span>: {<span class="tok-str">"catalog_hash"</span>: <span class="tok-attr">catalog_hash</span>, <span class="tok-str">"names"</span>: <span class="tok-attr">names</span>},</span></div>
+                <div class="code-line"><span class="code-ln">156</span><span class="code-src">            <span class="tok-str">"messages"</span>: [<span class="tok-cls">ToolMessage</span>(<span class="tok-attr">content</span><span class="tok-op">=</span><span class="tok-attr">content</span>, <span class="tok-attr">tool_call_id</span><span class="tok-op">=</span><span class="tok-attr">tool_call_id</span>, <span class="tok-attr">name</span><span class="tok-op">=</span><span class="tok-str">"tool_search"</span>)],</span></div>
+                <div class="code-line"><span class="code-ln">163</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">build_deferred_tool_setup</span>(<span class="tok-attr">filtered_tools</span>: <span class="tok-type">list</span>[<span class="tok-cls">BaseTool</span>], <span class="tok-op">*</span>, <span class="tok-attr">enabled</span>: <span class="tok-type">bool</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">DeferredToolSetup</span>:</span></div>
+                <div class="code-line"><span class="code-ln">176</span><span class="code-src">    <span class="tok-attr">deferred</span> <span class="tok-op">=</span> [<span class="tok-attr">t</span> <span class="tok-kw">for</span> <span class="tok-attr">t</span> <span class="tok-kw">in</span> <span class="tok-attr">filtered_tools</span> <span class="tok-kw">if</span> <span class="tok-fn">is_mcp_tool</span>(<span class="tok-attr">t</span>)]</span></div>
+                <div class="code-line"><span class="code-ln">184</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">assemble_deferred_tools</span>(<span class="tok-attr">filtered_tools</span>: <span class="tok-type">list</span>[<span class="tok-cls">BaseTool</span>], <span class="tok-op">*</span>, <span class="tok-attr">enabled</span>: <span class="tok-type">bool</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">tuple</span>[<span class="tok-type">list</span>[<span class="tok-cls">BaseTool</span>], <span class="tok-cls">DeferredToolSetup</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">195</span><span class="code-src">    <span class="tok-attr">deferred_setup</span> <span class="tok-op">=</span> <span class="tok-fn">build_deferred_tool_setup</span>(<span class="tok-attr">filtered_tools</span>, <span class="tok-attr">enabled</span><span class="tok-op">=</span><span class="tok-attr">enabled</span>)</span></div>
+                <div class="code-line"><span class="code-ln">196</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">enabled</span> <span class="tok-kw">and</span> <span class="tok-kw">not</span> <span class="tok-attr">deferred_setup</span>.<span class="tok-attr">deferred_names</span> <span class="tok-kw">and</span> <span class="tok-fn">any</span>(<span class="tok-fn">is_mcp_tool</span>(<span class="tok-attr">t</span>) <span class="tok-kw">for</span> <span class="tok-attr">t</span> <span class="tok-kw">in</span> <span class="tok-attr">filtered_tools</span>):</span></div>
+                <div class="code-line"><span class="code-ln">197</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">RuntimeError</span>(<span class="tok-str">"tool_search enabled and MCP tools survived policy filtering, but no deferred set was recovered - refusing to bind MCP schemas (fail-closed)."</span>)</span></div>
+                <div class="code-line"><span class="code-ln">199</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">deferred_setup</span>.<span class="tok-attr">tool_search_tool</span>:</span></div>
+                <div class="code-line"><span class="code-ln">200</span><span class="code-src">        <span class="tok-attr">final_tools</span>.<span class="tok-fn">append</span>(<span class="tok-attr">deferred_setup</span>.<span class="tok-attr">tool_search_tool</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第一段的 `search()` 已经不是简单 contains 搜索了，而是支持 `select:` 精确提取、`+token` 强约束和 regex 模式，所以模型可以用很便宜的提示面先缩小目标工具集。</li>
+            <li>真正关键的是第 153 到 156 行：`tool_search` 返回的不是普通字符串，而是带 `Command.update` 的状态更新，里面明确写入了 `promoted` 名单。也就是说，模型调用一次 search，系统状态就被正式提升了“这些工具现在可以调”。</li>
+            <li>第 184 到 200 行又补上了 fail-closed 保障。如果启用了 deferred 模式，但 MCP 工具没被正确恢复成 deferred 集，系统宁可报错也不偷偷把完整 schema 全量绑给模型。</li>
+            <li>这就是 DeerFlow 高级模式最核心的取舍之一：把工具发现、工具暴露、工具调用拆成三段，从而把上下文体积和安全边界都握在运行时手里。</li>
+          </ul>
+        </div>
       </section>
 
       <section id="config">

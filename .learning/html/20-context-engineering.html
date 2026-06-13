@@ -76,22 +76,176 @@
             <td>说明 DeerFlow 如何把工具 schema 也纳入“按需暴露”的上下文策略</td>
           </tr>
         </table>
+        <p>这里最容易误解的一点，是把“上下文工程”看成只发生在 prompt 文件里。实际上 <code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code> 只负责系统提示骨架、skills 段落、subagent 说明和 deferred tool 提示片段；真正随每轮变化的上下文，大量是通过 <code>backend/packages/harness/deerflow/agents/middlewares/</code> 注入的。换句话说，DeerFlow 的上下文工程同时存在于静态 prompt 代码和运行时中间件代码里。</p>
       </section>
 
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>一轮 DeerFlow 上下文组装，通常会沿着下面这条链发生：</p>
-        <div class="code-block"><code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py
-  -> build base system prompt
-  -> inject enabled skills
-  -> inject deferred tool names from backend/packages/harness/deerflow/tools/builtins/tool_search.py
-  -> backend/packages/harness/deerflow/agents/factory.py
-  -> mount middleware chain from backend/packages/harness/deerflow/agents/middlewares/
-  -> DynamicContextMiddleware injects current date + memory for this turn
-  -> uploads / images / summarization / other middlewares modify runtime state
-  -> final model invocation sees composed context</code></div>
+        <div class="annotated-code">
+          <div class="code-window">
+            <div class="code-window-header">
+              <div class="code-window-dots"><span></span><span></span><span></span></div>
+              <div class="code-window-title">context flow :: 一轮上下文是怎样被组装出来的</div>
+            </div>
+            <div class="code-window-body">
+              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"backend/packages/harness/deerflow/agents/lead_agent/prompt.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"build base system prompt"</span></span></div>
+              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"inject enabled skills"</span></span></div>
+              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"inject deferred tool names from tool_search.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/agents/factory.py"</span></span></div>
+              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"mount middleware chain from agents/middlewares/"</span></span></div>
+              <div class="code-line"><span class="code-ln">7</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"DynamicContextMiddleware injects current date + memory"</span></span></div>
+              <div class="code-line"><span class="code-ln">8</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"uploads / images / summarization / other middlewares modify runtime state"</span></span></div>
+              <div class="code-line"><span class="code-ln">9</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"final model invocation sees composed context"</span></span></div>
+            </div>
+          </div>
+        </div>
+        <p>真实源码里，这条链的关键节点是 <code>DynamicContextMiddleware</code>。它会在每轮模型调用前，把当前日期、长期记忆等提醒包装成特殊的人类消息插入上下文；这些消息还带有专门标记，后续标题生成和 summarization 中间件会识别并特殊处理。也就是说，DeerFlow 不是简单把一段“今天日期是...”写死进 system prompt，而是把实时上下文做成有生命周期的运行态消息。</p>
         <p>这里要特别分清两层责任。<code>backend/packages/harness/deerflow/agents/lead_agent/prompt.py</code> 主要提供静态 system prompt 骨架、skills 提示和 deferred tools 片段；而 memory 和当前日期这类“每轮都可能变化”的信息，是通过 <code>backend/packages/harness/deerflow/agents/middlewares/dynamic_context_middleware.py</code> 在当轮消息里注入的。<code>backend/packages/harness/deerflow/agents/memory/prompt.py</code> 则负责长期记忆更新所需的提示与格式化，而不是主对话链里唯一的注入点。</p>
         <p>上传文件、图片查看、summary 压缩也不是简单地“拼接到 prompt 末尾”，而是借助不同 middleware 在不同阶段注入 thread state 或额外说明。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码 1：DynamicContextMiddleware 怎样把日期和 memory 包成运行时提醒</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/agents/middlewares/dynamic_context_middleware.py</code>。这一段直接说明 DeerFlow 为什么不把动态上下文写死进 system prompt。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">middlewares/dynamic_context_middleware.py :: _build_full_reminder()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">DynamicContextMiddleware</span>(<span class="tok-cls">AgentMiddleware</span>):</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com"># 它的职责不是改 system prompt 常量，而是把动态上下文包装成当前轮可注入的 reminder</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">_build_full_reminder</span>(<span class="tok-self">self</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">deerflow.agents.lead_agent.prompt</span> <span class="tok-kw">import</span> <span class="tok-fn">_get_memory_context</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">        <span class="tok-com"># memory 注入是可配置开关；日期提醒则始终保留</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-fn">injection_enabled</span> <span class="tok-op">=</span> <span class="tok-self">self</span>.<span class="tok-attr">_app_config</span>.<span class="tok-attr">memory</span>.<span class="tok-attr">injection_enabled</span> <span class="tok-kw">if</span> <span class="tok-self">self</span>.<span class="tok-attr">_app_config</span> <span class="tok-kw">else</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">        <span class="tok-fn">memory_context</span> <span class="tok-op">=</span> <span class="tok-fn">_get_memory_context</span>(<span class="tok-self">self</span>.<span class="tok-attr">_agent_name</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-self">self</span>.<span class="tok-attr">_app_config</span>) <span class="tok-kw">if</span> <span class="tok-fn">injection_enabled</span> <span class="tok-kw">else</span> <span class="tok-str">""</span></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">        <span class="tok-fn">current_date</span> <span class="tok-op">=</span> <span class="tok-attr">datetime</span>.<span class="tok-fn">now</span>().<span class="tok-fn">strftime</span>(<span class="tok-str">"%Y-%m-%d, %A"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-fn">lines</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">=</span> [<span class="tok-str">"&lt;system-reminder&gt;"</span>]</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-fn">memory_context</span>:</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">            <span class="tok-fn">lines</span>.<span class="tok-fn">append</span>(<span class="tok-fn">memory_context</span>.<span class="tok-fn">strip</span>())</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">            <span class="tok-fn">lines</span>.<span class="tok-fn">append</span>(<span class="tok-str">""</span>)</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-fn">lines</span>.<span class="tok-fn">append</span>(<span class="tok-str">f"&lt;current_date&gt;{current_date}&lt;/current_date&gt;"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">        <span class="tok-fn">lines</span>.<span class="tok-fn">append</span>(<span class="tok-str">"&lt;/system-reminder&gt;"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-str">"\n"</span>.<span class="tok-fn">join</span>(<span class="tok-fn">lines</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>动态上下文被包成 <code>&lt;system-reminder&gt;</code>，说明它不是普通用户消息，也不是静态 prompt 常量。</li>
+            <li><code>memory.injection_enabled</code> 控制长期记忆是否注入，但日期提醒始终存在，这反映了 DeerFlow 对时间上下文的重视。</li>
+            <li><code>_get_memory_context(...)</code> 在这里被调用，说明长期记忆进入模型视野的真正时机是“本轮模型调用前”。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 2：tool_search 为什么能减少初始上下文体积</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code>。这段代码说明工具上下文也被当成上下文工程问题来处理。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">tools/builtins/tool_search.py :: DeferredToolCatalog</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com">"""The agent sees deferred tool names in &lt;available-deferred-tools&gt; but cannot</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-com">call them until it fetches their full schema via the tool_search tool."""</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-dec">@dataclass</span>(<span class="tok-attr">frozen</span><span class="tok-op">=</span><span class="tok-kw">True</span>)</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">DeferredToolCatalog</span>:</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-com">"""不可变的 deferred tools 目录，只负责搜索，不负责修改。"""</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">    <span class="tok-attr">tools</span>: <span class="tok-type">tuple</span>[<span class="tok-cls">BaseTool</span>, ...]</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-dec">@cached_property</span></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">names</span>(<span class="tok-self">self</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">frozenset</span>[<span class="tok-type">str</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-fn">frozenset</span>(<span class="tok-fn">t</span>.<span class="tok-attr">name</span> <span class="tok-kw">for</span> <span class="tok-fn">t</span> <span class="tok-kw">in</span> <span class="tok-self">self</span>.<span class="tok-attr">tools</span>)</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-dec">@cached_property</span></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">hash</span>(<span class="tok-self">self</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">        <span class="tok-fn">canon</span> <span class="tok-op">=</span> [{<span class="tok-str">"name"</span>: <span class="tok-fn">t</span>.<span class="tok-attr">name</span>, <span class="tok-str">"schema"</span>: <span class="tok-fn">convert_to_openai_function</span>(<span class="tok-fn">t</span>)} <span class="tok-kw">for</span> <span class="tok-fn">t</span> <span class="tok-kw">in</span> <span class="tok-fn">sorted</span>(<span class="tok-self">self</span>.<span class="tok-attr">tools</span>, <span class="tok-attr">key</span><span class="tok-op">=</span><span class="tok-kw">lambda</span> <span class="tok-fn">t</span>: <span class="tok-fn">t</span>.<span class="tok-attr">name</span>)]</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-fn">blob</span> <span class="tok-op">=</span> <span class="tok-attr">json</span>.<span class="tok-fn">dumps</span>(<span class="tok-fn">canon</span>, <span class="tok-attr">sort_keys</span><span class="tok-op">=</span><span class="tok-kw">True</span>, <span class="tok-attr">ensure_ascii</span><span class="tok-op">=</span><span class="tok-kw">False</span>, <span class="tok-attr">default</span><span class="tok-op">=</span><span class="tok-fn">str</span>)</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">hashlib</span>.<span class="tok-fn">sha256</span>(<span class="tok-attr">blob</span>.<span class="tok-fn">encode</span>(<span class="tok-str">"utf-8"</span>)).<span class="tok-fn">hexdigest</span>()[:<span class="tok-num">16</span>]</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">search</span>(<span class="tok-self">self</span>, <span class="tok-attr">query</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-cls">BaseTool</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">        <span class="tok-attr">query</span> <span class="tok-op">=</span> <span class="tok-attr">query</span>.<span class="tok-fn">strip</span>()</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">query</span>:</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">            <span class="tok-kw">return</span> []</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">query</span>.<span class="tok-fn">startswith</span>(<span class="tok-str">"select:"</span>):</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">            <span class="tok-fn">wanted</span> <span class="tok-op">=</span> {<span class="tok-fn">n</span>.<span class="tok-fn">strip</span>() <span class="tok-kw">for</span> <span class="tok-fn">n</span> <span class="tok-kw">in</span> <span class="tok-attr">query</span>[<span class="tok-num">7</span>:].<span class="tok-fn">split</span>(<span class="tok-str">","</span>)}</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">            <span class="tok-kw">return</span> [<span class="tok-fn">t</span> <span class="tok-kw">for</span> <span class="tok-fn">t</span> <span class="tok-kw">in</span> <span class="tok-self">self</span>.<span class="tok-attr">tools</span> <span class="tok-kw">if</span> <span class="tok-fn">t</span>.<span class="tok-attr">name</span> <span class="tok-kw">in</span> <span class="tok-fn">wanted</span>][:<span class="tok-attr">MAX_RESULTS</span>]</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">query</span>.<span class="tok-fn">startswith</span>(<span class="tok-str">"+"</span>):</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">            <span class="tok-fn">parts</span> <span class="tok-op">=</span> <span class="tok-attr">query</span>[<span class="tok-num">1</span>:].<span class="tok-fn">split</span>(<span class="tok-kw">None</span>, <span class="tok-num">1</span>)</span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-fn">parts</span>:</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">                <span class="tok-kw">return</span> []</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">            <span class="tok-fn">required</span> <span class="tok-op">=</span> <span class="tok-fn">parts</span>[<span class="tok-num">0</span>].<span class="tok-fn">lower</span>()</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">            <span class="tok-fn">candidates</span> <span class="tok-op">=</span> [<span class="tok-fn">t</span> <span class="tok-kw">for</span> <span class="tok-fn">t</span> <span class="tok-kw">in</span> <span class="tok-self">self</span>.<span class="tok-attr">tools</span> <span class="tok-kw">if</span> <span class="tok-fn">required</span> <span class="tok-kw">in</span> <span class="tok-fn">t</span>.<span class="tok-attr">name</span>.<span class="tok-fn">lower</span>()]</span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">len</span>(<span class="tok-fn">parts</span>) <span class="tok-op">&gt;</span> <span class="tok-num">1</span>:</span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src">                <span class="tok-attr">candidates</span>.<span class="tok-fn">sort</span>(<span class="tok-attr">key</span><span class="tok-op">=</span><span class="tok-kw">lambda</span> <span class="tok-fn">t</span>: <span class="tok-fn">_catalog_regex_score</span>(<span class="tok-fn">parts</span>[<span class="tok-num">1</span>], <span class="tok-fn">t</span>), <span class="tok-attr">reverse</span><span class="tok-op">=</span><span class="tok-kw">True</span>)</span></div>
+                <div class="code-line"><span class="code-ln">37</span><span class="code-src">            <span class="tok-kw">return</span> <span class="tok-fn">candidates</span>[:<span class="tok-attr">MAX_RESULTS</span>]</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>文件开头的注释已经把设计目标说透了：模型初始只能看到 deferred tool 的名字，拿不到完整 schema，必须显式调用 <code>tool_search</code> 才能“解锁”细节。</li>
+            <li><code>DeferredToolCatalog</code> 被声明成 <code>frozen=True</code> 的不可变数据类，说明这份目录在 agent build 阶段构造好之后，不希望执行中再被随手改写。</li>
+            <li><code>names</code> 和 <code>hash</code> 都做了缓存，前者用于 prompt 层只暴露名字，后者用于在 graph state 里识别“当前 deferred tool 集合是不是同一份”。</li>
+            <li><code>search(...)</code> 一开始先把空查询挡掉，再支持 <code>select:</code> 精确点名和 <code>+</code> 前缀的必含关键词搜索，这说明它不是简单字符串匹配，而是给模型准备了一套可推理的检索语法。</li>
+            <li>这整段实现的真正价值是控制首轮 prompt 体积。完整工具 schema 不再一股脑塞进上下文，而是按需查询、按需提升。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 3：上下文工程真正的装配点其实在 lead agent 工厂</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/agents/lead_agent/agent.py</code>。这段代码最适合回答“这些上下文能力到底是在哪一层被装进一轮对话里的”。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">lead_agent/agent.py :: context-related middleware assembly</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-fn">middlewares</span> <span class="tok-op">=</span> <span class="tok-fn">build_lead_runtime_middlewares</span>(<span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>, <span class="tok-attr">lazy_init</span><span class="tok-op">=</span><span class="tok-kw">True</span>)</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-com"># 先把“每轮都可能变化”的提醒注入进来</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-attr">middlewares</span>.<span class="tok-fn">append</span>(<span class="tok-cls">DynamicContextMiddleware</span>(<span class="tok-attr">agent_name</span><span class="tok-op">=</span><span class="tok-attr">agent_name</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>))</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src"><span class="tok-com"># 再把显式激活的 skill 注入，这会改变本轮可见工作法</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"><span class="tok-attr">middlewares</span>.<span class="tok-fn">append</span>(<span class="tok-cls">SkillActivationMiddleware</span>(<span class="tok-attr">available_skills</span><span class="tok-op">=</span><span class="tok-attr">available_skills</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>))</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-fn">summarization_middleware</span> <span class="tok-op">=</span> <span class="tok-fn">_create_summarization_middleware</span>(<span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">summarization_middleware</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-attr">middlewares</span>.<span class="tok-fn">append</span>(<span class="tok-attr">summarization_middleware</span>)</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-fn">cfg</span> <span class="tok-op">=</span> <span class="tok-fn">_get_runtime_config</span>(<span class="tok-attr">config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src"><span class="tok-fn">todo_list_middleware</span> <span class="tok-op">=</span> <span class="tok-fn">_create_todo_list_middleware</span>(<span class="tok-attr">cfg</span>.<span class="tok-fn">get</span>(<span class="tok-str">"is_plan_mode"</span>, <span class="tok-kw">False</span>))</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">todo_list_middleware</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-attr">middlewares</span>.<span class="tok-fn">append</span>(<span class="tok-attr">todo_list_middleware</span>)</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">resolved_app_config</span>.<span class="tok-attr">token_usage</span>.<span class="tok-attr">enabled</span>:</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">    <span class="tok-attr">middlewares</span>.<span class="tok-fn">append</span>(<span class="tok-cls">TokenUsageMiddleware</span>())</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src"><span class="tok-com"># 标题和记忆通常更靠后，因为它们偏向“本轮输出后的整理和持久化”</span></span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src"><span class="tok-attr">middlewares</span>.<span class="tok-fn">append</span>(<span class="tok-cls">TitleMiddleware</span>(<span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>))</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src"><span class="tok-attr">middlewares</span>.<span class="tok-fn">append</span>(<span class="tok-cls">MemoryMiddleware</span>(<span class="tok-attr">agent_name</span><span class="tok-op">=</span><span class="tok-attr">agent_name</span>, <span class="tok-attr">memory_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>.<span class="tok-attr">memory</span>))</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src"><span class="tok-com"># Clarification 总是放最后，让它能在所有上下文都就位后再判断是否必须先追问</span></span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src"><span class="tok-attr">middlewares</span>.<span class="tok-fn">append</span>(<span class="tok-cls">ClarificationMiddleware</span>())</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这一段最重要的价值，是把“上下文工程不只是 prompt 文件”的事实钉死了。真正决定本轮能看到哪些上下文信息的，是这里的 middleware 装配顺序。</li>
+            <li>`DynamicContextMiddleware` 和 `SkillActivationMiddleware` 靠前，说明 DeerFlow 认为“先让模型看到当前轮动态提醒和显式激活 skill”比“先统计 token”更重要。</li>
+            <li>`summarization` 和 `todo` 也是上下文工程的一部分，因为它们会直接改变保留下来的消息体积和结构。</li>
+            <li>`TitleMiddleware` 与 `MemoryMiddleware` 靠后，体现了一个很真实的执行顺序：先完成当前轮理解和回答，再做线程整理与长期记忆持久化。</li>
+            <li>所以如果你想在 DeerFlow 里改上下文策略，通常不应该只改 prompt 文本，而要回到这条 middleware 链看“该在哪一阶段注入”。</li>
+          </ul>
+        </div>
         <div class="highlight">
           <strong>一个很 DeerFlow 的点：</strong>
           工具上下文也被分层处理。<code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 让 MCP 工具默认只以名字进入 prompt，真正 schema 要在运行中按需搜索，避免一次把全部工具细节塞进模型上下文。
@@ -120,6 +274,7 @@
           <li><code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 采用 deferred tools，是为了控制上下文体积；代价是模型必须先学会何时搜索工具，而不是天然拿到完整 schema。</li>
           <li><code>backend/packages/harness/deerflow/agents/middlewares/</code> 中多种 middleware 联动，说明 DeerFlow 的上下文工程是运行态注入系统，不是单一 prompt 模板。</li>
         </ul>
+        <p>从源码风格也能看出这个取向。很多上下文不是直接拼接大字符串，而是借助消息对象、state 字段和 middleware hook 渐进式加入。这种做法牺牲了“一眼看到完整 prompt”的简单性，但换来了更细粒度的生命周期控制，例如哪些提醒要被保留、哪些可以被 summary 压缩、哪些应该只影响当前轮。</p>
         <div class="key-point">
           <strong>核心取舍：</strong>
           DeerFlow 选择“少量静态 prompt + 大量运行时中间件联动”的方式管理上下文，这比纯 prompt 拼接更复杂，但更贴合真实 thread、files、images、memory 和 tools 的生命周期。

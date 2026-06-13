@@ -80,19 +80,168 @@
             <td>最后看外部渠道如何复用 Gateway runtime</td>
           </tr>
         </table>
+        <p>如果你只把这张表当成目录索引，阅读时还是会卡住。更有效的做法是把每个目录看成一段接力：<code>backend/app/gateway/</code> 负责接住外部请求并建立 run / thread 语义；<code>backend/packages/harness/deerflow/agents/</code> 负责把模型、prompt、tools、middlewares 装成 agent；<code>runtime/</code> 负责 run worker、stream bridge 和序列化，让运行真正可观察；<code>sandbox/</code> 和 <code>skills/</code> 分别是文件执行边界和能力注入边界；<code>channels/</code> 则把外部 IM 世界翻译回 Gateway 语义。</p>
+        <p>这样读的时候，你脑子里追踪的就不是“文件树”，而是“外部请求怎样一步步变成 agent 行为”。</p>
       </section>
 
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
-        <div class="code-block"><code>recommended reading path
-  -> backend/docs/ARCHITECTURE.md
-  -> backend/app/gateway/
-  -> backend/packages/harness/deerflow/agents/
-  -> backend/packages/harness/deerflow/runtime/
-  -> backend/packages/harness/deerflow/sandbox/
-  -> backend/packages/harness/deerflow/skills/
-  -> backend/app/channels/</code></div>
+        <div class="annotated-code">
+          <div class="code-window">
+            <div class="code-window-header">
+              <div class="code-window-dots"><span></span><span></span><span></span></div>
+              <div class="code-window-title">source guide :: 推荐源码阅读主线</div>
+            </div>
+            <div class="code-window-body">
+              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"recommended reading path"</span></span></div>
+              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/docs/ARCHITECTURE.md"</span></span></div>
+              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/app/gateway/"</span></span></div>
+              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/agents/"</span></span></div>
+              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/runtime/"</span></span></div>
+              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/sandbox/"</span></span></div>
+              <div class="code-line"><span class="code-ln">7</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/skills/"</span></span></div>
+              <div class="code-line"><span class="code-ln">8</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/app/channels/"</span></span></div>
+            </div>
+          </div>
+        </div>
+        <p>如果把这条阅读路径再压缩成一句“源码主线”，就是：<code>app.py</code> 启动 Gateway 并挂上 routers，<code>thread_runs.py</code> 把一次请求变成 run，<code>runtime/runs/worker.py</code> 安装 run 上下文并驱动 graph，<code>agents/lead_agent/agent.py</code> 装配模型、工具和中间件，随后 skills、memory、sandbox、subagent 等能力才分别从自己的目录切入这条主线。掌握这条顺序以后，再读局部子系统就不容易迷路。</p>
         <p>如果你的目标是排查“用户发一句话以后系统怎么走”，就优先看 Gateway -> agents -> runtime；如果目标是排查“文件、上传、artifact 为什么表现成这样”，就从 sandbox 和 uploads/artifacts routers 下钻；如果目标是扩展能力，则优先看 skills、custom agents 和 channels。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码：把 DeerFlow 主调用链压缩到一段代码里看</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/tools/builtins/task_tool.py</code>。源码导航页不只告诉你去哪看，也要让你看到“真正的调用链长什么样”。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">tools/builtins/task_tool.py :: subagent dispatch path</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-fn">effective_model</span> <span class="tok-op">=</span> <span class="tok-fn">resolve_subagent_model_name</span>(<span class="tok-attr">config</span>, <span class="tok-attr">parent_model</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-fn">available_tools_kwargs</span> <span class="tok-op">=</span> {<span class="tok-str">"model_name"</span>: <span class="tok-fn">effective_model</span>, <span class="tok-str">"groups"</span>: <span class="tok-fn">parent_tool_groups</span>, <span class="tok-str">"subagent_enabled"</span>: <span class="tok-kw">False</span>}</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-fn">tools</span> <span class="tok-op">=</span> <span class="tok-fn">get_available_tools</span>(<span class="tok-op">**</span><span class="tok-attr">available_tools_kwargs</span>)</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-fn">executor</span> <span class="tok-op">=</span> <span class="tok-cls">SubagentExecutor</span>(<span class="tok-attr">config</span><span class="tok-op">=</span><span class="tok-attr">config</span>, <span class="tok-attr">tools</span><span class="tok-op">=</span><span class="tok-fn">tools</span>, <span class="tok-attr">parent_model</span><span class="tok-op">=</span><span class="tok-attr">parent_model</span>, <span class="tok-attr">sandbox_state</span><span class="tok-op">=</span><span class="tok-attr">sandbox_state</span>, <span class="tok-attr">thread_data</span><span class="tok-op">=</span><span class="tok-attr">thread_data</span>, <span class="tok-attr">thread_id</span><span class="tok-op">=</span><span class="tok-attr">thread_id</span>, <span class="tok-attr">trace_id</span><span class="tok-op">=</span><span class="tok-attr">trace_id</span>)</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-fn">task_id</span> <span class="tok-op">=</span> <span class="tok-attr">executor</span>.<span class="tok-fn">execute_async</span>(<span class="tok-attr">prompt</span>, <span class="tok-attr">task_id</span><span class="tok-op">=</span><span class="tok-attr">tool_call_id</span>)</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"><span class="tok-fn">writer</span> <span class="tok-op">=</span> <span class="tok-fn">get_stream_writer</span>()</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-fn">writer</span>({<span class="tok-str">"type"</span>: <span class="tok-str">"task_started"</span>, <span class="tok-str">"task_id"</span>: <span class="tok-attr">task_id</span>, <span class="tok-str">"description"</span>: <span class="tok-attr">description</span>})</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"><span class="tok-kw">while</span> <span class="tok-kw">True</span>:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-fn">result</span> <span class="tok-op">=</span> <span class="tok-fn">get_background_task_result</span>(<span class="tok-attr">task_id</span>)</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">result</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-fn">writer</span>({<span class="tok-str">"type"</span>: <span class="tok-str">"task_failed"</span>, <span class="tok-str">"task_id"</span>: <span class="tok-attr">task_id</span>, <span class="tok-str">"error"</span>: <span class="tok-str">"Task disappeared from background tasks"</span>})</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">        <span class="tok-fn">cleanup_background_task</span>(<span class="tok-attr">task_id</span>)</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-str">f"Error: Task {task_id} disappeared from background tasks"</span></span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>源码导航最容易空泛，所以这里故意放一段真实调用链：先解析模型，再生成工具，再创建执行器，再异步发车，再轮询结果。</li>
+            <li>你可以把 DeerFlow 里很多复杂子系统都套进这个阅读方法里：先找“配置在哪里定”，再找“对象在哪里建”，再找“执行在哪里发起”，最后找“结果怎么回流”。</li>
+            <li>如果你能把这一小段代码讲明白，后面读 Gateway、memory、sandbox、skills 时也会更容易追踪同类结构。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 2：Gateway service 层怎样把 router 请求转换成真正的 run 配置</h4>
+          <p class="source-caption">节选自 <code>backend/app/gateway/services.py</code>。这段代码特别适合放在源码导航页，因为它正好位于“HTTP 入口”和“runtime 执行”之间。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">gateway/services.py :: format_sse() / normalize_input() / merge_run_context_overrides()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">format_sse</span>(<span class="tok-attr">event</span>: <span class="tok-type">str</span>, <span class="tok-attr">data</span>: <span class="tok-cls">Any</span>, <span class="tok-op">*</span>, <span class="tok-attr">event_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-fn">payload</span> <span class="tok-op">=</span> <span class="tok-attr">json</span>.<span class="tok-fn">dumps</span>(<span class="tok-attr">data</span>, <span class="tok-attr">default</span><span class="tok-op">=</span><span class="tok-fn">str</span>, <span class="tok-attr">ensure_ascii</span><span class="tok-op">=</span><span class="tok-kw">False</span>)</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-fn">parts</span> <span class="tok-op">=</span> [<span class="tok-str">f"event: {event}"</span>, <span class="tok-str">f"data: {payload}"</span>]</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">event_id</span>:</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">        <span class="tok-attr">parts</span>.<span class="tok-fn">append</span>(<span class="tok-str">f"id: {event_id}"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-attr">parts</span>.<span class="tok-fn">append</span>(<span class="tok-str">""</span>)</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-attr">parts</span>.<span class="tok-fn">append</span>(<span class="tok-str">""</span>)</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-str">"\n"</span>.<span class="tok-fn">join</span>(<span class="tok-attr">parts</span>)</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">normalize_input</span>(<span class="tok-attr">raw_input</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">raw_input</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-kw">return</span> {}</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">    <span class="tok-fn">messages</span> <span class="tok-op">=</span> <span class="tok-attr">raw_input</span>.<span class="tok-fn">get</span>(<span class="tok-str">"messages"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">messages</span> <span class="tok-kw">and</span> <span class="tok-fn">isinstance</span>(<span class="tok-fn">messages</span>, <span class="tok-type">list</span>):</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-fn">converted</span>: <span class="tok-type">list</span>[<span class="tok-cls">Any</span>] <span class="tok-op">=</span> []</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">        <span class="tok-kw">for</span> <span class="tok-fn">index</span>, <span class="tok-fn">msg</span> <span class="tok-kw">in</span> <span class="tok-fn">enumerate</span>(<span class="tok-fn">messages</span>):</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">isinstance</span>(<span class="tok-fn">msg</span>, <span class="tok-cls">BaseMessage</span>):</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">                <span class="tok-attr">converted</span>.<span class="tok-fn">append</span>(<span class="tok-fn">msg</span>)</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">            <span class="tok-kw">elif</span> <span class="tok-fn">isinstance</span>(<span class="tok-fn">msg</span>, <span class="tok-type">dict</span>):</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">                <span class="tok-kw">try</span>:</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">                    <span class="tok-attr">converted</span>.<span class="tok-fn">extend</span>(<span class="tok-fn">convert_to_messages</span>([<span class="tok-fn">msg</span>]))</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">                <span class="tok-kw">except</span> (<span class="tok-cls">ValueError</span>, <span class="tok-cls">TypeError</span>, <span class="tok-cls">NotImplementedError</span>) <span class="tok-kw">as</span> <span class="tok-fn">exc</span>:</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">                    <span class="tok-kw">raise</span> <span class="tok-cls">HTTPException</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-num">400</span>, <span class="tok-attr">detail</span><span class="tok-op">=</span><span class="tok-str">f"Invalid message at input.messages[{index}]: {exc}"</span>) <span class="tok-kw">from</span> <span class="tok-kw">exc</span></span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">        <span class="tok-kw">return</span> {<span class="tok-op">**</span><span class="tok-attr">raw_input</span>, <span class="tok-str">"messages"</span>: <span class="tok-attr">converted</span>}</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">raw_input</span></span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_run_context_overrides</span>(<span class="tok-attr">config</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>], <span class="tok-attr">context</span>: <span class="tok-type">Mapping</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">context</span>:</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">        <span class="tok-kw">return</span></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-fn">configurable</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">setdefault</span>(<span class="tok-str">"configurable"</span>, {})</span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">    <span class="tok-fn">runtime_context</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">setdefault</span>(<span class="tok-str">"context"</span>, {})</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-fn">key</span> <span class="tok-kw">in</span> <span class="tok-attr">_CONTEXT_CONFIGURABLE_KEYS</span>:</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-fn">key</span> <span class="tok-kw">in</span> <span class="tok-attr">context</span>:</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">            <span class="tok-attr">configurable</span>.<span class="tok-fn">setdefault</span>(<span class="tok-fn">key</span>, <span class="tok-attr">context</span>[<span class="tok-fn">key</span>])</span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src">            <span class="tok-attr">runtime_context</span>.<span class="tok-fn">setdefault</span>(<span class="tok-fn">key</span>, <span class="tok-attr">context</span>[<span class="tok-fn">key</span>])</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这段代码特别适合用来当“源码导航锚点”，因为它清楚展示了 Gateway service 层的职责不是跑 agent，而是把 HTTP 世界翻译成 DeerFlow runtime 能吃的配置和消息。</li>
+            <li><code>format_sse(...)</code> 决定了流式事件最终怎么变成标准 SSE 帧，这也是前端 `useStream` 能直接消费 DeerFlow 的原因之一。</li>
+            <li><code>normalize_input(...)</code> 很关键，它会把来自 HTTP body 的消息字典转换成真正的 LangChain / LangGraph 消息对象，同时把错误变成 400，而不是让后面 runtime 直接炸 500。</li>
+            <li><code>merge_run_context_overrides(...)</code> 则展示了另一件大事：前端传来的 `model_name`、`thinking_enabled`、`agent_name` 这些运行时上下文，要被同时塞进 `configurable` 和 `context` 两套容器，兼顾 DeerFlow 的旧读法和新读法。</li>
+            <li>如果你在源码里迷路，看到这一层就该意识到：router 之后、runtime 之前，还有一层 service 负责做协议整形、上下文合并和 wire format 适配。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 3：worker 层才是真正把 run 记录变成 agent 执行的地方</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/runtime/runs/worker.py</code>。源码导航页放这一段的意义，是让你把“router -> service -> worker -> agent”这条主线彻底串起来。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">runtime/runs/worker.py :: run_agent(...)</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">run_agent</span>(<span class="tok-attr">bridge</span>: <span class="tok-cls">StreamBridge</span>, <span class="tok-attr">run_manager</span>: <span class="tok-cls">RunManager</span>, <span class="tok-attr">record</span>: <span class="tok-cls">RunRecord</span>, <span class="tok-op">*</span>, <span class="tok-attr">ctx</span>: <span class="tok-cls">RunContext</span>, <span class="tok-attr">agent_factory</span>: <span class="tok-cls">Any</span>, <span class="tok-attr">graph_input</span>: <span class="tok-type">dict</span>, <span class="tok-attr">config</span>: <span class="tok-type">dict</span>, <span class="tok-attr">stream_modes</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">stream_subgraphs</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-attr">interrupt_before</span><span class="tok-op">=</span><span class="tok-kw">None</span>, <span class="tok-attr">interrupt_after</span><span class="tok-op">=</span><span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-fn">run_id</span> <span class="tok-op">=</span> <span class="tok-attr">record</span>.<span class="tok-attr">run_id</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-fn">thread_id</span> <span class="tok-op">=</span> <span class="tok-attr">record</span>.<span class="tok-attr">thread_id</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-fn">requested_modes</span>: <span class="tok-type">set</span>[<span class="tok-type">str</span>] <span class="tok-op">=</span> <span class="tok-fn">set</span>(<span class="tok-attr">stream_modes</span> <span class="tok-kw">or</span> [<span class="tok-str">"values"</span>])</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-str">"events"</span> <span class="tok-kw">in</span> <span class="tok-attr">requested_modes</span>:</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-attr">logger</span>.<span class="tok-fn">info</span>(<span class="tok-str">"Run %s: 'events' stream_mode not supported in gateway. Skipping."</span>, <span class="tok-attr">run_id</span>)</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">event_store</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">runtime</span>.<span class="tok-attr">journal</span> <span class="tok-kw">import</span> <span class="tok-cls">RunJournal</span></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-fn">journal</span> <span class="tok-op">=</span> <span class="tok-cls">RunJournal</span>(<span class="tok-attr">run_id</span><span class="tok-op">=</span><span class="tok-attr">run_id</span>, <span class="tok-attr">thread_id</span><span class="tok-op">=</span><span class="tok-attr">thread_id</span>, <span class="tok-attr">event_store</span><span class="tok-op">=</span><span class="tok-attr">event_store</span>, <span class="tok-attr">track_token_usage</span><span class="tok-op">=</span><span class="tok-fn">getattr</span>(<span class="tok-attr">run_events_config</span>, <span class="tok-str">"track_token_usage"</span>, <span class="tok-kw">True</span>), <span class="tok-attr">progress_reporter</span><span class="tok-op">=</span><span class="tok-kw">lambda</span> <span class="tok-attr">snapshot</span>: <span class="tok-attr">run_manager</span>.<span class="tok-fn">update_run_progress</span>(<span class="tok-attr">run_id</span>, <span class="tok-op">**</span><span class="tok-attr">snapshot</span>))</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">    <span class="tok-kw">await</span> <span class="tok-attr">run_manager</span>.<span class="tok-fn">set_status</span>(<span class="tok-attr">run_id</span>, <span class="tok-cls">RunStatus</span>.<span class="tok-attr">running</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-kw">await</span> <span class="tok-attr">bridge</span>.<span class="tok-fn">publish</span>(<span class="tok-attr">run_id</span>, <span class="tok-str">"metadata"</span>, {<span class="tok-str">"run_id"</span>: <span class="tok-attr">run_id</span>, <span class="tok-str">"thread_id"</span>: <span class="tok-attr">thread_id</span>})</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-kw">from</span> <span class="tok-attr">langchain_core</span>.<span class="tok-attr">runnables</span> <span class="tok-kw">import</span> <span class="tok-cls">RunnableConfig</span></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-kw">from</span> <span class="tok-attr">langgraph</span>.<span class="tok-attr">runtime</span> <span class="tok-kw">import</span> <span class="tok-cls">Runtime</span></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-fn">runtime_ctx</span> <span class="tok-op">=</span> <span class="tok-fn">_build_runtime_context</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">run_id</span>, <span class="tok-attr">config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"context"</span>), <span class="tok-attr">ctx</span>.<span class="tok-attr">app_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">journal</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">        <span class="tok-attr">runtime_ctx</span>[<span class="tok-str">"__run_journal"</span>] <span class="tok-op">=</span> <span class="tok-attr">journal</span></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-fn">_install_runtime_context</span>(<span class="tok-attr">config</span>, <span class="tok-attr">runtime_ctx</span>)</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-fn">runtime</span> <span class="tok-op">=</span> <span class="tok-cls">Runtime</span>(<span class="tok-attr">context</span><span class="tok-op">=</span><span class="tok-attr">runtime_ctx</span>, <span class="tok-attr">store</span><span class="tok-op">=</span><span class="tok-attr">store</span>)</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">    <span class="tok-attr">config</span>.<span class="tok-fn">setdefault</span>(<span class="tok-str">"configurable"</span>, {})[<span class="tok-str">"__pregel_runtime"</span>] <span class="tok-op">=</span> <span class="tok-attr">runtime</span></span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">journal</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">        <span class="tok-attr">config</span>.<span class="tok-fn">setdefault</span>(<span class="tok-str">"callbacks"</span>, []).<span class="tok-fn">append</span>(<span class="tok-attr">journal</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>如果说 router 负责接请求，service 负责整形，那么 worker 就是“真正开跑”的地方。这里第一次把 run_id、thread_id、stream_modes 和运行上下文全部绑在一起。</li>
+            <li>第 9 到 11 行创建 `RunJournal`，说明 DeerFlow 在后台执行时不是只求结果，还会顺手记录事件、token 使用和进度快照。</li>
+            <li>第 13 到 14 行先更新 run 状态、再通过 bridge 发布 metadata，这样前端或 channel 才能在 agent 真正开始输出前就拿到 run 基本信息。</li>
+            <li>第 18 到 23 行尤其关键: DeerFlow 把 thread_id、run_id、app_config 等信息塞进 LangGraph runtime context，再挂到 `__pregel_runtime` 上。后面的 middleware、tools、memory 更新都靠这里拿运行时上下文。</li>
+            <li>所以当你顺着源码读到 worker 时，就应该意识到: 这是 Gateway 世界和 LangGraph 执行世界真正接上的那一层。</li>
+          </ul>
+        </div>
       </section>
 
       <section id="config">
@@ -131,7 +280,7 @@
           <li>它和第 32 章系统构建视角相连，因为“从零构建”的经验最终也要落回到“哪些代码区域承载了哪些责任”。</li>
         </ul>
         <div class="highlight">
-          建议配合 <code>backend/app/gateway/</code>、<code>backend/packages/harness/deerflow/agents/</code>、<code>backend/packages/harness/deerflow/runtime/</code>、<code>backend/packages/harness/deerflow/sandbox/</code>、<code>backend/packages/harness/deerflow/skills/</code> 和 <code>backend/app/channels/</code> 同步阅读。
+          建议配合 <code>backend/app/gateway/</code>、<code>backend/packages/harness/deerflow/agents/</code>、<code>backend/packages/harness/deerflow/runtime/</code>、<code>backend/packages/harness/deerflow/sandbox/</code>、<code>backend/packages/harness/deerflow/skills/</code> 和 <code>backend/app/channels/</code> 同步阅读。最实用的阅读目标不是“把每个文件都看完”，而是先能口头讲清一条完整调用链，再回头补各层细节。
         </div>
       </section>
 
