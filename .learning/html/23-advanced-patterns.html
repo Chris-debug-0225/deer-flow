@@ -76,35 +76,62 @@
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>DeerFlow 当前最值得掌握的组合模式，可以概括成下面几条链：</p>
-        <div class="annotated-code">
-          <div class="code-window">
-            <div class="code-window-header">
-              <div class="code-window-dots"><span></span><span></span><span></span></div>
-              <div class="code-window-title">advanced patterns :: DeerFlow 里常见的 3 条高级组合链</div>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>高级组合模式流程图</strong>
+            <span>这一页讲的不是单点能力，而是几种会在真实系统里反复复用的组合套路</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">P1</div>
+              <div class="flow-step-copy">
+                <strong>模式 1：先收窄工具暴露面，再按需补全 schema</strong>
+                <p>系统不会把所有 MCP 工具 schema 一股脑塞给模型，而是先做工具策略过滤，只在 prompt 里暴露延迟工具名字。</p>
+                <div class="flow-step-path"><code>tool policy filtering</code> + <code>tools/builtins/tool_search.py</code></div>
+              </div>
             </div>
-            <div class="code-window-body">
-              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># 模式 1：MCP 工具体积控制</span></span></div>
-              <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-str">"tool policy filtering"</span></span></div>
-              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/tools/builtins/tool_search.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"only deferred names in prompt"</span></span></div>
-              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"model calls tool_search when needed"</span></span></div>
-              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"schema promoted into state"</span></span></div>
-              <div class="code-line"><span class="code-ln">7</span><span class="code-src"></span></div>
-              <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-com"># 模式 2：复杂任务隔离</span></span></div>
-              <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-str">"lead agent decides to delegate"</span></span></div>
-              <div class="code-line"><span class="code-ln">10</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/tools/builtins/task_tool.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">11</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"SubagentExecutor background run"</span></span></div>
-              <div class="code-line"><span class="code-ln">12</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"poll / usage summarize / cleanup"</span></span></div>
-              <div class="code-line"><span class="code-ln">13</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"parent agent continues with result"</span></span></div>
-              <div class="code-line"><span class="code-ln">14</span><span class="code-src"></span></div>
-              <div class="code-line"><span class="code-ln">15</span><span class="code-src"><span class="tok-com"># 模式 3：双消费端流式输出</span></span></div>
-              <div class="code-line"><span class="code-ln">16</span><span class="code-src"><span class="tok-str">"same agent core"</span></span></div>
-              <div class="code-line"><span class="code-ln">17</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"Gateway path for HTTP/SSE"</span></span></div>
-              <div class="code-line"><span class="code-ln">18</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"DeerFlowClient path for sync in-process streaming"</span></span></div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">P2</div>
+              <div class="flow-step-copy">
+                <strong>模型需要时再主动搜索工具详情</strong>
+                <p>等模型判断自己真的要用某类工具时，才会去调用 <code>tool_search</code> 把对应 schema 拉进当前状态。</p>
+                <div class="flow-step-path"><code>only deferred names in prompt</code> → <code>model calls tool_search</code> → <code>schema promoted into state</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">P3</div>
+              <div class="flow-step-copy">
+                <strong>模式 2：把复杂任务拆到后台子代理里隔离执行</strong>
+                <p>当 lead agent 判断任务太复杂、太耗时或更适合独立推进时，会通过 task tool 委派给子执行器后台运行。</p>
+                <div class="flow-step-path"><code>lead agent decides to delegate</code> + <code>tools/builtins/task_tool.py</code> + <code>SubagentExecutor</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">P4</div>
+              <div class="flow-step-copy">
+                <strong>父代理不被阻塞，只接收整理后的阶段结果</strong>
+                <p>子代理侧会负责后台运行、轮询、usage 汇总和清理动作，父代理拿到的是可继续推理的结果，而不是裸后台任务句柄。</p>
+                <div class="flow-step-path"><code>poll</code> + <code>usage summarize</code> + <code>cleanup</code> + <code>parent continues with result</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">P5</div>
+              <div class="flow-step-copy">
+                <strong>模式 3：同一个 agent core 服务两种消费端</strong>
+                <p>DeerFlow 既要服务 Web/Gateway 的 HTTP/SSE 场景，也要服务进程内客户端的同步流式消费，但底层 agent 核心仍然尽量保持同一套。</p>
+                <div class="flow-step-path"><code>same agent core</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">P6</div>
+              <div class="flow-step-copy">
+                <strong>之所以不能硬合并，是因为消费协议和出口责任不同</strong>
+                <p>Gateway 路径要对接 HTTP/SSE，DeerFlowClient 路径要处理进程内同步流式消费；<code>backend/docs/STREAMING.md</code> 解释了为什么这两条路不能简单折成一条。</p>
+                <div class="flow-step-path"><code>Gateway path for HTTP/SSE</code> + <code>DeerFlowClient path for sync in-process streaming</code> + <code>docs/STREAMING.md</code></div>
+              </div>
             </div>
           </div>
         </div>
-  -> backend/docs/STREAMING.md defines why they cannot be collapsed</code></div>
         <p>这些链路之所以能成立，是因为 <code>backend/packages/harness/deerflow/agents/middlewares/</code> 提供了大量护栏：例如错误处理、loop detection、subagent 限流、summary 压缩、tool output budget 等。也就是说，高级模式不是再发明一个新框架，而是把现有能力编排出更稳定的运行行为。</p>
         <p>除此之外，还有几种同样重要但更“系统级”的组合：Gateway-embedded runtime 让浏览器、API 和 IM 渠道共享同一执行主线；channel adapters 让外部消息平台复用 thread/run/auth 语义；sandbox-aware execution 让文件、artifact 和命令路径都围绕 <code>/mnt/user-data</code> 契约工作；memory/summarization 协作则让长期记忆和即时上下文压缩各司其职。</p>
         <div class="source-walkthrough">
