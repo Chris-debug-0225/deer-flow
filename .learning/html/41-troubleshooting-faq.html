@@ -79,19 +79,59 @@
 
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
-        <div class="annotated-code">
-          <div class="code-window">
-            <div class="code-window-header">
-              <div class="code-window-dots"><span></span><span></span><span></span></div>
-              <div class="code-window-title">troubleshooting flow :: 先按层定位，再看模型和工具</div>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>排障定位流程图</strong>
+            <span>先分层，再找锚点，最后才下钻模型和工具细节</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>先抓住用户看到的症状</strong>
+                <p>先明确问题表现是什么，不要一上来就跳进某个源码目录瞎翻。</p>
+                <div class="flow-step-path"><code>symptom appears</code></div>
+              </div>
             </div>
-            <div class="code-window-body">
-              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"symptom appears"</span></span></div>
-              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"classify by layer"</span></span></div>
-              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"config? auth? gateway? streaming? channels? files?"</span></span></div>
-              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"open matching doc + code anchor"</span></span></div>
-              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"verify runtime path"</span></span></div>
-              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"only then inspect model/tool behavior"</span></span></div>
+            <div class="flow-step">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>先判断它属于哪一层</strong>
+                <p>很多问题看起来像模型坏了，其实更早就在配置、认证、流式输出或渠道层出错了。</p>
+                <div class="flow-step-path"><code>classify by layer</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>先把问题归到一个大类里</strong>
+                <p>常见大类通常是配置、认证、Gateway、streaming、channels、files 这些入口层问题。</p>
+                <div class="flow-step-path"><code>config</code> / <code>auth</code> / <code>gateway</code> / <code>streaming</code> / <code>channels</code> / <code>files</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>打开对应文档和源码锚点</strong>
+                <p>先找到最贴近问题的那一层入口文件，而不是海量全文搜索。</p>
+                <div class="flow-step-path"><code>matching doc + code anchor</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>确认真实运行路径有没有走到这里</strong>
+                <p>只有先确认请求真的走过这条链，后面的源码细读才有意义。</p>
+                <div class="flow-step-path"><code>verify runtime path</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">06</div>
+              <div class="flow-step-copy">
+                <strong>最后才下钻模型、工具或 prompt 行为</strong>
+                <p>这样排障效率会高很多，也能避免把结果性问题误判成模型本身的问题。</p>
+                <div class="flow-step-path"><code>inspect model/tool behavior</code></div>
+              </div>
             </div>
           </div>
         </div>
@@ -106,6 +146,7 @@
                 <div class="code-window-title">gateway/auth_middleware.py :: public path / session / internal auth</div>
               </div>
               <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># _PUBLIC_EXACT_PATHS: 认证中间件里的公开路径白名单，这些接口即使没登录也允许直接访问</span></span></div>
                 <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-attr">_PUBLIC_EXACT_PATHS</span> <span class="tok-op">=</span> <span class="tok-fn">frozenset</span>({</span></div>
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-str">"/api/v1/auth/login/local"</span>,</span></div>
                 <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-str">"/api/v1/auth/register"</span>,</span></div>
@@ -155,8 +196,10 @@
                 <div class="code-window-title">app/channels/manager.py :: _extract_response_text() / _current_turn_messages()</div>
               </div>
               <div class="code-window-body">
-                <div class="code-line"><span class="code-ln">173</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_extract_response_text</span>(<span class="tok-attr">result</span>: <span class="tok-type">dict</span> <span class="tok-op">|</span> <span class="tok-type">list</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
-                <div class="code-line"><span class="code-ln">183</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">result</span>, <span class="tok-type">list</span>):</span></div>
+                <div class="code-line"><span class="code-ln">173</span><span class="code-src"><span class="tok-com"># result: Gateway wait/stream 聚合后的消息结果，职责是从中抽出当前轮真正该回给渠道用户的文本</span></span></div>
+                <div class="code-line"><span class="code-ln">174</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_extract_response_text</span>(<span class="tok-attr">result</span>: <span class="tok-type">dict</span> <span class="tok-op">|</span> <span class="tok-type">list</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                <div class="code-line"><span class="code-ln">183</span><span class="code-src">    <span class="tok-com"># 先把 list/dict 两种结果拍平成统一 messages 列表，不然后面的轮次切分逻辑没法共用</span></span></div>
+                <div class="code-line"><span class="code-ln">184</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">result</span>, <span class="tok-type">list</span>):</span></div>
                 <div class="code-line"><span class="code-ln">185</span><span class="code-src">    <span class="tok-kw">elif</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">result</span>, <span class="tok-type">dict</span>):</span></div>
                 <div class="code-line"><span class="code-ln">186</span><span class="code-src">        <span class="tok-attr">messages</span> <span class="tok-op">=</span> <span class="tok-attr">result</span>.<span class="tok-fn">get</span>(<span class="tok-str">"messages"</span>, [])</span></div>
                 <div class="code-line"><span class="code-ln">190</span><span class="code-src">    <span class="tok-com"># 倒着找最后一个可返回内容，但不能越过本轮 human</span></span></div>
@@ -173,8 +216,10 @@
                 <div class="code-line"><span class="code-ln">216</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">content</span>, <span class="tok-type">list</span>):</span></div>
                 <div class="code-line"><span class="code-ln">219</span><span class="code-src">                <span class="tok-kw">if</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">block</span>, <span class="tok-type">dict</span>) <span class="tok-kw">and</span> <span class="tok-attr">block</span>.<span class="tok-fn">get</span>(<span class="tok-str">"type"</span>) <span class="tok-op">==</span> <span class="tok-str">"text"</span>:</span></div>
                 <div class="code-line"><span class="code-ln">223</span><span class="code-src">                <span class="tok-attr">text</span> <span class="tok-op">=</span> <span class="tok-str">""</span>.<span class="tok-fn">join</span>(<span class="tok-attr">parts</span>)</span></div>
-                <div class="code-line"><span class="code-ln">229</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_messages_from_result</span>(<span class="tok-attr">result</span>: <span class="tok-type">dict</span> <span class="tok-op">|</span> <span class="tok-type">list</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-type">Any</span>]:</span></div>
-                <div class="code-line"><span class="code-ln">239</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_current_turn_messages</span>(<span class="tok-attr">result</span>: <span class="tok-type">dict</span> <span class="tok-op">|</span> <span class="tok-type">list</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>]]:</span></div>
+                <div class="code-line"><span class="code-ln">229</span><span class="code-src"><span class="tok-com"># result: 原始运行结果；这里只做“安全取 messages 列表”的低层辅助，不负责业务语义判断</span></span></div>
+                <div class="code-line"><span class="code-ln">230</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_messages_from_result</span>(<span class="tok-attr">result</span>: <span class="tok-type">dict</span> <span class="tok-op">|</span> <span class="tok-type">list</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-type">Any</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">239</span><span class="code-src"><span class="tok-com"># result: 同一份运行结果；职责是裁出“最近一轮 human 之后”的消息子集，排障时特别适合判断串轮问题</span></span></div>
+                <div class="code-line"><span class="code-ln">240</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_current_turn_messages</span>(<span class="tok-attr">result</span>: <span class="tok-type">dict</span> <span class="tok-op">|</span> <span class="tok-type">list</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>]]:</span></div>
                 <div class="code-line"><span class="code-ln">242</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-attr">msg</span> <span class="tok-kw">in</span> <span class="tok-fn">reversed</span>(<span class="tok-attr">messages</span>):</span></div>
                 <div class="code-line"><span class="code-ln">245</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">msg</span>.<span class="tok-fn">get</span>(<span class="tok-str">"type"</span>) <span class="tok-op">==</span> <span class="tok-str">"human"</span>:</span></div>
                 <div class="code-line"><span class="code-ln">247</span><span class="code-src">        <span class="tok-attr">current_turn</span>.<span class="tok-fn">append</span>(<span class="tok-attr">msg</span>)</span></div>

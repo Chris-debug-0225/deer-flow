@@ -103,19 +103,59 @@
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>从运行时视角看，DeerFlow 的链路不是“用户输入 → 模型 → 工具 → 完成”这么简单，而是“配置解析 → 模型构建 → 工具汇总 → tool policy 过滤 → deferred tool 装配 → prompt 注入 → runtime 执行”。</p>
-        <div class="annotated-code">
-          <div class="code-window">
-            <div class="code-window-header">
-              <div class="code-window-dots"><span></span><span></span><span></span></div>
-              <div class="code-window-title">LLM + Tools flow :: 从配置到运行时的真实链路</div>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>从配置到运行的能力装配图</strong>
+            <span>这一页真正想讲的是“模型能力是怎样一层层装上去的”</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>先读配置，确定模型和能力开关</strong>
+                <p>配置层先决定这次要用什么模型、开哪些功能、后续 agent 应该怎么装。</p>
+                <div class="flow-step-path"><code>config.yaml</code> + <code>agents/factory.py</code></div>
+              </div>
             </div>
-            <div class="code-window-body">
-              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"config.yaml"</span>                                      <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/agents/factory.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-str">"model construction"</span>                               <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/models/factory.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-str">"tool aggregation"</span>                                 <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/tools/tools.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-str">"allowed-tools policy + deferred tool setup"</span>      <span class="tok-op">-&gt;</span> <span class="tok-str">"skills/tool_policy.py + tool_search.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-str">"prompt injection"</span>                                 <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/agents/lead_agent/prompt.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">6</span><span class="code-src"><span class="tok-str">"runtime execution"</span>                                <span class="tok-op">-&gt;</span> <span class="tok-str">"lead agent runtime / DeerFlowClient / Gateway runs"</span></span></div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>模型工厂把配置变成可调用的 LLM</strong>
+                <p>这一层会处理 provider 差异、thinking、timeout、stream usage 等细节，拿到真正能跑的模型对象。</p>
+                <div class="flow-step-path"><code>models/factory.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>工具层先把 DeerFlow 可见能力汇总起来</strong>
+                <p>文件、搜索、子代理、MCP 等工具会先形成一份候选能力清单，供后续继续筛选和包装。</p>
+                <div class="flow-step-path"><code>tools/tools.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>按技能策略收窄能力面，再设置延迟工具</strong>
+                <p>不是所有工具都会立刻暴露给模型。技能白名单会先过滤一遍，延迟工具则只先给名字，不给完整 schema。</p>
+                <div class="flow-step-path"><code>skills/tool_policy.py</code> + <code>tool_search.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>提示词层告诉模型“你现在能做什么”</strong>
+                <p>lead agent prompt 会把系统规则、技能提示和延迟工具目录拼起来，形成模型眼中的能力边界。</p>
+                <div class="flow-step-path"><code>agents/lead_agent/prompt.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">06</div>
+              <div class="flow-step-copy">
+                <strong>运行时才真正进入模型与工具协作</strong>
+                <p>到了这一层，才开始发生 tool call、stream、回复生成，所以前面几层本质上都在做运行前装配。</p>
+                <div class="flow-step-path"><code>lead agent runtime</code> / <code>DeerFlowClient</code> / <code>Gateway runs</code></div>
+              </div>
             </div>
           </div>
         </div>
@@ -224,22 +264,28 @@
                 <div class="code-window-title">models/factory.py :: create_chat_model(...)</div>
               </div>
               <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">80</span><span class="code-src"><span class="tok-com"># name / thinking_enabled: 想取哪一款模型，以及本轮是否打开 thinking 能力</span></span></div>
+                <div class="code-line"><span class="code-ln">81</span><span class="code-src"><span class="tok-com"># app_config / attach_tracing / kwargs: 可选配置来源、是否挂 tracing callbacks，以及额外透传给 provider 构造器的参数</span></span></div>
                 <div class="code-line"><span class="code-ln">82</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">create_chat_model</span>(<span class="tok-attr">name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">thinking_enabled</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-op">*</span>, <span class="tok-attr">app_config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">attach_tracing</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">True</span>, <span class="tok-op">**</span><span class="tok-attr">kwargs</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">BaseChatModel</span>:</span></div>
+                <div class="code-line"><span class="code-ln">103</span><span class="code-src">    <span class="tok-com"># 第一步先拿到全局配置，并解析出这条模型配置对应的真正模型类</span></span></div>
                 <div class="code-line"><span class="code-ln">104</span><span class="code-src">    <span class="tok-attr">config</span> <span class="tok-op">=</span> <span class="tok-attr">app_config</span> <span class="tok-kw">or</span> <span class="tok-fn">get_app_config</span>()</span></div>
                 <div class="code-line"><span class="code-ln">107</span><span class="code-src">    <span class="tok-attr">model_config</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">get_model_config</span>(<span class="tok-attr">name</span>)</span></div>
                 <div class="code-line"><span class="code-ln">110</span><span class="code-src">    <span class="tok-attr">model_class</span> <span class="tok-op">=</span> <span class="tok-fn">resolve_class</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">use</span>, <span class="tok-cls">BaseChatModel</span>)</span></div>
                 <div class="code-line"><span class="code-ln">111</span><span class="code-src">    <span class="tok-attr">model_settings_from_config</span> <span class="tok-op">=</span> <span class="tok-attr">model_config</span>.<span class="tok-fn">model_dump</span>(<span class="tok-attr">exclude_none</span><span class="tok-op">=</span><span class="tok-kw">True</span>, <span class="tok-attr">exclude</span><span class="tok-op">=</span>{<span class="tok-str">"use"</span>, <span class="tok-str">"name"</span>, <span class="tok-str">"display_name"</span>, <span class="tok-str">"description"</span>, <span class="tok-str">"supports_thinking"</span>, <span class="tok-str">"supports_reasoning_effort"</span>, <span class="tok-str">"when_thinking_enabled"</span>, <span class="tok-str">"when_thinking_disabled"</span>, <span class="tok-str">"thinking"</span>, <span class="tok-str">"supports_vision"</span>})</span></div>
+                <div class="code-line"><span class="code-ln">127</span><span class="code-src">    <span class="tok-com"># 第二步把 thinking 相关配置合成“本轮生效版本”，这样 provider 差异先被吸收在工厂层</span></span></div>
                 <div class="code-line"><span class="code-ln">128</span><span class="code-src">    <span class="tok-attr">effective_wte</span>: <span class="tok-type">dict</span> <span class="tok-op">=</span> <span class="tok-fn">dict</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">when_thinking_enabled</span>) <span class="tok-kw">if</span> <span class="tok-attr">model_config</span>.<span class="tok-attr">when_thinking_enabled</span> <span class="tok-kw">else</span> {}</span></div>
                 <div class="code-line"><span class="code-ln">133</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">thinking_enabled</span> <span class="tok-kw">and</span> <span class="tok-attr">has_thinking_settings</span>:</span></div>
                 <div class="code-line"><span class="code-ln">137</span><span class="code-src">            <span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">update</span>(<span class="tok-attr">effective_wte</span>)</span></div>
                 <div class="code-line"><span class="code-ln">142</span><span class="code-src">        <span class="tok-kw">elif</span> <span class="tok-attr">has_thinking_settings</span> <span class="tok-kw">and</span> <span class="tok-attr">effective_wte</span>.<span class="tok-fn">get</span>(<span class="tok-str">"extra_body"</span>, {}).<span class="tok-fn">get</span>(<span class="tok-str">"thinking"</span>, {}).<span class="tok-fn">get</span>(<span class="tok-str">"type"</span>):</span></div>
                 <div class="code-line"><span class="code-ln">144</span><span class="code-src">            <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"extra_body"</span>] <span class="tok-op">=</span> <span class="tok-fn">_deep_merge_dicts</span>(<span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"extra_body"</span>), {<span class="tok-str">"thinking"</span>: {<span class="tok-str">"type"</span>: <span class="tok-str">"disabled"</span>}})</span></div>
+                <div class="code-line"><span class="code-ln">161</span><span class="code-src">    <span class="tok-com"># 第三步补 provider 级默认值和兼容性补丁，避免每个调用方都自己记这些坑</span></span></div>
                 <div class="code-line"><span class="code-ln">162</span><span class="code-src">    <span class="tok-fn">_enable_stream_usage_by_default</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">use</span>, <span class="tok-attr">model_settings_from_config</span>)</span></div>
                 <div class="code-line"><span class="code-ln">163</span><span class="code-src">    <span class="tok-fn">_apply_stream_chunk_timeout_default</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">use</span>, <span class="tok-attr">model_settings_from_config</span>)</span></div>
                 <div class="code-line"><span class="code-ln">168</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">issubclass</span>(<span class="tok-attr">model_class</span>, <span class="tok-cls">CodexChatModel</span>):</span></div>
                 <div class="code-line"><span class="code-ln">175</span><span class="code-src">            <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"reasoning_effort"</span>] <span class="tok-op">=</span> <span class="tok-str">"none"</span></span></div>
                 <div class="code-line"><span class="code-ln">183</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">getattr</span>(<span class="tok-attr">model_class</span>, <span class="tok-str">"__name__"</span>, <span class="tok-str">""</span>) <span class="tok-op">==</span> <span class="tok-str">"MindIEChatModel"</span>:</span></div>
                 <div class="code-line"><span class="code-ln">185</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"max_retries"</span>] <span class="tok-op">=</span> <span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"max_retries"</span>, <span class="tok-num">1</span>)</span></div>
+                <div class="code-line"><span class="code-ln">195</span><span class="code-src">    <span class="tok-com"># 最后实例化模型并按需挂 tracing callbacks，让外部看到的是统一可运行模型对象</span></span></div>
                 <div class="code-line"><span class="code-ln">196</span><span class="code-src">    <span class="tok-attr">model_instance</span> <span class="tok-op">=</span> <span class="tok-attr">model_class</span>(<span class="tok-op">**</span><span class="tok-attr">kwargs</span>, <span class="tok-op">**</span><span class="tok-attr">model_settings_from_config</span>)</span></div>
                 <div class="code-line"><span class="code-ln">198</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">attach_tracing</span>:</span></div>
                 <div class="code-line"><span class="code-ln">201</span><span class="code-src">            <span class="tok-attr">model_instance</span>.<span class="tok-attr">callbacks</span> <span class="tok-op">=</span> [<span class="tok-op">*</span><span class="tok-attr">existing_callbacks</span>, <span class="tok-op">*</span><span class="tok-attr">callbacks</span>]</span></div>

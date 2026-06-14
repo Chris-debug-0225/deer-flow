@@ -92,21 +92,67 @@
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>DeerFlow 默认不是“run 开始就先启动 sandbox”。它采用 lazy sandbox acquisition：只有当运行真的触碰到文件/命令工具时，sandbox 才通过 middleware 和 provider 被获取。这一点在 <code>backend/packages/harness/deerflow/sandbox/middleware.py</code> 与 <code>backend/packages/harness/deerflow/agents/factory.py</code> 的 lazy init 组合里非常明确。</p>
-        <div class="annotated-code">
-          <div class="code-window">
-            <div class="code-window-header">
-              <div class="code-window-dots"><span></span><span></span><span></span></div>
-              <div class="code-window-title">sandbox flow :: lazy sandbox acquisition</div>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>Sandbox 延迟获取流程图</strong>
+            <span>不是一开跑就建沙箱，而是等真正碰到文件或命令能力时再拿</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>主 Agent 或子 Agent 先正常开始运行</strong>
+                <p>这时候系统还没有急着创建实际沙箱，只是先把运行链装起来。</p>
+                <div class="flow-step-path"><code>lead agent / subagent runtime</code></div>
+              </div>
             </div>
-            <div class="code-window-body">
-              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"lead agent / subagent runtime"</span></span></div>
-              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"sandbox middleware (lazy_init=True)"</span></span></div>
-              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"first sandbox-backed tool call"</span></span></div>
-              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/sandbox/tools.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"get_sandbox_provider().acquire(thread_id)"</span></span></div>
-              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"LocalSandboxProvider or AioSandboxProvider"</span></span></div>
-              <div class="code-line"><span class="code-ln">7</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"path mapping + bounds check + tool execution"</span></span></div>
-              <div class="code-line"><span class="code-ln">8</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"return result in virtual-path view"</span></span></div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>中间件先挂上“延迟初始化”入口</strong>
+                <p>Sandbox middleware 先把获取逻辑埋好，等后面真需要时再触发。</p>
+                <div class="flow-step-path"><code>sandbox middleware (lazy_init=True)</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>第一次调用文件或命令类工具时才真正触发</strong>
+                <p>只有当运行碰到读文件、列目录、bash 这类能力时，沙箱才会被真正请求。</p>
+                <div class="flow-step-path"><code>first sandbox-backed tool call</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>工具层开始申请线程专属沙箱句柄</strong>
+                <p>真正发起 acquire 的不是文档配置，而是工具实现本身。</p>
+                <div class="flow-step-path"><code>sandbox/tools.py</code> + <code>acquire(thread_id)</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>底层 provider 决定实际跑在宿主机还是容器里</strong>
+                <p>这一层才区分是本地沙箱，还是 Aio 容器沙箱，但对上层接口仍然统一。</p>
+                <div class="flow-step-path"><code>LocalSandboxProvider</code> / <code>AioSandboxProvider</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">06</div>
+              <div class="flow-step-copy">
+                <strong>路径映射和边界检查通过后才执行操作</strong>
+                <p>虚拟路径会先映射到真实路径，并确认仍在当前线程允许的范围内，之后才真正执行。</p>
+                <div class="flow-step-path"><code>path mapping</code> + <code>bounds check</code> + <code>tool execution</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">07</div>
+              <div class="flow-step-copy">
+                <strong>返回给模型的仍然是统一的虚拟路径视图</strong>
+                <p>这样上层 agent 不需要知道底下到底是宿主机目录还是容器挂载目录。</p>
+                <div class="flow-step-path"><code>virtual-path view</code></div>
+              </div>
             </div>
           </div>
         </div>
@@ -122,7 +168,8 @@
                 <div class="code-window-title">sandbox/tools.py :: _get_skills_host_path() / _resolve_skills_path()</div>
               </div>
               <div class="code-window-body">
-                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_get_skills_host_path</span>() <span class="tok-op">-&gt;</span> <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># 无入参: 直接从全局配置推导宿主机 skills 根目录，并在成功时做函数级缓存</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_get_skills_host_path</span>() <span class="tok-op">-&gt;</span> <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com">"""从配置里拿真实 skills 目录；只有成功时才缓存。"""</span></span></div>
                 <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-fn">cached</span> <span class="tok-op">=</span> <span class="tok-fn">getattr</span>(<span class="tok-fn">_get_skills_host_path</span>, <span class="tok-str">"_cached"</span>, <span class="tok-kw">None</span>)</span></div>
                 <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">cached</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
@@ -141,7 +188,8 @@
                 <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-kw">pass</span></span></div>
                 <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-kw">None</span></span></div>
                 <div class="code-line"><span class="code-ln">19</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">20</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_resolve_skills_path</span>(<span class="tok-attr">path</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src"><span class="tok-com"># path: agent 侧看到的虚拟 skills 路径，职责是把它翻译成真实宿主机路径并在缺目录时立即报错</span></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_resolve_skills_path</span>(<span class="tok-attr">path</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
                 <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-com"># path 是 agent 看到的虚拟路径，例如 /mnt/skills/public/bootstrap/SKILL.md</span></span></div>
                 <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-fn">skills_container</span> <span class="tok-op">=</span> <span class="tok-fn">_get_skills_container_path</span>()</span></div>
                 <div class="code-line"><span class="code-ln">23</span><span class="code-src">    <span class="tok-fn">skills_host</span> <span class="tok-op">=</span> <span class="tok-fn">_get_skills_host_path</span>()</span></div>
@@ -229,19 +277,22 @@
                 <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">ThreadDataMiddleware</span>(<span class="tok-cls">AgentMiddleware</span>[<span class="tok-cls">ThreadDataMiddlewareState</span>]):</span></div>
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com">"""为每个线程执行准备 workspace / uploads / outputs 三个目录。"""</span></span></div>
                 <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">_get_thread_paths</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">str</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-com"># self / thread_id / user_id: 根据当前线程和用户，推导 workspace、uploads、outputs 三类真实目录</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">_get_thread_paths</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">str</span>]:</span></div>
                 <div class="code-line"><span class="code-ln">5</span><span class="code-src">        <span class="tok-kw">return</span> {</span></div>
                 <div class="code-line"><span class="code-ln">6</span><span class="code-src">            <span class="tok-str">"workspace_path"</span>: <span class="tok-fn">str</span>(<span class="tok-self">self</span>.<span class="tok-attr">_paths</span>.<span class="tok-fn">sandbox_work_dir</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)),</span></div>
                 <div class="code-line"><span class="code-ln">7</span><span class="code-src">            <span class="tok-str">"uploads_path"</span>: <span class="tok-fn">str</span>(<span class="tok-self">self</span>.<span class="tok-attr">_paths</span>.<span class="tok-fn">sandbox_uploads_dir</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)),</span></div>
                 <div class="code-line"><span class="code-ln">8</span><span class="code-src">            <span class="tok-str">"outputs_path"</span>: <span class="tok-fn">str</span>(<span class="tok-self">self</span>.<span class="tok-attr">_paths</span>.<span class="tok-fn">sandbox_outputs_dir</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)),</span></div>
                 <div class="code-line"><span class="code-ln">9</span><span class="code-src">        }</span></div>
                 <div class="code-line"><span class="code-ln">10</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">_create_thread_directories</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">str</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-com"># self / thread_id / user_id: 在推导出路径后顺手确保目录存在，给后续 sandbox 和上传流程做物理准备</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">_create_thread_directories</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">str</span>]:</span></div>
                 <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_paths</span>.<span class="tok-fn">ensure_thread_dirs</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)</span></div>
                 <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-self">self</span>.<span class="tok-fn">_get_thread_paths</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)</span></div>
                 <div class="code-line"><span class="code-ln">14</span><span class="code-src"></span></div>
                 <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-dec">@override</span></span></div>
-                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">before_agent</span>(<span class="tok-self">self</span>, <span class="tok-attr">state</span>: <span class="tok-cls">ThreadDataMiddlewareState</span>, <span class="tok-attr">runtime</span>: <span class="tok-cls">Runtime</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-com"># state: 当前线程状态快照；runtime: LangGraph 运行时上下文，这里要把 thread 目录和用户语义提前注入进去</span></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">before_agent</span>(<span class="tok-self">self</span>, <span class="tok-attr">state</span>: <span class="tok-cls">ThreadDataMiddlewareState</span>, <span class="tok-attr">runtime</span>: <span class="tok-cls">Runtime</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-fn">context</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">context</span> <span class="tok-kw">or</span> {}</span></div>
                 <div class="code-line"><span class="code-ln">18</span><span class="code-src">        <span class="tok-fn">thread_id</span> <span class="tok-op">=</span> <span class="tok-attr">context</span>.<span class="tok-fn">get</span>(<span class="tok-str">"thread_id"</span>)</span></div>
                 <div class="code-line"><span class="code-ln">19</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">thread_id</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>

@@ -92,27 +92,59 @@
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>长期记忆在 DeerFlow 里有两条主线：一条是“运行前注入”，一条是“运行后更新”。两条线都围绕 <code>backend/packages/harness/deerflow/agents/memory/storage.py</code> 和 <code>backend/packages/harness/deerflow/agents/memory/updater.py</code> 展开。</p>
-        <div class="annotated-code">
-          <div class="code-window">
-            <div class="code-window-header">
-              <div class="code-window-dots"><span></span><span></span><span></span></div>
-              <div class="code-window-title">memory flow :: 注入链与更新链</div>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>Memory 双主线流程图</strong>
+            <span>一条负责“运行前拿来用”，一条负责“运行后沉淀下来”</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">A1</div>
+              <div class="flow-step-copy">
+                <strong>注入线先从存储层读取长期记忆</strong>
+                <p>系统会按用户和 agent 维度找到已有记忆，为当前对话准备可复用的长期上下文。</p>
+                <div class="flow-step-path"><code>agents/memory/storage.py</code> + <code>load(agent_name, user_id)</code></div>
+              </div>
             </div>
-            <div class="code-window-body">
-              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># 注入链</span></span></div>
-              <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-str">"backend/packages/harness/deerflow/agents/memory/storage.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"load(agent_name, user_id)"</span></span></div>
-              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/agents/lead_agent/prompt.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"render memory section"</span></span></div>
-              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"lead agent system prompt gets durable context"</span></span></div>
-              <div class="code-line"><span class="code-ln">7</span><span class="code-src"></span></div>
-              <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-com"># 更新链</span></span></div>
-              <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-str">"conversation / run output"</span></span></div>
-              <div class="code-line"><span class="code-ln">10</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/agents/memory/updater.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">11</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/agents/memory/prompt.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">12</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"model produces structured update"</span></span></div>
-              <div class="code-line"><span class="code-ln">13</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"normalize / validate / merge facts"</span></span></div>
-              <div class="code-line"><span class="code-ln">14</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/agents/memory/storage.py.save(...)"</span></span></div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">A2</div>
+              <div class="flow-step-copy">
+                <strong>把记忆整理成模型能读懂的提示片段</strong>
+                <p>读出来的内容不会原样裸奔，而是会被格式化成适合注入主对话的 memory section。</p>
+                <div class="flow-step-path"><code>agents/lead_agent/prompt.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">A3</div>
+              <div class="flow-step-copy">
+                <strong>Lead Agent 带着可持续上下文开始这一轮</strong>
+                <p>这就是 DeerFlow 能跨会话延续用户偏好和事实背景的关键原因。</p>
+                <div class="flow-step-path"><code>durable context injected</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">B1</div>
+              <div class="flow-step-copy">
+                <strong>更新线在运行后收集本轮对话内容</strong>
+                <p>一次对话结束后，系统会判断哪些消息值得沉淀成长期事实，哪些只是临时上下文。</p>
+                <div class="flow-step-path"><code>conversation / run output</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">B2</div>
+              <div class="flow-step-copy">
+                <strong>更新器借助专门 prompt 提炼结构化变更</strong>
+                <p>这里做的不是普通摘要，而是判断“应不应该写入记忆，以及应该怎样写”。</p>
+                <div class="flow-step-path"><code>agents/memory/updater.py</code> + <code>agents/memory/prompt.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">B3</div>
+              <div class="flow-step-copy">
+                <strong>结果经过校验、归一化和合并后再落盘</strong>
+                <p>只有被规范化处理过的事实才会进入长期存储，避免记忆层被噪音不断污染。</p>
+                <div class="flow-step-path"><code>normalize / validate / merge</code> + <code>storage.py.save(...)</code></div>
+              </div>
             </div>
           </div>
         </div>
@@ -184,18 +216,21 @@
                 <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">MemoryUpdateQueue</span>:</span></div>
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com">"""带 debounce 的记忆更新队列。"""</span></span></div>
                 <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-self">self</span>):</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-com"># self: 初始化一套线程安全的去抖队列状态，包括锁、计时器和处理标志位</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-self">self</span>):</span></div>
                 <div class="code-line"><span class="code-ln">5</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_queue</span>: <span class="tok-type">list</span>[<span class="tok-cls">ConversationContext</span>] <span class="tok-op">=</span> []</span></div>
                 <div class="code-line"><span class="code-ln">6</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_lock</span> <span class="tok-op">=</span> <span class="tok-attr">threading</span>.<span class="tok-fn">Lock</span>()</span></div>
                 <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_timer</span>: <span class="tok-attr">threading</span>.<span class="tok-cls">Timer</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
                 <div class="code-line"><span class="code-ln">8</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_processing</span> <span class="tok-op">=</span> <span class="tok-kw">False</span></span></div>
                 <div class="code-line"><span class="code-ln">9</span><span class="code-src"></span></div>
                 <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-dec">@staticmethod</span></span></div>
-                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">_queue_key</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">agent_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">tuple</span>[<span class="tok-type">str</span>, <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-com"># thread_id / user_id / agent_name: 定义一批记忆更新属于谁，避免不同用户或 agent 的记忆被合并去抖</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">_queue_key</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">agent_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">tuple</span>[<span class="tok-type">str</span>, <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]:</span></div>
                 <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-com"># 同一个 thread 里，不同 user/agent 的长期记忆不能混成一份</span></span></div>
                 <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-kw">return</span> (<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span>, <span class="tok-attr">agent_name</span>)</span></div>
                 <div class="code-line"><span class="code-ln">14</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">add</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">messages</span>: <span class="tok-type">list</span>[<span class="tok-cls">Any</span>], <span class="tok-attr">agent_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">correction_detected</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-attr">reinforcement_detected</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-com"># thread_id / messages: 哪段对话要进记忆队列；agent_name / user_id: 归属维度；correction_* / reinforcement_*: 告诉后续提取器这轮是否出现纠正或强化信号</span></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">add</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">messages</span>: <span class="tok-type">list</span>[<span class="tok-cls">Any</span>], <span class="tok-attr">agent_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">correction_detected</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-attr">reinforcement_detected</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">16</span><span class="code-src">        <span class="tok-fn">config</span> <span class="tok-op">=</span> <span class="tok-fn">get_memory_config</span>()</span></div>
                 <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">config</span>.<span class="tok-attr">enabled</span>:</span></div>
                 <div class="code-line"><span class="code-ln">18</span><span class="code-src">            <span class="tok-kw">return</span></span></div>
@@ -204,7 +239,8 @@
                 <div class="code-line"><span class="code-ln">21</span><span class="code-src">            <span class="tok-self">self</span>.<span class="tok-fn">_enqueue_locked</span>(<span class="tok-attr">thread_id</span><span class="tok-op">=</span><span class="tok-attr">thread_id</span>, <span class="tok-attr">messages</span><span class="tok-op">=</span><span class="tok-attr">messages</span>, <span class="tok-attr">agent_name</span><span class="tok-op">=</span><span class="tok-attr">agent_name</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>, <span class="tok-attr">correction_detected</span><span class="tok-op">=</span><span class="tok-attr">correction_detected</span>, <span class="tok-attr">reinforcement_detected</span><span class="tok-op">=</span><span class="tok-attr">reinforcement_detected</span>)</span></div>
                 <div class="code-line"><span class="code-ln">22</span><span class="code-src">            <span class="tok-self">self</span>.<span class="tok-fn">_reset_timer</span>()</span></div>
                 <div class="code-line"><span class="code-ln">23</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">24</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">add_nowait</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">messages</span>: <span class="tok-type">list</span>[<span class="tok-cls">Any</span>], <span class="tok-attr">agent_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">correction_detected</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-attr">reinforcement_detected</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">    <span class="tok-com"># 参数含义和 add(...) 相同，但这条入口会跳过 debounce 等待窗口，适合需要立刻刷记忆的场景</span></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">add_nowait</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">messages</span>: <span class="tok-type">list</span>[<span class="tok-cls">Any</span>], <span class="tok-attr">agent_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">correction_detected</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-attr">reinforcement_detected</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">25</span><span class="code-src">        <span class="tok-fn">config</span> <span class="tok-op">=</span> <span class="tok-fn">get_memory_config</span>()</span></div>
                 <div class="code-line"><span class="code-ln">26</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">config</span>.<span class="tok-attr">enabled</span>:</span></div>
                 <div class="code-line"><span class="code-ln">27</span><span class="code-src">            <span class="tok-kw">return</span></span></div>
@@ -233,11 +269,13 @@
                 <div class="code-window-title">agents/memory/updater.py :: get_memory_data() / create_fact() / normalize update fact</div>
               </div>
               <div class="code-window-body">
-                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">get_memory_data</span>(<span class="tok-attr">agent_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-op">*</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># agent_name / user_id: 指定要读取哪位用户、哪位 agent 的长期记忆视图</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">get_memory_data</span>(<span class="tok-attr">agent_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-op">*</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>]:</span></div>
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com"># 真正读取是委托给 storage provider，而不是这里自己开 JSON 文件</span></span></div>
                 <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-fn">get_memory_storage</span>().<span class="tok-fn">load</span>(<span class="tok-attr">agent_name</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)</span></div>
                 <div class="code-line"><span class="code-ln">4</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">create_memory_fact</span>(<span class="tok-attr">content</span>: <span class="tok-type">str</span>, <span class="tok-attr">category</span>: <span class="tok-type">str</span> <span class="tok-op">=</span> <span class="tok-str">"context"</span>, <span class="tok-attr">confidence</span>: <span class="tok-type">float</span> <span class="tok-op">=</span> <span class="tok-num">0.5</span>, <span class="tok-attr">agent_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-op">*</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-com"># content / category / confidence: 这条事实的正文、类别和可信度；agent_name / user_id: 事实要记到谁的长期记忆名下</span></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">create_memory_fact</span>(<span class="tok-attr">content</span>: <span class="tok-type">str</span>, <span class="tok-attr">category</span>: <span class="tok-type">str</span> <span class="tok-op">=</span> <span class="tok-str">"context"</span>, <span class="tok-attr">confidence</span>: <span class="tok-type">float</span> <span class="tok-op">=</span> <span class="tok-num">0.5</span>, <span class="tok-attr">agent_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-op">*</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>]:</span></div>
                 <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-fn">normalized_content</span> <span class="tok-op">=</span> <span class="tok-attr">content</span>.<span class="tok-fn">strip</span>()</span></div>
                 <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">normalized_content</span>:</span></div>
                 <div class="code-line"><span class="code-ln">8</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"content"</span>)</span></div>
@@ -251,7 +289,8 @@
                 <div class="code-line"><span class="code-ln">16</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">OSError</span>(<span class="tok-str">"Failed to save memory data after creating fact"</span>)</span></div>
                 <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">updated_memory</span></span></div>
                 <div class="code-line"><span class="code-ln">18</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">19</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_normalize_memory_update_fact</span>(<span class="tok-attr">fact</span>: <span class="tok-cls">Any</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src"><span class="tok-com"># fact: 模型返回的一条候选 memory update，要在这里二次清洗成系统可接受的标准事实对象</span></span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_normalize_memory_update_fact</span>(<span class="tok-attr">fact</span>: <span class="tok-cls">Any</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">20</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">fact</span>, <span class="tok-type">dict</span>):</span></div>
                 <div class="code-line"><span class="code-ln">21</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-kw">None</span></span></div>
                 <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-fn">raw_content</span> <span class="tok-op">=</span> <span class="tok-attr">fact</span>.<span class="tok-fn">get</span>(<span class="tok-str">"content"</span>)</span></div>

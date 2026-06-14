@@ -86,23 +86,67 @@
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>DeerFlow 的 subagent 委派链很清晰，入口固定是 <code>backend/packages/harness/deerflow/tools/builtins/task_tool.py</code>：</p>
-        <div class="annotated-code">
-          <div class="code-window">
-            <div class="code-window-header">
-              <div class="code-window-dots"><span></span><span></span><span></span></div>
-              <div class="code-window-title">subagent flow :: 从父 agent 委派到子执行器完成</div>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>子代理委派流程图</strong>
+            <span>重点是看父代理怎样把任务、安全边界和上下文一起交给子执行器</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>父代理先判断这件事该不该委派</strong>
+                <p>不是所有任务都会下放，只有父代理决定拆出去时才会进入这条链。</p>
+                <div class="flow-step-path"><code>parent agent decides to delegate</code></div>
+              </div>
             </div>
-            <div class="code-window-body">
-              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"parent agent decides to delegate"</span></span></div>
-              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"task tool call"</span></span></div>
-              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/tools/builtins/task_tool.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"registry/config resolve subagent type"</span></span></div>
-              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"create SubagentExecutor(...)"</span></span></div>
-              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"execute_async(prompt, task_id=tool_call_id)"</span></span></div>
-              <div class="code-line"><span class="code-ln">7</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/subagents/executor.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">8</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"background execution + polling"</span></span></div>
-              <div class="code-line"><span class="code-ln">9</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"terminal status / usage summary / cleanup"</span></span></div>
-              <div class="code-line"><span class="code-ln">10</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"result returned to parent agent"</span></span></div>
+            <div class="flow-step">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>委派动作先表现成一次 task tool 调用</strong>
+                <p>对父代理来说，启动子代理的入口本质上就是一次工具调用。</p>
+                <div class="flow-step-path"><code>task tool call</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>task tool 负责解析要调用哪种子代理</strong>
+                <p>这里会结合 registry、配置和父运行时上下文，决定本次子任务的有效类型与限制。</p>
+                <div class="flow-step-path"><code>tools/builtins/task_tool.py</code> + <code>registry/config</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>系统创建一个子执行器并启动异步执行</strong>
+                <p>到了这一步，子代理才真正拥有自己的执行上下文和后台任务句柄。</p>
+                <div class="flow-step-path"><code>create SubagentExecutor(...)</code> + <code>execute_async(...)</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>执行器在后台运行并持续轮询状态</strong>
+                <p>它不是简单起个线程就结束，而是要持续管理运行状态、超时和结果回收。</p>
+                <div class="flow-step-path"><code>subagents/executor.py</code> + <code>background execution</code> + <code>polling</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">06</div>
+              <div class="flow-step-copy">
+                <strong>完成后整理状态、用量和清理动作</strong>
+                <p>终态、token usage 和清理逻辑都会在这一步收口，不会直接裸结果回传。</p>
+                <div class="flow-step-path"><code>terminal status</code> + <code>usage summary</code> + <code>cleanup</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">07</div>
+              <div class="flow-step-copy">
+                <strong>最后结果再回到父代理继续主线推理</strong>
+                <p>对子代理来说这是终点，但对父代理来说只是中间一步能力扩展。</p>
+                <div class="flow-step-path"><code>result returned to parent agent</code></div>
+              </div>
             </div>
           </div>
         </div>
@@ -215,6 +259,7 @@
                 <div class="code-window-title">subagents/executor.py :: SubagentStatus / SubagentResult / isolated loop</div>
               </div>
               <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># SubagentStatus: 子 agent 后台执行的状态机，父级轮询、取消和清理逻辑都依赖这些终态定义</span></span></div>
                 <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">SubagentStatus</span>(<span class="tok-cls">Enum</span>):</span></div>
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-attr">PENDING</span> <span class="tok-op">=</span> <span class="tok-str">"pending"</span></span></div>
                 <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-attr">RUNNING</span> <span class="tok-op">=</span> <span class="tok-str">"running"</span></span></div>
@@ -224,9 +269,11 @@
                 <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-attr">TIMED_OUT</span> <span class="tok-op">=</span> <span class="tok-str">"timed_out"</span></span></div>
                 <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
                 <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-dec">@property</span></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-com"># self: 当前状态值；这里只判断它是否已经进入不可再继续推进的终态</span></span></div>
                 <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">is_terminal</span>(<span class="tok-self">self</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">bool</span>:</span></div>
                 <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-self">self</span> <span class="tok-kw">in</span> {<span class="tok-fn">type</span>(<span class="tok-self">self</span>).<span class="tok-attr">COMPLETED</span>, <span class="tok-fn">type</span>(<span class="tok-self">self</span>).<span class="tok-attr">FAILED</span>, <span class="tok-fn">type</span>(<span class="tok-self">self</span>).<span class="tok-attr">CANCELLED</span>, <span class="tok-fn">type</span>(<span class="tok-self">self</span>).<span class="tok-attr">TIMED_OUT</span>}</span></div>
                 <div class="code-line"><span class="code-ln">12</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-com"># SubagentResult: 单个子任务的共享结果槽，既存状态，也挂取消事件和并发保护锁</span></span></div>
                 <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-dec">@dataclass</span></span></div>
                 <div class="code-line"><span class="code-ln">14</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">SubagentResult</span>:</span></div>
                 <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-attr">task_id</span>: <span class="tok-type">str</span></span></div>
@@ -235,7 +282,9 @@
                 <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-attr">cancel_event</span>: <span class="tok-attr">threading</span>.<span class="tok-cls">Event</span> <span class="tok-op">=</span> <span class="tok-fn">field</span>(<span class="tok-attr">default_factory</span><span class="tok-op">=</span><span class="tok-attr">threading</span>.<span class="tok-cls">Event</span>, <span class="tok-attr">repr</span><span class="tok-op">=</span><span class="tok-kw">False</span>)</span></div>
                 <div class="code-line"><span class="code-ln">19</span><span class="code-src">    <span class="tok-attr">_state_lock</span>: <span class="tok-attr">threading</span>.<span class="tok-cls">Lock</span> <span class="tok-op">=</span> <span class="tok-fn">field</span>(<span class="tok-attr">default_factory</span><span class="tok-op">=</span><span class="tok-attr">threading</span>.<span class="tok-cls">Lock</span>, <span class="tok-attr">init</span><span class="tok-op">=</span><span class="tok-kw">False</span>, <span class="tok-attr">repr</span><span class="tok-op">=</span><span class="tok-kw">False</span>)</span></div>
                 <div class="code-line"><span class="code-ln">20</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-com"># self / status / result / error: 想把子任务推进到某个终态，并可附带成功结果或失败信息</span></span></div>
                 <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">try_set_terminal</span>(<span class="tok-self">self</span>, <span class="tok-attr">status</span>: <span class="tok-cls">SubagentStatus</span>, <span class="tok-op">*</span>, <span class="tok-attr">result</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">error</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">bool</span>:</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-com"># 先验证传入的确实是终态，再用锁保证多个竞争线程只有一个能成功落盘最终状态</span></span></div>
                 <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">status</span>.<span class="tok-attr">is_terminal</span>:</span></div>
                 <div class="code-line"><span class="code-ln">23</span><span class="code-src">            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Status {status} is not terminal"</span>)</span></div>
                 <div class="code-line"><span class="code-ln">24</span><span class="code-src">        <span class="tok-kw">with</span> <span class="tok-self">self</span>.<span class="tok-attr">_state_lock</span>:</span></div>
@@ -244,8 +293,10 @@
                 <div class="code-line"><span class="code-ln">27</span><span class="code-src">            <span class="tok-self">self</span>.<span class="tok-attr">status</span> <span class="tok-op">=</span> <span class="tok-attr">status</span></span></div>
                 <div class="code-line"><span class="code-ln">28</span><span class="code-src">            <span class="tok-kw">return</span> <span class="tok-kw">True</span></span></div>
                 <div class="code-line"><span class="code-ln">29</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-com"># 这组全局对象负责复用后台线程池与专用事件循环，避免每次委派都新起一整套 asyncio 环境</span></span></div>
                 <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-attr">_scheduler_pool</span> <span class="tok-op">=</span> <span class="tok-cls">ThreadPoolExecutor</span>(<span class="tok-attr">max_workers</span><span class="tok-op">=</span><span class="tok-num">3</span>, <span class="tok-attr">thread_name_prefix</span><span class="tok-op">=</span><span class="tok-str">"subagent-scheduler-"</span>)</span></div>
                 <div class="code-line"><span class="code-ln">31</span><span class="code-src"><span class="tok-attr">_isolated_subagent_loop</span>: <span class="tok-cls">asyncio</span>.<span class="tok-cls">AbstractEventLoop</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src"><span class="tok-com"># _get_isolated_subagent_loop(): 当前 loop 不可用时就在后台线程里重建一份持久事件循环给全部 subagent 共用</span></span></div>
                 <div class="code-line"><span class="code-ln">32</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_get_isolated_subagent_loop</span>() <span class="tok-op">-&gt;</span> <span class="tok-cls">asyncio</span>.<span class="tok-cls">AbstractEventLoop</span>:</span></div>
                 <div class="code-line"><span class="code-ln">33</span><span class="code-src">    <span class="tok-kw">with</span> <span class="tok-attr">_isolated_subagent_loop_lock</span>:</span></div>
                 <div class="code-line"><span class="code-ln">34</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-fn">loop_is_usable</span>:</span></div>

@@ -82,22 +82,67 @@
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>一轮 DeerFlow 上下文组装，通常会沿着下面这条链发生：</p>
-        <div class="annotated-code">
-          <div class="code-window">
-            <div class="code-window-header">
-              <div class="code-window-dots"><span></span><span></span><span></span></div>
-              <div class="code-window-title">context flow :: 一轮上下文是怎样被组装出来的</div>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>上下文组装流程图</strong>
+            <span>先搭提示骨架，再把运行时上下文一层层补进去</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>先生成基础系统提示</strong>
+                <p>这一层先定义 agent 的角色、固定规则和基础行为，还没放入当轮动态信息。</p>
+                <div class="flow-step-path"><code>agents/lead_agent/prompt.py</code></div>
+              </div>
             </div>
-            <div class="code-window-body">
-              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"backend/packages/harness/deerflow/agents/lead_agent/prompt.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"build base system prompt"</span></span></div>
-              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"inject enabled skills"</span></span></div>
-              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"inject deferred tool names from tool_search.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/agents/factory.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"mount middleware chain from agents/middlewares/"</span></span></div>
-              <div class="code-line"><span class="code-ln">7</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"DynamicContextMiddleware injects current date + memory"</span></span></div>
-              <div class="code-line"><span class="code-ln">8</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"uploads / images / summarization / other middlewares modify runtime state"</span></span></div>
-              <div class="code-line"><span class="code-ln">9</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"final model invocation sees composed context"</span></span></div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>把已启用的技能说明补进去</strong>
+                <p>真正启用中的 Skill 会被渲染成工作方法提示，让模型知道这轮该按什么套路做事。</p>
+                <div class="flow-step-path"><code>agents/lead_agent/prompt.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>只先告诉模型有哪些延迟工具可查</strong>
+                <p>初始上下文不会塞满所有工具 schema，而是先暴露 deferred tool 名录，细节等需要时再搜索。</p>
+                <div class="flow-step-path"><code>tools/builtins/tool_search.py</code> + <code>agents/lead_agent/prompt.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>工厂开始挂载中间件链</strong>
+                <p>进入 agent 构建后，DeerFlow 才把上下文相关能力按顺序装进运行链，而不是全部写死在 prompt 中。</p>
+                <div class="flow-step-path"><code>agents/factory.py</code> + <code>agents/middlewares/</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>动态提醒注入日期和长期记忆</strong>
+                <p><code>DynamicContextMiddleware</code> 会在每轮模型调用前补入当前日期、memory 提醒等实时信息。</p>
+                <div class="flow-step-path"><code>dynamic_context_middleware.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">06</div>
+              <div class="flow-step-copy">
+                <strong>上传文件、图片和摘要继续改写运行态</strong>
+                <p>文件、图片查看、summary、todo 等能力会继续补充 thread state，让上下文变成一份加工后的运行材料。</p>
+                <div class="flow-step-path"><code>agents/middlewares/</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">07</div>
+              <div class="flow-step-copy">
+                <strong>模型最终看到的是组合完成后的上下文</strong>
+                <p>所以模型真正读到的不是一段孤立 prompt，而是静态规则、技能提示和运行时提醒的合成结果。</p>
+                <div class="flow-step-path"><code>final model invocation</code></div>
+              </div>
             </div>
           </div>
         </div>
@@ -114,8 +159,10 @@
                 <div class="code-window-title">middlewares/dynamic_context_middleware.py :: _build_full_reminder()</div>
               </div>
               <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># DynamicContextMiddleware: 专门处理每轮变化的提醒，把日期和记忆注入到运行时消息而不是静态 prompt</span></span></div>
                 <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">DynamicContextMiddleware</span>(<span class="tok-cls">AgentMiddleware</span>):</span></div>
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com"># 它的职责不是改 system prompt 常量，而是把动态上下文包装成当前轮可注入的 reminder</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-com"># self: 中间件实例，会从内部 app_config 和 agent_name 里推导本轮完整 reminder</span></span></div>
                 <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">_build_full_reminder</span>(<span class="tok-self">self</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
                 <div class="code-line"><span class="code-ln">4</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">deerflow.agents.lead_agent.prompt</span> <span class="tok-kw">import</span> <span class="tok-fn">_get_memory_context</span></span></div>
                 <div class="code-line"><span class="code-ln">5</span><span class="code-src"></span></div>
@@ -155,22 +202,27 @@
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-com">call them until it fetches their full schema via the tool_search tool."""</span></span></div>
                 <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
                 <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-dec">@dataclass</span>(<span class="tok-attr">frozen</span><span class="tok-op">=</span><span class="tok-kw">True</span>)</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-com"># DeferredToolCatalog: 延迟工具目录本体，只暴露名字、指纹和检索能力，不负责直接执行工具</span></span></div>
                 <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">DeferredToolCatalog</span>:</span></div>
                 <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-com">"""不可变的 deferred tools 目录，只负责搜索，不负责修改。"""</span></span></div>
                 <div class="code-line"><span class="code-ln">7</span><span class="code-src"></span></div>
                 <div class="code-line"><span class="code-ln">8</span><span class="code-src">    <span class="tok-attr">tools</span>: <span class="tok-type">tuple</span>[<span class="tok-cls">BaseTool</span>, ...]</span></div>
                 <div class="code-line"><span class="code-ln">9</span><span class="code-src"></span></div>
                 <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-dec">@cached_property</span></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-com"># self: 当前目录对象；这里先提炼所有工具名字，让 prompt 只暴露“可检索能力名单”</span></span></div>
                 <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">names</span>(<span class="tok-self">self</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">frozenset</span>[<span class="tok-type">str</span>]:</span></div>
                 <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-fn">frozenset</span>(<span class="tok-fn">t</span>.<span class="tok-attr">name</span> <span class="tok-kw">for</span> <span class="tok-fn">t</span> <span class="tok-kw">in</span> <span class="tok-self">self</span>.<span class="tok-attr">tools</span>)</span></div>
                 <div class="code-line"><span class="code-ln">13</span><span class="code-src"></span></div>
                 <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-dec">@cached_property</span></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-com"># hash: 为这一整份 deferred tool 集合做版本指纹，后面 state merge 才能判断 catalog 是否发生变化</span></span></div>
                 <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">hash</span>(<span class="tok-self">self</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
                 <div class="code-line"><span class="code-ln">16</span><span class="code-src">        <span class="tok-fn">canon</span> <span class="tok-op">=</span> [{<span class="tok-str">"name"</span>: <span class="tok-fn">t</span>.<span class="tok-attr">name</span>, <span class="tok-str">"schema"</span>: <span class="tok-fn">convert_to_openai_function</span>(<span class="tok-fn">t</span>)} <span class="tok-kw">for</span> <span class="tok-fn">t</span> <span class="tok-kw">in</span> <span class="tok-fn">sorted</span>(<span class="tok-self">self</span>.<span class="tok-attr">tools</span>, <span class="tok-attr">key</span><span class="tok-op">=</span><span class="tok-kw">lambda</span> <span class="tok-fn">t</span>: <span class="tok-fn">t</span>.<span class="tok-attr">name</span>)]</span></div>
                 <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-fn">blob</span> <span class="tok-op">=</span> <span class="tok-attr">json</span>.<span class="tok-fn">dumps</span>(<span class="tok-fn">canon</span>, <span class="tok-attr">sort_keys</span><span class="tok-op">=</span><span class="tok-kw">True</span>, <span class="tok-attr">ensure_ascii</span><span class="tok-op">=</span><span class="tok-kw">False</span>, <span class="tok-attr">default</span><span class="tok-op">=</span><span class="tok-fn">str</span>)</span></div>
                 <div class="code-line"><span class="code-ln">18</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">hashlib</span>.<span class="tok-fn">sha256</span>(<span class="tok-attr">blob</span>.<span class="tok-fn">encode</span>(<span class="tok-str">"utf-8"</span>)).<span class="tok-fn">hexdigest</span>()[:<span class="tok-num">16</span>]</span></div>
                 <div class="code-line"><span class="code-ln">19</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">    <span class="tok-com"># query: 模型发来的检索表达式，既可能是自然语言，也可能是 select:/+ 这种结构化检索语法</span></span></div>
                 <div class="code-line"><span class="code-ln">20</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">search</span>(<span class="tok-self">self</span>, <span class="tok-attr">query</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-cls">BaseTool</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">        <span class="tok-com"># 先做空查询和特殊前缀分流，后面才会进入模糊匹配、正则打分等真正的检索逻辑</span></span></div>
                 <div class="code-line"><span class="code-ln">21</span><span class="code-src">        <span class="tok-attr">query</span> <span class="tok-op">=</span> <span class="tok-attr">query</span>.<span class="tok-fn">strip</span>()</span></div>
                 <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">query</span>:</span></div>
                 <div class="code-line"><span class="code-ln">23</span><span class="code-src">            <span class="tok-kw">return</span> []</span></div>

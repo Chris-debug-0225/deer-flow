@@ -815,18 +815,43 @@
                     前面讲的是抽象概念，但在 DeerFlow 里，Agent 并不是一个空泛名词。它最终会落到三层实现：
                     一层是 <code>ThreadState</code> 这种“Agent 持有的数据结构”，一层是 <code>build_middlewares(...)</code> 这种“Agent 的能力编排”，最后一层是 <code>create_agent(...)</code> / <code>run_agent(...)</code> 这种真正让它跑起来的执行入口。
                 </p>
-                <div class="annotated-code">
-                    <div class="code-window">
-                        <div class="code-window-header">
-                            <div class="code-window-dots"><span></span><span></span><span></span></div>
-                            <div class="code-window-title">Agent concepts :: 对应到 DeerFlow 真实实现层</div>
+                <div class="flow-visual">
+                    <div class="flow-visual-title">
+                        <strong>Agent 概念落地流程图</strong>
+                        <span>把抽象的 Agent 拆成“数据、装配、执行、对外表现”四层来看</span>
+                    </div>
+                    <div class="flow-steps">
+                        <div class="flow-step">
+                            <div class="flow-step-num">01</div>
+                            <div class="flow-step-copy">
+                                <strong>先看 Agent 持有什么状态</strong>
+                                <p>这一层回答的是“它脑子里都记着什么、线程里都存着什么”。</p>
+                                <div class="flow-step-path"><code>deerflow/agents/thread_state.py</code></div>
+                            </div>
                         </div>
-                        <div class="code-window-body">
-                            <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># Agent 概念在 DeerFlow 源码中的真实落点</span></span></div>
-                            <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-str">"State"</span>                <span class="tok-op">-&gt;</span> <span class="tok-str">"deerflow/agents/thread_state.py"</span></span></div>
-                            <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-str">"Capability assembly"</span>  <span class="tok-op">-&gt;</span> <span class="tok-str">"deerflow/agents/lead_agent/agent.py"</span></span></div>
-                            <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-str">"Runtime execution"</span>    <span class="tok-op">-&gt;</span> <span class="tok-str">"deerflow/runtime/runs/worker.py"</span></span></div>
-                            <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-str">"User-visible behavior"</span> <span class="tok-op">-&gt;</span> <span class="tok-str">"Gateway / DeerFlowClient / channels"</span></span></div>
+                        <div class="flow-step flow-step-accent-purple">
+                            <div class="flow-step-num">02</div>
+                            <div class="flow-step-copy">
+                                <strong>再看它的能力是怎样被拼出来的</strong>
+                                <p>工具、中间件、记忆、反思和控制逻辑，都是在装配层被组合起来的。</p>
+                                <div class="flow-step-path"><code>deerflow/agents/lead_agent/agent.py</code></div>
+                            </div>
+                        </div>
+                        <div class="flow-step flow-step-accent-green">
+                            <div class="flow-step-num">03</div>
+                            <div class="flow-step-copy">
+                                <strong>然后看它怎么真正跑起来</strong>
+                                <p>只有到了运行层，前面的状态和能力才会变成一轮轮真实执行。</p>
+                                <div class="flow-step-path"><code>deerflow/runtime/runs/worker.py</code></div>
+                            </div>
+                        </div>
+                        <div class="flow-step flow-step-accent-orange">
+                            <div class="flow-step-num">04</div>
+                            <div class="flow-step-copy">
+                                <strong>最后看用户实际能感知到的表现</strong>
+                                <p>用户看到的回复、流式输出和渠道行为，是前面三层共同作用后的结果。</p>
+                                <div class="flow-step-path"><code>Gateway</code> / <code>DeerFlowClient</code> / <code>channels</code></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -869,25 +894,32 @@
                                 <div class="code-window-title">agents/thread_state.py :: ThreadState / reducers</div>
                             </div>
                             <div class="code-window-body">
+                                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-com"># SandboxState: 线程绑定沙箱时会挂在 state 里的最小沙箱信息，目前核心是 sandbox_id</span></span></div>
                                 <div class="code-line"><span class="code-ln">6</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">SandboxState</span>(<span class="tok-cls">TypedDict</span>):</span></div>
                                 <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-attr">sandbox_id</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                                <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-com"># ThreadDataState: 当前线程工作区相关目录，后续工具和中间件会靠这些路径读写文件</span></span></div>
                                 <div class="code-line"><span class="code-ln">10</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">ThreadDataState</span>(<span class="tok-cls">TypedDict</span>):</span></div>
                                 <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-attr">workspace_path</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
                                 <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-attr">uploads_path</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
                                 <div class="code-line"><span class="code-ln">13</span><span class="code-src">    <span class="tok-attr">outputs_path</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                                <div class="code-line"><span class="code-ln">20</span><span class="code-src"><span class="tok-com"># existing / new: 图状态里之前积累的 artifact 列表和本轮节点新增 artifact，目标是保序合并</span></span></div>
                                 <div class="code-line"><span class="code-ln">21</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_artifacts</span>(<span class="tok-attr">existing</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">new</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-type">str</span>]:</span></div>
                                 <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-com"># dict.fromkeys 一边保序一边去重，适合 artifact 列表</span></span></div>
                                 <div class="code-line"><span class="code-ln">28</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-type">list</span>(<span class="tok-fn">dict</span>.<span class="tok-fn">fromkeys</span>(<span class="tok-attr">existing</span> <span class="tok-op">+</span> <span class="tok-attr">new</span>))</span></div>
+                                <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-com"># existing / new: 之前看过的图片缓存与本轮新增图片信息，支持叠加也支持显式清空</span></span></div>
                                 <div class="code-line"><span class="code-ln">31</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_viewed_images</span>(<span class="tok-attr">existing</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">ViewedImageData</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">new</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">ViewedImageData</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">ViewedImageData</span>]:</span></div>
                                 <div class="code-line"><span class="code-ln">34</span><span class="code-src">    <span class="tok-com"># new == {} 时清空，允许 middleware 主动重置图片上下文</span></span></div>
                                 <div class="code-line"><span class="code-ln">42</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">len</span>(<span class="tok-attr">new</span>) <span class="tok-op">==</span> <span class="tok-num">0</span>:</span></div>
                                 <div class="code-line"><span class="code-ln">43</span><span class="code-src">        <span class="tok-kw">return</span> {}</span></div>
+                                <div class="code-line"><span class="code-ln">60</span><span class="code-src"><span class="tok-com"># PromotedTools: deferred tool search 提升出来的工具快照，既记录目录 hash 也记录已提升名字</span></span></div>
                                 <div class="code-line"><span class="code-ln">61</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">PromotedTools</span>(<span class="tok-cls">TypedDict</span>):</span></div>
                                 <div class="code-line"><span class="code-ln">62</span><span class="code-src">    <span class="tok-attr">catalog_hash</span>: <span class="tok-type">str</span></span></div>
                                 <div class="code-line"><span class="code-ln">63</span><span class="code-src">    <span class="tok-attr">names</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>]</span></div>
+                                <div class="code-line"><span class="code-ln">65</span><span class="code-src"><span class="tok-com"># existing / new: 之前和本轮提升出来的 deferred 工具状态，catalog 变了就不能继续混用旧名字</span></span></div>
                                 <div class="code-line"><span class="code-ln">66</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_promoted</span>(<span class="tok-attr">existing</span>: <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">new</span>: <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
                                 <div class="code-line"><span class="code-ln">70</span><span class="code-src">    <span class="tok-com"># catalog_hash 变化时整体替换，避免旧 promoted 名字误映射到新 catalog</span></span></div>
                                 <div class="code-line"><span class="code-ln">76</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">existing</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span> <span class="tok-kw">or</span> <span class="tok-attr">existing</span>.<span class="tok-fn">get</span>(<span class="tok-str">"catalog_hash"</span>) <span class="tok-op">!=</span> <span class="tok-attr">new</span>[<span class="tok-str">"catalog_hash"</span>]:</span></div>
+                                <div class="code-line"><span class="code-ln">86</span><span class="code-src"><span class="tok-com"># ThreadState: DeerFlow 真正贯穿整张图的主状态对象，把消息、工作区、产物和工具提升状态统合在一起</span></span></div>
                                 <div class="code-line"><span class="code-ln">87</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">ThreadState</span>(<span class="tok-cls">AgentState</span>):</span></div>
                                 <div class="code-line"><span class="code-ln">88</span><span class="code-src">    <span class="tok-attr">sandbox</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-cls">SandboxState</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
                                 <div class="code-line"><span class="code-ln">89</span><span class="code-src">    <span class="tok-attr">thread_data</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-cls">ThreadDataState</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>

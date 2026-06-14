@@ -93,20 +93,67 @@
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>默认 Gateway 路径下，一次典型运行可以压缩成下面这条链：</p>
-        <div class="annotated-code">
-          <div class="code-window">
-            <div class="code-window-header">
-              <div class="code-window-dots"><span></span><span></span><span></span></div>
-              <div class="code-window-title">execution flow :: run 请求进入后怎样跑到 agent</div>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>一次 Run 的执行接力图</strong>
+            <span>重点不是单个循环，而是谁在什么时候接手控制权</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>入口先把外部请求翻译成 DeerFlow 运行任务</strong>
+                <p>Gateway 负责收请求、建 run record，并把用户输入转成 DeerFlow 能统一处理的运行协议。</p>
+                <div class="flow-step-path"><code>app/gateway/routers/thread_runs.py</code></div>
+              </div>
             </div>
-            <div class="code-window-body">
-              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"backend/app/gateway/routers/thread_runs.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"runtime/runs/worker.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/agents/lead_agent/agent.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"build middlewares + bind tools + ThreadState"</span></span></div>
-              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"agent.astream(stream_mode=['values','messages','custom'])"</span></span></div>
-              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"stream bridge / SSE"</span></span></div>
-              <div class="code-line"><span class="code-ln">7</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"caller receives events"</span></span></div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>Worker 接管整次运行生命周期</strong>
+                <p>run 状态、checkpoint、runtime context、callbacks、stream bridge 和 journal 都是在这一层装起来的。</p>
+                <div class="flow-step-path"><code>runtime/runs/worker.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>Lead Agent 开始组装本次执行图</strong>
+                <p>到了 agent 层，系统才把模型、工具和执行语义拼成真正能跑的一张图。</p>
+                <div class="flow-step-path"><code>agents/lead_agent/agent.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>中间件、工具和状态结构依次挂载进去</strong>
+                <p>Clarification、DynamicContext、Sandbox、Todo、Memory、Summarization 等行为大多都藏在这一步的装配顺序里。</p>
+                <div class="flow-step-path"><code>agents/middlewares/</code> + <code>agents/thread_state.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>Agent 图以流式方式开始执行</strong>
+                <p>模型思考、工具调用和状态更新会持续向外发事件，而不是等整轮结束才统一返回。</p>
+                <div class="flow-step-path"><code>agent.astream(...)</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">06</div>
+              <div class="flow-step-copy">
+                <strong>内部事件再被桥接成外部可消费的流</strong>
+                <p>SSE 等出口负责把内部运行事件翻译成前端或调用方能直接接住的消息格式。</p>
+                <div class="flow-step-path"><code>stream bridge</code> / <code>SSE</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">07</div>
+              <div class="flow-step-copy">
+                <strong>调用方最终看到的是包装好的运行事件</strong>
+                <p>外部看到的回复流，背后其实已经经过运行调度、图执行和事件适配三层加工。</p>
+                <div class="flow-step-path"><code>caller receives events</code></div>
+              </div>
             </div>
           </div>
         </div>
@@ -175,42 +222,45 @@
                 <div class="code-window-title">runtime/runs/worker.py :: run_agent(...)</div>
               </div>
               <div class="code-window-body">
-                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># 1. 先把 run 状态推进到 running，确保后续 cancel / join 都有统一状态源</span></span></div>
-                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-kw">await</span> <span class="tok-attr">run_manager</span>.<span class="tok-fn">set_status</span>(<span class="tok-attr">run_id</span>, <span class="tok-cls">RunStatus</span>.<span class="tok-attr">running</span>)</span></div>
-                <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-com"># 2. 尝试抓一份 pre-run checkpoint，后面 rollback 会依赖它恢复状态</span></span></div>
-                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">checkpointer</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
-                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-kw">try</span>:</span></div>
-                <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-fn">config_for_check</span> <span class="tok-op">=</span> {<span class="tok-str">"configurable"</span>: {<span class="tok-str">"thread_id"</span>: <span class="tok-attr">thread_id</span>, <span class="tok-str">"checkpoint_ns"</span>: <span class="tok-str">""</span>}}</span></div>
-                <div class="code-line"><span class="code-ln">8</span><span class="code-src">        <span class="tok-fn">ckpt_tuple</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-attr">checkpointer</span>.<span class="tok-fn">aget_tuple</span>(<span class="tok-fn">config_for_check</span>)</span></div>
-                <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-kw">except</span> <span class="tok-cls">Exception</span>:</span></div>
-                <div class="code-line"><span class="code-ln">10</span><span class="code-src">        <span class="tok-attr">snapshot_capture_failed</span> <span class="tok-op">=</span> <span class="tok-kw">True</span></span></div>
-                <div class="code-line"><span class="code-ln">11</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">12</span><span class="code-src"><span class="tok-com"># 3. 先向前端发 metadata 事件，让 useStream 一开始就知道 run_id / thread_id</span></span></div>
-                <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-kw">await</span> <span class="tok-attr">bridge</span>.<span class="tok-fn">publish</span>(</span></div>
-                <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-attr">run_id</span>,</span></div>
-                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-str">"metadata"</span>,</span></div>
-                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    {</span></div>
-                <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-str">"run_id"</span>: <span class="tok-attr">run_id</span>,</span></div>
-                <div class="code-line"><span class="code-ln">18</span><span class="code-src">        <span class="tok-str">"thread_id"</span>: <span class="tok-attr">thread_id</span>,</span></div>
-                <div class="code-line"><span class="code-ln">19</span><span class="code-src">    },</span></div>
-                <div class="code-line"><span class="code-ln">20</span><span class="code-src">)</span></div>
-                <div class="code-line"><span class="code-ln">21</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">22</span><span class="code-src"><span class="tok-com"># 4. 安装 DeerFlow 自己的 runtime context，后面所有中间件和工具都靠它读 thread_id / run_id / app_config</span></span></div>
-                <div class="code-line"><span class="code-ln">23</span><span class="code-src"><span class="tok-fn">runtime_ctx</span> <span class="tok-op">=</span> <span class="tok-fn">_build_runtime_context</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">run_id</span>, <span class="tok-attr">config</span>.<span class="tok-attr">get</span>(<span class="tok-str">"context"</span>), <span class="tok-attr">ctx</span>.<span class="tok-attr">app_config</span>)</span></div>
-                <div class="code-line"><span class="code-ln">24</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">journal</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
-                <div class="code-line"><span class="code-ln">25</span><span class="code-src">    <span class="tok-fn">runtime_ctx</span>[<span class="tok-str">"__run_journal"</span>] <span class="tok-op">=</span> <span class="tok-attr">journal</span></span></div>
-                <div class="code-line"><span class="code-ln">26</span><span class="code-src"><span class="tok-fn">_install_runtime_context</span>(<span class="tok-attr">config</span>, <span class="tok-fn">runtime_ctx</span>)</span></div>
-                <div class="code-line"><span class="code-ln">27</span><span class="code-src"><span class="tok-fn">runtime</span> <span class="tok-op">=</span> <span class="tok-cls">Runtime</span>(<span class="tok-attr">context</span><span class="tok-op">=</span><span class="tok-fn">cast</span>(<span class="tok-cls">Any</span>, <span class="tok-fn">runtime_ctx</span>), <span class="tok-attr">store</span><span class="tok-op">=</span><span class="tok-attr">store</span>)</span></div>
-                <div class="code-line"><span class="code-ln">28</span><span class="code-src"><span class="tok-attr">config</span>.<span class="tok-fn">setdefault</span>(<span class="tok-str">"configurable"</span>, {})[<span class="tok-str">"__pregel_runtime"</span>] <span class="tok-op">=</span> <span class="tok-fn">runtime</span></span></div>
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># 这段不是“普通函数调用前置代码”，而是 Gateway 把 run 现场布置成可执行 graph 的全过程</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-com"># bridge: 把 metadata、消息流和自定义事件往外转发，决定前端/频道能看到什么</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-com"># run_manager / record: 管 run 生命周期和 run 身份；ctx / config: 提供宿主配置与本轮运行时上下文</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-com"># agent_factory / graph_input / stream_* / interrupt_*: 决定 agent 怎样创建、拿什么输入运行、以什么粒度流式输出</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-com"># 1. 先把 run 状态推进到 running，确保后续 cancel / join 都有统一状态源</span></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src"><span class="tok-kw">await</span> <span class="tok-attr">run_manager</span>.<span class="tok-fn">set_status</span>(<span class="tok-attr">run_id</span>, <span class="tok-cls">RunStatus</span>.<span class="tok-attr">running</span>)</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-com"># 2. 先抓 pre-run checkpoint，后面如果需要 rollback，恢复点就靠这一步留下</span></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">checkpointer</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-kw">try</span>:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-fn">config_for_check</span> <span class="tok-op">=</span> {<span class="tok-str">"configurable"</span>: {<span class="tok-str">"thread_id"</span>: <span class="tok-attr">thread_id</span>, <span class="tok-str">"checkpoint_ns"</span>: <span class="tok-str">""</span>}}</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-fn">ckpt_tuple</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-attr">checkpointer</span>.<span class="tok-fn">aget_tuple</span>(<span class="tok-fn">config_for_check</span>)</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">    <span class="tok-kw">except</span> <span class="tok-cls">Exception</span>:</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">        <span class="tok-attr">snapshot_capture_failed</span> <span class="tok-op">=</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src"><span class="tok-com"># 3. 对外先发 metadata，让前端在真正收到 token 之前就知道自己连接的是哪次运行</span></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src"><span class="tok-kw">await</span> <span class="tok-attr">bridge</span>.<span class="tok-fn">publish</span>(</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-attr">run_id</span>,</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">    <span class="tok-str">"metadata"</span>,</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">    {</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">        <span class="tok-str">"run_id"</span>: <span class="tok-attr">run_id</span>,</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-str">"thread_id"</span>: <span class="tok-attr">thread_id</span>,</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">    },</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">)</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src"><span class="tok-com"># 4. 把 DeerFlow 自己的上下文装进 LangGraph runtime，后面的工具、中间件、memory 都靠这份上下文协作</span></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src"><span class="tok-fn">runtime_ctx</span> <span class="tok-op">=</span> <span class="tok-fn">_build_runtime_context</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">run_id</span>, <span class="tok-attr">config</span>.<span class="tok-attr">get</span>(<span class="tok-str">"context"</span>), <span class="tok-attr">ctx</span>.<span class="tok-attr">app_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">journal</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">    <span class="tok-fn">runtime_ctx</span>[<span class="tok-str">"__run_journal"</span>] <span class="tok-op">=</span> <span class="tok-attr">journal</span></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-fn">_install_runtime_context</span>(<span class="tok-attr">config</span>, <span class="tok-fn">runtime_ctx</span>)</span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src"><span class="tok-fn">runtime</span> <span class="tok-op">=</span> <span class="tok-cls">Runtime</span>(<span class="tok-attr">context</span><span class="tok-op">=</span><span class="tok-fn">cast</span>(<span class="tok-cls">Any</span>, <span class="tok-fn">runtime_ctx</span>), <span class="tok-attr">store</span><span class="tok-op">=</span><span class="tok-attr">store</span>)</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src"><span class="tok-attr">config</span>.<span class="tok-fn">setdefault</span>(<span class="tok-str">"configurable"</span>, {})[<span class="tok-str">"__pregel_runtime"</span>] <span class="tok-op">=</span> <span class="tok-fn">runtime</span></span></div>
               </div>
             </div>
           </div>
           <ul class="annotation-list">
-            <li>第一步不是立刻调模型，而是先把 run 状态标记为 <code>running</code>，这样取消、join、状态查询才有一致依据。</li>
-            <li><code>bridge.publish(..., "metadata", ...)</code> 会先把 <code>run_id</code> 和 <code>thread_id</code> 发给前端流，这就是为什么前端一开始就能知道自己连的是哪次运行。</li>
-            <li><code>runtime_ctx</code> 是 DeerFlow 的关键胶水层。后面中间件和工具能拿到 <code>thread_id</code>、<code>run_id</code>、<code>app_config</code>，就是因为 worker 先把它们塞进了 runtime context。</li>
-            <li><code>config["configurable"]["__pregel_runtime"] = runtime</code> 这一句把 DeerFlow 自己准备好的运行时塞回 LangGraph，这样 graph 内部执行时就能读到同一份上下文。</li>
+            <li>这版代码块把“状态推进、快照捕获、metadata 发布、runtime 安装”拆成四个阶段后，就不会再像一整坨实现细节那样难读。</li>
+            <li>前端为什么能立刻知道当前 run 的身份，答案就在第 13 到 21 行的 metadata 发布里，而不是在 agent graph 内部。</li>
+            <li>第 23 到 29 行是最关键的宿主边界：DeerFlow 不是把模型直接丢给 LangGraph，而是先把自己的 runtime 上下文缝进去再开跑。</li>
           </ul>
         </div>
         <div class="source-walkthrough">
@@ -231,7 +281,8 @@
                 <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-attr">uploads_path</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
                 <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-attr">outputs_path</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
                 <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_artifacts</span>(<span class="tok-attr">existing</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">new</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-type">str</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-com"># existing / new: 线程状态里旧的 artifact 列表和本轮新增 artifact，要在这里做去重合并</span></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_artifacts</span>(<span class="tok-attr">existing</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">new</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-type">str</span>]:</span></div>
                 <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">existing</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">new</span> <span class="tok-kw">or</span> []</span></div>
                 <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">new</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
@@ -239,7 +290,8 @@
                 <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-com"># 合并并去重，确保多个节点都产出 artifact 时不会互相覆盖</span></span></div>
                 <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-fn">list</span>(<span class="tok-fn">dict</span>.<span class="tok-fn">fromkeys</span>(<span class="tok-attr">existing</span> <span class="tok-op">+</span> <span class="tok-attr">new</span>))</span></div>
                 <div class="code-line"><span class="code-ln">16</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">17</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_promoted</span>(<span class="tok-attr">existing</span>: <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">new</span>: <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src"><span class="tok-com"># existing / new: deferred tool search 已提升的工具状态，职责是把父状态和本轮新增提升记录安全叠到一起</span></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_promoted</span>(<span class="tok-attr">existing</span>: <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">new</span>: <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">new</span>:</span></div>
                 <div class="code-line"><span class="code-ln">19</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">existing</span></span></div>
                 <div class="code-line"><span class="code-ln">20</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">existing</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span> <span class="tok-kw">or</span> <span class="tok-attr">existing</span>.<span class="tok-fn">get</span>(<span class="tok-str">"catalog_hash"</span>) <span class="tok-op">!=</span> <span class="tok-attr">new</span>[<span class="tok-str">"catalog_hash"</span>]:</span></div>
@@ -276,7 +328,8 @@
               <div class="code-window-body">
                 <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com">"""INVARIANT — tracing callbacks are attached at the graph invocation root."""</span></span></div>
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_get_runtime_config</span>(<span class="tok-attr">config</span>: <span class="tok-cls">RunnableConfig</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>:</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-com"># config: LangGraph 传下来的 RunnableConfig，职责是从中捞出 DeerFlow 自己约定的 runtime 配置字典</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_get_runtime_config</span>(<span class="tok-attr">config</span>: <span class="tok-cls">RunnableConfig</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>:</span></div>
                 <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-com"># 把 legacy configurable 和新 context 合并成同一份运行时视图</span></span></div>
                 <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-fn">cfg</span> <span class="tok-op">=</span> <span class="tok-fn">dict</span>(<span class="tok-attr">config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"configurable"</span>, {}) <span class="tok-kw">or</span> {})</span></div>
                 <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-fn">context</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"context"</span>, {}) <span class="tok-kw">or</span> {}</span></div>
@@ -284,7 +337,8 @@
                 <div class="code-line"><span class="code-ln">8</span><span class="code-src">        <span class="tok-attr">cfg</span>.<span class="tok-fn">update</span>(<span class="tok-fn">context</span>)</span></div>
                 <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">cfg</span></span></div>
                 <div class="code-line"><span class="code-ln">10</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">11</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_create_summarization_middleware</span>(<span class="tok-op">*</span>, <span class="tok-attr">app_config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">DeerFlowSummarizationMiddleware</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src"><span class="tok-com"># app_config: 宿主配置入口，用来决定 summarization 中间件要不要创建，以及创建时采用哪套阈值和模型设置</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_create_summarization_middleware</span>(<span class="tok-op">*</span>, <span class="tok-attr">app_config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">DeerFlowSummarizationMiddleware</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-fn">resolved_app_config</span> <span class="tok-op">=</span> <span class="tok-attr">app_config</span> <span class="tok-kw">or</span> <span class="tok-fn">get_app_config</span>()</span></div>
                 <div class="code-line"><span class="code-ln">13</span><span class="code-src">    <span class="tok-fn">config</span> <span class="tok-op">=</span> <span class="tok-attr">resolved_app_config</span>.<span class="tok-attr">summarization</span></span></div>
                 <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">config</span>.<span class="tok-attr">enabled</span>:</span></div>

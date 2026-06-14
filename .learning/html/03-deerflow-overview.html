@@ -101,38 +101,118 @@
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>默认 Web 路径下，DeerFlow 的流向大致是：</p>
-        <div class="annotated-code">
-          <div class="code-window">
-            <div class="code-window-header">
-              <div class="code-window-dots"><span></span><span></span><span></span></div>
-              <div class="code-window-title">overview flow :: 默认 Web 调用链</div>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>默认 Web 调用链流程图</strong>
+            <span>适合先看清外部请求怎样一步步落到 DeerFlow 运行时</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>浏览器、IM 或 API 调用方先发起请求</strong>
+                <p>所有外部入口都从这里开始，只是来源不同。</p>
+                <div class="flow-step-path"><code>Browser / IM / API caller</code></div>
+              </div>
             </div>
-            <div class="code-window-body">
-              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"Browser / IM / API caller"</span></span></div>
-              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"optional front proxy (typical deployment: nginx)"</span></span></div>
-              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/app/gateway/app.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"Gateway routers (runs, threads, skills, uploads, models, ...)"</span></span></div>
-              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"lead agent runtime"</span></span></div>
-              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"sandbox / memory / skills / tools / subagents"</span></span></div>
-              <div class="code-line"><span class="code-ln">7</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"streaming response back through Gateway"</span></span></div>
+            <div class="flow-step">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>常见部署下会先经过前置代理</strong>
+                <p>像 nginx 这种前置层通常负责统一入口和转发，但不属于 DeerFlow 核心本体。</p>
+                <div class="flow-step-path"><code>front proxy</code> such as <code>nginx</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>Gateway 应用接住这次请求</strong>
+                <p>真正属于 DeerFlow 的默认 HTTP 入口，是 Gateway 这层 FastAPI 应用。</p>
+                <div class="flow-step-path"><code>backend/app/gateway/app.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>不同 router 决定进入哪条业务路径</strong>
+                <p>runs、threads、skills、uploads、models 等能力，都会在这里被分发到各自入口。</p>
+                <div class="flow-step-path"><code>Gateway routers</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>Lead Agent 运行时开始真正组装和执行</strong>
+                <p>到了这里，模型、工具和上下文能力才会进入实际运行。</p>
+                <div class="flow-step-path"><code>lead agent runtime</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">06</div>
+              <div class="flow-step-copy">
+                <strong>横切能力在运行中持续介入</strong>
+                <p>sandbox、memory、skills、tools 和 subagents 都会在这一层参与同一轮执行。</p>
+                <div class="flow-step-path"><code>sandbox</code> / <code>memory</code> / <code>skills</code> / <code>tools</code> / <code>subagents</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">07</div>
+              <div class="flow-step-copy">
+                <strong>结果再通过 Gateway 回到外部调用方</strong>
+                <p>最终流式输出或普通响应，都会沿着 Gateway 这条主线返回用户。</p>
+                <div class="flow-step-path"><code>streaming response back through Gateway</code></div>
+              </div>
             </div>
           </div>
         </div>
         <p>这里把 <code>nginx</code> 放进链路，是为了描述统一入口部署中的常见前置代理，不是说 DeerFlow 架构本体必须依赖它。真正属于 DeerFlow 本体的默认 HTTP 入口仍然是 <code>backend/app/gateway/app.py</code>。</p>
         <p>把这条链再翻译成“代码里谁接谁”的版本，会更好懂：浏览器请求先被 <code>backend/app/gateway/app.py</code> 创建出来的 FastAPI 应用接住；具体进入哪个 router，由 <code>app.include_router(...)</code> 的挂载关系决定；run 类请求进一步落到 <code>backend/app/gateway/routers/thread_runs.py</code> 和 Gateway service 层，再交给 runtime worker；worker 安装好 run_id、thread_id、callbacks、stream bridge 等运行上下文后，才调用 <code>backend/packages/harness/deerflow/agents/lead_agent/agent.py</code> 产出的 agent graph。也就是说，Gateway 不只是“外壳”，它实际负责把请求改造成 DeerFlow 内部能运行的那种形态。</p>
         <p>而嵌入式 Python 路径则是：</p>
-        <div class="annotated-code">
-          <div class="code-window">
-            <div class="code-window-header">
-              <div class="code-window-dots"><span></span><span></span><span></span></div>
-              <div class="code-window-title">overview flow :: 嵌入式 Python 调用链</div>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>嵌入式 Python 调用链流程图</strong>
+            <span>不走 HTTP，也能复用同一套核心运行能力</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>Python 调用方直接在进程内发起请求</strong>
+                <p>这一条链不经过 Gateway HTTP 路由，而是直接从 SDK 风格入口进入。</p>
+                <div class="flow-step-path"><code>Python caller</code></div>
+              </div>
             </div>
-            <div class="code-window-body">
-              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"Python caller"</span></span></div>
-              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/client.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"create agent / lead agent runtime"</span></span></div>
-              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"same core runtime capabilities"</span></span></div>
-              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"sync stream or chat result"</span></span></div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>客户端入口接手构建调用上下文</strong>
+                <p>嵌入式路径的关键入口是 DeerFlowClient，而不是 Web 层。</p>
+                <div class="flow-step-path"><code>backend/packages/harness/deerflow/client.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>随后仍然会创建 Agent 并进入同一套运行时</strong>
+                <p>虽然入口不同，但真正执行时仍会走到 lead agent runtime 这条核心主线。</p>
+                <div class="flow-step-path"><code>create agent</code> / <code>lead agent runtime</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>底层可复用的能力并没有变</strong>
+                <p>memory、sandbox、skills、tools 等核心能力在这条链里依然是同一套。</p>
+                <div class="flow-step-path"><code>same core runtime capabilities</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>最后按 SDK 方式返回同步结果或流式结果</strong>
+                <p>区别主要在入口和返回形式，而不是执行引擎完全重写了一套。</p>
+                <div class="flow-step-path"><code>sync stream or chat result</code></div>
+              </div>
             </div>
           </div>
         </div>
@@ -186,10 +266,13 @@
                 <div class="code-window-title">deerflow/client.py :: DeerFlowClient.__init__() / _get_runnable_config()</div>
               </div>
               <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># DeerFlowClient: 嵌入式 Python 入口，把本地函数调用装配成 DeerFlow 标准运行时</span></span></div>
                 <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">DeerFlowClient</span>:</span></div>
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com">"""Embedded Python client for DeerFlow agent system."""</span></span></div>
                 <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-self">self</span>, <span class="tok-attr">config_path</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">checkpointer</span><span class="tok-op">=</span><span class="tok-kw">None</span>, <span class="tok-op">*</span>, <span class="tok-attr">model_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">thinking_enabled</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">True</span>, <span class="tok-attr">subagent_enabled</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-attr">plan_mode</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-attr">agent_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">available_skills</span>: <span class="tok-type">set</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">middlewares</span>: <span class="tok-type">Sequence</span>[<span class="tok-cls">AgentMiddleware</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">environment</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>):</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-com"># config_path / checkpointer: 配置来源和状态持久化入口；后面的开关则决定默认模型、技能、模式和附加中间件</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-self">self</span>, <span class="tok-attr">config_path</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">checkpointer</span><span class="tok-op">=</span><span class="tok-kw">None</span>, <span class="tok-op">*</span>, <span class="tok-attr">model_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">thinking_enabled</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">True</span>, <span class="tok-attr">subagent_enabled</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-attr">plan_mode</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-attr">agent_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">available_skills</span>: <span class="tok-type">set</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">middlewares</span>: <span class="tok-type">Sequence</span>[<span class="tok-cls">AgentMiddleware</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">environment</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>):</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">        <span class="tok-com"># 初始化阶段先读配置，再把这些默认开关缓存起来，真正造 agent 会延后到首个实际调用时</span></span></div>
                 <div class="code-line"><span class="code-ln">5</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">config_path</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">6</span><span class="code-src">            <span class="tok-fn">reload_app_config</span>(<span class="tok-attr">config_path</span>)</span></div>
                 <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_app_config</span> <span class="tok-op">=</span> <span class="tok-fn">get_app_config</span>()</span></div>
@@ -207,8 +290,10 @@
                 <div class="code-line"><span class="code-ln">19</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_agent</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
                 <div class="code-line"><span class="code-ln">20</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_agent_config_key</span>: <span class="tok-type">tuple</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
                 <div class="code-line"><span class="code-ln">21</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">_get_runnable_config</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-op">**</span><span class="tok-attr">overrides</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">RunnableConfig</span>:</span></div>
-                <div class="code-line"><span class="code-ln">23</span><span class="code-src">        <span class="tok-fn">configurable</span> <span class="tok-op">=</span> {</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-com"># self / thread_id / overrides: 当前 client 实例、这次运行归属线程，以及本轮临时覆盖值</span></span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">_get_runnable_config</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-op">**</span><span class="tok-attr">overrides</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">RunnableConfig</span>:</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">        <span class="tok-com"># 这里把实例默认值和本轮覆盖值折叠成统一 configurable，保证嵌入式路径和 Gateway 路径语义一致</span></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">        <span class="tok-fn">configurable</span> <span class="tok-op">=</span> {</span></div>
                 <div class="code-line"><span class="code-ln">24</span><span class="code-src">            <span class="tok-str">"thread_id"</span>: <span class="tok-attr">thread_id</span>,</span></div>
                 <div class="code-line"><span class="code-ln">25</span><span class="code-src">            <span class="tok-str">"model_name"</span>: <span class="tok-attr">overrides</span>.<span class="tok-fn">get</span>(<span class="tok-str">"model_name"</span>, <span class="tok-self">self</span>.<span class="tok-attr">_model_name</span>),</span></div>
                 <div class="code-line"><span class="code-ln">26</span><span class="code-src">            <span class="tok-str">"thinking_enabled"</span>: <span class="tok-attr">overrides</span>.<span class="tok-fn">get</span>(<span class="tok-str">"thinking_enabled"</span>, <span class="tok-self">self</span>.<span class="tok-attr">_thinking_enabled</span>),</span></div>
@@ -236,6 +321,7 @@
                 <div class="code-window-title">gateway/routers/thread_runs.py :: create_run() / stream_run() / wait_run()</div>
               </div>
               <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># thread_id / body / request: 线程标识、本次 run 输入和 HTTP 请求对象，路由层先把它们编排成统一启动入口</span></span></div>
                 <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-dec">@router.post</span>(<span class="tok-str">"/{thread_id}/runs"</span>, <span class="tok-attr">response_model</span><span class="tok-op">=</span><span class="tok-cls">RunResponse</span>)</span></div>
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-dec">@require_permission</span>(<span class="tok-str">"runs"</span>, <span class="tok-str">"create"</span>, <span class="tok-attr">owner_check</span><span class="tok-op">=</span><span class="tok-kw">True</span>, <span class="tok-attr">require_existing</span><span class="tok-op">=</span><span class="tok-kw">True</span>)</span></div>
                 <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">create_run</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">body</span>: <span class="tok-cls">RunCreateRequest</span>, <span class="tok-attr">request</span>: <span class="tok-cls">Request</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">RunResponse</span>:</span></div>
@@ -243,12 +329,15 @@
                 <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-fn">record</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">start_run</span>(<span class="tok-attr">body</span>, <span class="tok-attr">thread_id</span>, <span class="tok-attr">request</span>)</span></div>
                 <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-fn">_record_to_response</span>(<span class="tok-attr">record</span>)</span></div>
                 <div class="code-line"><span class="code-ln">7</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-com"># stream_run 参数和 create_run 一样，但这里的目标是把后台 run 挂到一条 SSE 连接上</span></span></div>
                 <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-dec">@router.post</span>(<span class="tok-str">"/{thread_id}/runs/stream"</span>)</span></div>
                 <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-dec">@require_permission</span>(<span class="tok-str">"runs"</span>, <span class="tok-str">"create"</span>, <span class="tok-attr">owner_check</span><span class="tok-op">=</span><span class="tok-kw">True</span>, <span class="tok-attr">require_existing</span><span class="tok-op">=</span><span class="tok-kw">True</span>)</span></div>
                 <div class="code-line"><span class="code-ln">10</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">stream_run</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">body</span>: <span class="tok-cls">RunCreateRequest</span>, <span class="tok-attr">request</span>: <span class="tok-cls">Request</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">StreamingResponse</span>:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-com"># 先拿 bridge 和 run manager，再启动 run，确保第一批事件从一开始就有消费者接住</span></span></div>
                 <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-fn">bridge</span> <span class="tok-op">=</span> <span class="tok-fn">get_stream_bridge</span>(<span class="tok-attr">request</span>)</span></div>
                 <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-fn">run_mgr</span> <span class="tok-op">=</span> <span class="tok-fn">get_run_manager</span>(<span class="tok-attr">request</span>)</span></div>
                 <div class="code-line"><span class="code-ln">13</span><span class="code-src">    <span class="tok-fn">record</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">start_run</span>(<span class="tok-attr">body</span>, <span class="tok-attr">thread_id</span>, <span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-com"># StreamingResponse 只是出口包装，真正的执行生命周期仍然在后台 worker + sse_consumer 那一侧</span></span></div>
                 <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-cls">StreamingResponse</span>(</span></div>
                 <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-fn">sse_consumer</span>(<span class="tok-attr">bridge</span>, <span class="tok-attr">record</span>, <span class="tok-attr">request</span>, <span class="tok-attr">run_mgr</span>),</span></div>
                 <div class="code-line"><span class="code-ln">16</span><span class="code-src">        <span class="tok-attr">media_type</span><span class="tok-op">=</span><span class="tok-str">"text/event-stream"</span>,</span></div>
@@ -260,11 +349,13 @@
                 <div class="code-line"><span class="code-ln">22</span><span class="code-src">        },</span></div>
                 <div class="code-line"><span class="code-ln">23</span><span class="code-src">    )</span></div>
                 <div class="code-line"><span class="code-ln">24</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src"><span class="tok-com"># wait_run 仍走同一套后台 run，只是这里会主动等它结束，并把最终 checkpoint 摘要同步返回</span></span></div>
                 <div class="code-line"><span class="code-ln">25</span><span class="code-src"><span class="tok-dec">@router.post</span>(<span class="tok-str">"/{thread_id}/runs/wait"</span>, <span class="tok-attr">response_model</span><span class="tok-op">=</span><span class="tok-type">dict</span>)</span></div>
                 <div class="code-line"><span class="code-ln">26</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">wait_run</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">body</span>: <span class="tok-cls">RunCreateRequest</span>, <span class="tok-attr">request</span>: <span class="tok-cls">Request</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>:</span></div>
                 <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-fn">bridge</span> <span class="tok-op">=</span> <span class="tok-fn">get_stream_bridge</span>(<span class="tok-attr">request</span>)</span></div>
                 <div class="code-line"><span class="code-ln">28</span><span class="code-src">    <span class="tok-fn">run_mgr</span> <span class="tok-op">=</span> <span class="tok-fn">get_run_manager</span>(<span class="tok-attr">request</span>)</span></div>
                 <div class="code-line"><span class="code-ln">29</span><span class="code-src">    <span class="tok-fn">record</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">start_run</span>(<span class="tok-attr">body</span>, <span class="tok-attr">thread_id</span>, <span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-com"># 如果后台 task 存在就阻塞等待，等完再从 checkpointer 拿最终 channel_values 给同步调用方</span></span></div>
                 <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-fn">completed</span> <span class="tok-op">=</span> <span class="tok-kw">True</span></span></div>
                 <div class="code-line"><span class="code-ln">31</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">record</span>.<span class="tok-attr">task</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">32</span><span class="code-src">        <span class="tok-fn">completed</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">wait_for_run_completion</span>(<span class="tok-attr">bridge</span>, <span class="tok-attr">record</span>, <span class="tok-attr">request</span>, <span class="tok-attr">run_mgr</span>)</span></div>

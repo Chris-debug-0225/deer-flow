@@ -96,21 +96,67 @@
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>一次典型的 DeerFlow Web 运行链路可以压缩成下面这条主线：</p>
-        <div class="annotated-code">
-          <div class="code-window">
-            <div class="code-window-header">
-              <div class="code-window-dots"><span></span><span></span><span></span></div>
-              <div class="code-window-title">gateway flow :: 一次 SSE run 请求怎样穿过 Gateway</div>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>Gateway SSE 请求流转图</strong>
+            <span>这一章最重要的是看一次 Web 请求怎样穿过 Gateway 进入运行时</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>浏览器先发起流式 run 请求</strong>
+                <p>入口通常是兼容 LangGraph 风格的线程运行流接口。</p>
+                <div class="flow-step-path"><code>/api/langgraph/threads/{thread_id}/runs/stream</code></div>
+              </div>
             </div>
-            <div class="code-window-body">
-              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-str">"nginx /api/langgraph/threads/{thread_id}/runs/stream"</span></span></div>
-              <div class="code-line"><span class="code-ln">2</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"rewrite to Gateway-owned /api/* compatibility path"</span></span></div>
-              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/app/gateway/app.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/app/gateway/routers/thread_runs.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"app.gateway.services.start_run(...)"</span></span></div>
-              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"deerflow runtime worker / stream bridge"</span></span></div>
-              <div class="code-line"><span class="code-ln">7</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"lead agent runtime"</span></span></div>
-              <div class="code-line"><span class="code-ln">8</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"SSE back through Gateway response"</span></span></div>
+            <div class="flow-step">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>请求先被改写到 Gateway 自己维护的兼容路径</strong>
+                <p>这一层保证外部入口和内部实现之间能兼容衔接。</p>
+                <div class="flow-step-path"><code>rewrite to Gateway-owned /api/* path</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>Gateway 应用接住请求并分发到线程运行路由</strong>
+                <p>真正理解 Gateway 时，关键是看 app 层怎么把请求送到 thread run 入口。</p>
+                <div class="flow-step-path"><code>gateway/app.py</code> + <code>gateway/routers/thread_runs.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>服务层正式启动这次运行任务</strong>
+                <p>到了这里，Gateway 不再只是转发，而是开始拥有这次 run 的调度责任。</p>
+                <div class="flow-step-path"><code>app.gateway.services.start_run(...)</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>运行时 worker 和流桥接层接手执行</strong>
+                <p>worker 负责 run 生命周期，stream bridge 负责把内部事件组织成可外发的数据流。</p>
+                <div class="flow-step-path"><code>runtime worker</code> + <code>stream bridge</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">06</div>
+              <div class="flow-step-copy">
+                <strong>Lead Agent 真正开始处理这轮任务</strong>
+                <p>模型、工具和上下文能力会在这一层进入实际执行。</p>
+                <div class="flow-step-path"><code>lead agent runtime</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">07</div>
+              <div class="flow-step-copy">
+                <strong>流式结果再通过 Gateway 回到前端</strong>
+                <p>用户最终看到的 SSE 数据，是 Gateway 包装后的运行输出。</p>
+                <div class="flow-step-path"><code>SSE Gateway response</code></div>
+              </div>
             </div>
           </div>
         </div>
@@ -174,7 +220,8 @@
               <div class="code-window-body">
                 <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-dec">@router.post</span>(<span class="tok-str">"/{thread_id}/runs/stream"</span>)</span></div>
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-dec">@require_permission</span>(<span class="tok-str">"runs"</span>, <span class="tok-str">"create"</span>, <span class="tok-attr">owner_check</span><span class="tok-op">=</span><span class="tok-kw">True</span>, <span class="tok-attr">require_existing</span><span class="tok-op">=</span><span class="tok-kw">True</span>)</span></div>
-                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">stream_run</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">body</span>: <span class="tok-cls">RunCreateRequest</span>, <span class="tok-attr">request</span>: <span class="tok-cls">Request</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">StreamingResponse</span>:</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-com"># thread_id: 这次 run 绑定到哪条线程；body: 前端提交的运行请求；request: 用来拿 bridge、run manager 和鉴权上下文</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">stream_run</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">body</span>: <span class="tok-cls">RunCreateRequest</span>, <span class="tok-attr">request</span>: <span class="tok-cls">Request</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">StreamingResponse</span>:</span></div>
                 <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-com"># 先从 request 依赖里拿到全局 stream bridge 和 run manager</span></span></div>
                 <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-fn">bridge</span> <span class="tok-op">=</span> <span class="tok-fn">get_stream_bridge</span>(<span class="tok-attr">request</span>)</span></div>
                 <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-fn">run_mgr</span> <span class="tok-op">=</span> <span class="tok-fn">get_run_manager</span>(<span class="tok-attr">request</span>)</span></div>
@@ -214,7 +261,8 @@
               <div class="code-window-body">
                 <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-dec">@router.post</span>(<span class="tok-str">""</span>, <span class="tok-attr">response_model</span><span class="tok-op">=</span><span class="tok-cls">UploadResponse</span>)</span></div>
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-dec">@require_permission</span>(<span class="tok-str">"threads"</span>, <span class="tok-str">"write"</span>, <span class="tok-attr">owner_check</span><span class="tok-op">=</span><span class="tok-kw">True</span>, <span class="tok-attr">require_existing</span><span class="tok-op">=</span><span class="tok-kw">False</span>)</span></div>
-                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">upload_files</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">request</span>: <span class="tok-cls">Request</span>, <span class="tok-attr">files</span>: <span class="tok-type">list</span>[<span class="tok-cls">UploadFile</span>] <span class="tok-op">=</span> <span class="tok-cls">File</span>(...), <span class="tok-attr">config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">=</span> <span class="tok-cls">Depends</span>(<span class="tok-fn">get_config</span>)) <span class="tok-op">-&gt;</span> <span class="tok-cls">UploadResponse</span>:</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-com"># thread_id / request: 决定文件属于哪条线程、哪个用户；files: 本次上传的文件列表；config: 提供 sandbox 和体积限制配置</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">upload_files</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">request</span>: <span class="tok-cls">Request</span>, <span class="tok-attr">files</span>: <span class="tok-type">list</span>[<span class="tok-cls">UploadFile</span>] <span class="tok-op">=</span> <span class="tok-cls">File</span>(...), <span class="tok-attr">config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">=</span> <span class="tok-cls">Depends</span>(<span class="tok-fn">get_config</span>)) <span class="tok-op">-&gt;</span> <span class="tok-cls">UploadResponse</span>:</span></div>
                 <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-fn">user_id</span> <span class="tok-op">=</span> <span class="tok-fn">get_effective_user_id</span>()</span></div>
                 <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-fn">sandbox_provider</span> <span class="tok-op">=</span> <span class="tok-fn">get_sandbox_provider</span>(<span class="tok-attr">config</span>)</span></div>
                 <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-fn">paths</span> <span class="tok-op">=</span> <span class="tok-fn">get_paths</span>()</span></div>
@@ -256,7 +304,8 @@
                 <div class="code-window-title">gateway/services.py :: normalize_input() / merge_run_context_overrides() / build_run_config()</div>
               </div>
               <div class="code-window-body">
-                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">normalize_input</span>(<span class="tok-attr">raw_input</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># raw_input: 前端送来的原始输入包，重点是把 messages 从普通 dict 规范成 runtime 认识的消息对象</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">normalize_input</span>(<span class="tok-attr">raw_input</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>]:</span></div>
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">raw_input</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">3</span><span class="code-src">        <span class="tok-kw">return</span> {}</span></div>
                 <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-fn">messages</span> <span class="tok-op">=</span> <span class="tok-attr">raw_input</span>.<span class="tok-fn">get</span>(<span class="tok-str">"messages"</span>)</span></div>
@@ -273,7 +322,8 @@
                 <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-kw">return</span> {<span class="tok-op">**</span><span class="tok-attr">raw_input</span>, <span class="tok-str">"messages"</span>: <span class="tok-attr">converted</span>}</span></div>
                 <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">raw_input</span></span></div>
                 <div class="code-line"><span class="code-ln">17</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">18</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_run_context_overrides</span>(<span class="tok-attr">config</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>], <span class="tok-attr">context</span>: <span class="tok-type">Mapping</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"><span class="tok-com"># config: 即将喂给 runtime 的配置；context: 请求层补进来的 thread/user/agent 等覆盖值</span></span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_run_context_overrides</span>(<span class="tok-attr">config</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>], <span class="tok-attr">context</span>: <span class="tok-type">Mapping</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">19</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">context</span>:</span></div>
                 <div class="code-line"><span class="code-ln">20</span><span class="code-src">        <span class="tok-kw">return</span></span></div>
                 <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-fn">configurable</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">setdefault</span>(<span class="tok-str">"configurable"</span>, {})</span></div>
@@ -283,7 +333,8 @@
                 <div class="code-line"><span class="code-ln">25</span><span class="code-src">            <span class="tok-attr">configurable</span>.<span class="tok-fn">setdefault</span>(<span class="tok-fn">key</span>, <span class="tok-attr">context</span>[<span class="tok-fn">key</span>])</span></div>
                 <div class="code-line"><span class="code-ln">26</span><span class="code-src">            <span class="tok-attr">runtime_context</span>.<span class="tok-fn">setdefault</span>(<span class="tok-fn">key</span>, <span class="tok-attr">context</span>[<span class="tok-fn">key</span>])</span></div>
                 <div class="code-line"><span class="code-ln">27</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">28</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">build_run_config</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">request_config</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">metadata</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-op">*</span>, <span class="tok-attr">assistant_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src"><span class="tok-com"># thread_id: 运行归属线程；request_config / metadata: 请求方额外传入的配置和元数据；assistant_id: 是否切到某个自定义 agent</span></span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">build_run_config</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">request_config</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">metadata</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-op">*</span>, <span class="tok-attr">assistant_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>]:</span></div>
                 <div class="code-line"><span class="code-ln">29</span><span class="code-src">    <span class="tok-fn">config</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>] <span class="tok-op">=</span> {<span class="tok-str">"recursion_limit"</span>: <span class="tok-num">100</span>}</span></div>
                 <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">request_config</span>:</span></div>
                 <div class="code-line"><span class="code-ln">31</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-str">"context"</span> <span class="tok-kw">in</span> <span class="tok-attr">request_config</span>:</span></div>

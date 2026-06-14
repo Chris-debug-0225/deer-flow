@@ -87,26 +87,59 @@
       <section id="flow">
         <h2>真实运行链路或数据链路</h2>
         <p>一个典型的 Skill 生效链路可以分成“管理面”和“运行面”两段：</p>
-        <div class="annotated-code">
-          <div class="code-window">
-            <div class="code-window-header">
-              <div class="code-window-dots"><span></span><span></span><span></span></div>
-              <div class="code-window-title">skills flow :: 管理面与运行面两段链路</div>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>Skill 生效流程图</strong>
+            <span>先进入存储和启用态，再真正影响系统提示</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>管理入口先处理安装、编辑和启停</strong>
+                <p>Skill 的第一站不是模型，而是管理面。这里负责接收操作并决定要不要落盘、启用或回滚。</p>
+                <div class="flow-step-path"><code>app/gateway/routers/skills.py</code></div>
+              </div>
             </div>
-            <div class="code-window-body">
-              <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># 管理面</span></span></div>
-              <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-str">"backend/app/gateway/routers/skills.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">3</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"get_or_new_skill_storage(...)"</span></span></div>
-              <div class="code-line"><span class="code-ln">4</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"backend/packages/harness/deerflow/skills/installer.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">5</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"scan_skill_content / storage write / history"</span></span></div>
-              <div class="code-line"><span class="code-ln">6</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"refresh_skills_system_prompt_cache_async()"</span></span></div>
-              <div class="code-line"><span class="code-ln">7</span><span class="code-src"></span></div>
-              <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-com"># 运行面</span></span></div>
-              <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-str">"backend/packages/harness/deerflow/agents/lead_agent/prompt.py"</span></span></div>
-              <div class="code-line"><span class="code-ln">10</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"get_or_new_skill_storage().load_skills(enabled_only=True)"</span></span></div>
-              <div class="code-line"><span class="code-ln">11</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"cache enabled skills"</span></span></div>
-              <div class="code-line"><span class="code-ln">12</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"render skills prompt section"</span></span></div>
-              <div class="code-line"><span class="code-ln">13</span><span class="code-src">  <span class="tok-op">-&gt;</span> <span class="tok-str">"lead agent system prompt receives skill instructions"</span></span></div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>安装器负责安全检查和写入存储</strong>
+                <p>技能内容会先经过扫描、写入和历史管理，避免“文件存在就直接生效”。</p>
+                <div class="flow-step-path"><code>skills/installer.py</code> + <code>skill storage</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>技能缓存被刷新，等待影响后续新运行</strong>
+                <p>变更完成后会触发缓存失效和后台重载，这样下一次 run 构建 prompt 时就能看到最新技能集合。</p>
+                <div class="flow-step-path"><code>refresh_skills_system_prompt_cache_async()</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>运行面只读取“已启用”的技能</strong>
+                <p>技能躺在磁盘上不等于会生效，真正进入运行链的只有 enabled 集合。</p>
+                <div class="flow-step-path"><code>agents/lead_agent/prompt.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>提示词层把技能说明渲染成系统提示片段</strong>
+                <p>模型拿到的是一段“应该如何工作”的说明，而不是直接多出一个 tool 按钮。</p>
+                <div class="flow-step-path"><code>load_skills(enabled_only=True)</code> + <code>render skills prompt section</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">06</div>
+              <div class="flow-step-copy">
+                <strong>Lead Agent 从思考开始就受到技能影响</strong>
+                <p>到了这里，Skill 才真正改变模型的规划方式、工具使用习惯和回答风格。</p>
+                <div class="flow-step-path"><code>lead agent system prompt</code></div>
+              </div>
             </div>
           </div>
         </div>
@@ -123,7 +156,8 @@
                 <div class="code-window-title">lead_agent/prompt.py :: enabled skills cache</div>
               </div>
               <div class="code-window-body">
-                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">get_cached_enabled_skills</span>() <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-cls">Skill</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># 无入参: 直接读取全局 enabled skills 缓存，适合高频请求路径快速命中</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">get_cached_enabled_skills</span>() <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-cls">Skill</span>]:</span></div>
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com"># 读取内存中的 enabled skills 缓存，避免请求线程直接扫磁盘</span></span></div>
                 <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-kw">with</span> <span class="tok-attr">_enabled_skills_lock</span>:</span></div>
                 <div class="code-line"><span class="code-ln">4</span><span class="code-src">        <span class="tok-fn">cached</span> <span class="tok-op">=</span> <span class="tok-attr">_enabled_skills_cache</span></span></div>
@@ -135,7 +169,8 @@
                 <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-fn">_ensure_enabled_skills_cache</span>()</span></div>
                 <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-kw">return</span> []</span></div>
                 <div class="code-line"><span class="code-ln">12</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">get_enabled_skills_for_config</span>(<span class="tok-attr">app_config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-cls">Skill</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-com"># app_config: 某次运行注入的配置实例，存在时要按这份配置对应的存储后端和启用态单独取缓存</span></span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">get_enabled_skills_for_config</span>(<span class="tok-attr">app_config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-cls">Skill</span>]:</span></div>
                 <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">app_config</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-fn">_get_enabled_skills</span>()</span></div>
                 <div class="code-line"><span class="code-ln">16</span><span class="code-src"></span></div>
@@ -152,7 +187,8 @@
                 <div class="code-line"><span class="code-ln">27</span><span class="code-src">        <span class="tok-attr">_enabled_skills_by_config_cache</span>[<span class="tok-fn">cache_key</span>] <span class="tok-op">=</span> (<span class="tok-attr">app_config</span>, <span class="tok-fn">skills</span>)</span></div>
                 <div class="code-line"><span class="code-ln">28</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-fn">list</span>(<span class="tok-fn">skills</span>)</span></div>
                 <div class="code-line"><span class="code-ln">29</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">refresh_skills_system_prompt_cache_async</span>() <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-com"># 无入参: 由安装/启停流程触发，职责是让缓存失效并等待后台刷新完成</span></span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">refresh_skills_system_prompt_cache_async</span>() <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">31</span><span class="code-src">    <span class="tok-com"># 当安装/启停/编辑技能后，主动让缓存失效并在后台完成新一轮加载</span></span></div>
                 <div class="code-line"><span class="code-ln">32</span><span class="code-src">    <span class="tok-kw">await</span> <span class="tok-attr">asyncio</span>.<span class="tok-fn">to_thread</span>(<span class="tok-fn">_invalidate_enabled_skills_cache</span>().<span class="tok-fn">wait</span>)</span></div>
               </div>
@@ -175,7 +211,8 @@
                 <div class="code-window-title">skills/installer.py :: safe_extract_skill_archive()</div>
               </div>
               <div class="code-window-body">
-                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">safe_extract_skill_archive</span>(<span class="tok-attr">zip_ref</span>: <span class="tok-cls">zipfile</span>.<span class="tok-cls">ZipFile</span>, <span class="tok-attr">dest_path</span>: <span class="tok-cls">Path</span>, <span class="tok-attr">max_total_size</span>: <span class="tok-type">int</span> <span class="tok-op">=</span> <span class="tok-num">512</span> <span class="tok-op">*</span> <span class="tok-num">1024</span> <span class="tok-op">*</span> <span class="tok-num">1024</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># zip_ref / dest_path: 要解压的技能包和目标目录；max_total_size: 整包总写入量上限，用来挡住 zip bomb 这类风险</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">safe_extract_skill_archive</span>(<span class="tok-attr">zip_ref</span>: <span class="tok-cls">zipfile</span>.<span class="tok-cls">ZipFile</span>, <span class="tok-attr">dest_path</span>: <span class="tok-cls">Path</span>, <span class="tok-attr">max_total_size</span>: <span class="tok-type">int</span> <span class="tok-op">=</span> <span class="tok-num">512</span> <span class="tok-op">*</span> <span class="tok-num">1024</span> <span class="tok-op">*</span> <span class="tok-num">1024</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-fn">dest_root</span> <span class="tok-op">=</span> <span class="tok-attr">dest_path</span>.<span class="tok-fn">resolve</span>()</span></div>
                 <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-fn">total_written</span> <span class="tok-op">=</span> <span class="tok-num">0</span></span></div>
                 <div class="code-line"><span class="code-ln">4</span><span class="code-src"></span></div>
@@ -230,7 +267,8 @@
                 <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-com">"""抽象基类：子类只实现存储介质差异，通用协议流程放在这里。"""</span></span></div>
                 <div class="code-line"><span class="code-ln">5</span><span class="code-src"></span></div>
                 <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-dec">@staticmethod</span></span></div>
-                <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">validate_skill_name</span>(<span class="tok-attr">name</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-com"># name: 用户想创建/读取的 skill 名称，这里统一做 hyphen-case 和长度校验</span></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">validate_skill_name</span>(<span class="tok-attr">name</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
                 <div class="code-line"><span class="code-ln">8</span><span class="code-src">        <span class="tok-fn">normalized</span> <span class="tok-op">=</span> <span class="tok-attr">name</span>.<span class="tok-fn">strip</span>()</span></div>
                 <div class="code-line"><span class="code-ln">9</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">_SKILL_NAME_PATTERN</span>.<span class="tok-fn">fullmatch</span>(<span class="tok-fn">normalized</span>):</span></div>
                 <div class="code-line"><span class="code-ln">10</span><span class="code-src">            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"Skill name must be hyphen-case using lowercase letters, digits, and hyphens only."</span>)</span></div>
@@ -239,7 +277,8 @@
                 <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-fn">normalized</span></span></div>
                 <div class="code-line"><span class="code-ln">14</span><span class="code-src"></span></div>
                 <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-dec">@staticmethod</span></span></div>
-                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">validate_skill_markdown_content</span>(<span class="tok-attr">name</span>: <span class="tok-type">str</span>, <span class="tok-attr">content</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-com"># name / content: 目标 skill 名和整份 SKILL.md 文本，要一起验证 frontmatter 是否自洽</span></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">validate_skill_markdown_content</span>(<span class="tok-attr">name</span>: <span class="tok-type">str</span>, <span class="tok-attr">content</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
                 <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-kw">with</span> <span class="tok-fn">tempfile</span>.<span class="tok-fn">TemporaryDirectory</span>() <span class="tok-kw">as</span> <span class="tok-attr">tmp_dir</span>:</span></div>
                 <div class="code-line"><span class="code-ln">18</span><span class="code-src">            <span class="tok-fn">temp_skill_dir</span> <span class="tok-op">=</span> <span class="tok-cls">Path</span>(<span class="tok-attr">tmp_dir</span>) <span class="tok-op">/</span> <span class="tok-cls">SkillStorage</span>.<span class="tok-fn">validate_skill_name</span>(<span class="tok-attr">name</span>)</span></div>
                 <div class="code-line"><span class="code-ln">19</span><span class="code-src">            (<span class="tok-fn">temp_skill_dir</span> <span class="tok-op">/</span> <span class="tok-attr">SKILL_MD_FILE</span>).<span class="tok-fn">write_text</span>(<span class="tok-attr">content</span>, <span class="tok-attr">encoding</span><span class="tok-op">=</span><span class="tok-str">"utf-8"</span>)</span></div>
@@ -249,11 +288,13 @@
                 <div class="code-line"><span class="code-ln">23</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">parsed_name</span> <span class="tok-op">!=</span> <span class="tok-attr">name</span>:</span></div>
                 <div class="code-line"><span class="code-ln">24</span><span class="code-src">                <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Frontmatter name '{parsed_name}' must match requested skill name '{name}'."</span>)</span></div>
                 <div class="code-line"><span class="code-ln">25</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">26</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">get_custom_skill_dir</span>(<span class="tok-self">self</span>, <span class="tok-attr">name</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">Path</span>:</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">    <span class="tok-com"># self / name: 当前存储后端实例和 skill 名称，返回 custom 分类下这份 skill 的标准目录位置</span></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">get_custom_skill_dir</span>(<span class="tok-self">self</span>, <span class="tok-attr">name</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">Path</span>:</span></div>
                 <div class="code-line"><span class="code-ln">27</span><span class="code-src">        <span class="tok-fn">normalized_name</span> <span class="tok-op">=</span> <span class="tok-self">self</span>.<span class="tok-fn">validate_skill_name</span>(<span class="tok-attr">name</span>)</span></div>
                 <div class="code-line"><span class="code-ln">28</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-self">self</span>.<span class="tok-fn">get_skills_root_path</span>() <span class="tok-op">/</span> <span class="tok-cls">SkillCategory</span>.<span class="tok-attr">CUSTOM</span>.<span class="tok-attr">value</span> <span class="tok-op">/</span> <span class="tok-fn">normalized_name</span></span></div>
                 <div class="code-line"><span class="code-ln">29</span><span class="code-src"></span></div>
-                <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">load_skills</span>(<span class="tok-self">self</span>, <span class="tok-op">*</span>, <span class="tok-attr">enabled_only</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-cls">Skill</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-com"># self: 当前 skill 存储后端；enabled_only: 是否只返回被 extensions config 标成启用态的技能</span></span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">load_skills</span>(<span class="tok-self">self</span>, <span class="tok-op">*</span>, <span class="tok-attr">enabled_only</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-cls">Skill</span>]:</span></div>
                 <div class="code-line"><span class="code-ln">31</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">deerflow.skills.parser</span> <span class="tok-kw">import</span> <span class="tok-fn">parse_skill_file</span></span></div>
                 <div class="code-line"><span class="code-ln">32</span><span class="code-src">        <span class="tok-fn">skills_by_name</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Skill</span>] <span class="tok-op">=</span> {}</span></div>
                 <div class="code-line"><span class="code-ln">33</span><span class="code-src">        <span class="tok-kw">for</span> <span class="tok-fn">category</span>, <span class="tok-fn">category_root</span>, <span class="tok-fn">md_path</span> <span class="tok-kw">in</span> <span class="tok-self">self</span>.<span class="tok-fn">_iter_skill_files</span>():</span></div>
