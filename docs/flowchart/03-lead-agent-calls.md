@@ -284,21 +284,21 @@ graph TB
         BuildHistory --> AddSystem[添加系统提示]
         AddSystem --> AddContext[添加上下文]
     end
-    
-    subgraph "上下文增强"
+
+    subgraph "上下文增强（4 路并行，全部汇入请求）"
         AddContext --> MemoryRetrieval[检索记忆]
         MemoryRetrieval --> AddMemoryCtx[添加记忆到提示]
-        
+
         AddContext --> ThreadInfo[线程信息]
         ThreadInfo --> AddThreadCtx[添加线程数据]
-        
+
         AddContext --> TodoList[待办列表]
         TodoList --> AddTodoCtx[添加待办到提示]
-        
+
         AddContext --> Summary[对话摘要]
         Summary --> AddSummaryCtx[添加摘要到提示]
     end
-    
+
     subgraph "模型配置"
         BuildHistory --> ModelSelect[选择模型]
         ModelSelect --> ConfigParams[配置参数]
@@ -306,33 +306,38 @@ graph TB
         ConfigParams --> MaxTokens[最大 token]
         ConfigParams --> TopP[Top P]
     end
-    
+
     subgraph "API 调用"
-        ConfigParams --> PrepareRequest[准备请求]
+        AddMemoryCtx --> PrepareRequest[准备请求]
+        AddThreadCtx --> PrepareRequest
+        AddTodoCtx --> PrepareRequest
+        AddSummaryCtx --> PrepareRequest
+        ConfigParams --> PrepareRequest
         PrepareRequest --> Stream{流式？}
-        Stream -->|是 | StreamCall[流式 API 调用]
-        Stream -->|否 | NormalCall[普通 API 调用]
+        Stream -->|是| StreamCall[流式 API 调用]
+        Stream -->|否| NormalCall[普通 API 调用]
     end
-    
+
     subgraph "响应处理"
         StreamCall --> ParseStream[解析流式响应]
         NormalCall --> ParseStream
-        
+
         ParseStream --> CheckContent{有内容？}
-        CheckContent -->|是 | ExtractContent[提取内容]
-        CheckContent -->|工具调用 | ExtractTool[提取工具调用]
-        
+        CheckContent -->|是| ExtractContent[提取内容]
+        CheckContent -->|工具调用| ExtractTool[提取工具调用]
+
         ExtractContent --> CreateMessage[创建 AI 消息]
         ExtractTool --> CreateToolMessage[创建工具消息]
-        
+
         CreateMessage --> ReturnState[返回状态]
         CreateToolMessage --> ReturnState
     end
-    
+
     style State fill:#e1f5ff
     style ReturnState fill:#e1ffe1
     style StreamCall fill:#fff4e1
     style ExtractTool fill:#f0e1ff
+    style PrepareRequest fill:#ffe1e1,stroke:#d97706,stroke-width:2px
 ```
 
 ## 6. 工具调用处理图
