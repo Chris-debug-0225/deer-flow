@@ -6,215 +6,7 @@
     <title>Sub-Agents：多Agent协作 · DeerFlow 学习系列</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
-        /* 页面特定样式 - 与深色主题兼容 */
-        
-        .toc {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--accent);
-            padding: 20px;
-            margin-bottom: 40px;
-            border-radius: 8px;
-        }
-        
-        .toc h2 {
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .toc li:before {
-            content: "▸";
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: bold;
-        }
-        
-        .toc a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .toc a:hover {
-            color: var(--accent-2);
-            text-decoration: underline;
-        }
-        
-        section {
-            margin-bottom: 50px;
-        }
-        
-        /* 代码块样式 */
-        .code-block {
-            background: var(--bg-code);
-            color: var(--text-soft);
-            padding: 18px 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 18px 0;
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 13.5px;
-            line-height: 1.65;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-        }
-        
-        .code-block code {
-            background: none;
-            border: none;
-            padding: 0;
-            color: var(--text-soft);
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            white-space: pre;
-            display: block;
-        }
-        
-        .code-block::-webkit-scrollbar {
-            height: 9px;
-        }
-        
-        .code-block::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-        
-        /* 提示框样式 */
-        .highlight {
-            background: var(--bg-soft);
-            padding: 15px 18px;
-            border-left: 4px solid var(--orange);
-            margin: 18px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .key-point {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--green);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--green);
-        }
-        
-        .key-point strong {
-            color: var(--green-soft);
-            font-weight: 650;
-        }
-        
-        .example-case {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--orange);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .example-case strong {
-            color: var(--orange);
-            font-weight: 650;
-        }
-        
-        .warning {
-            background: var(--bg-soft);
-            border-left: 4px solid #ff6b6b;
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid #ff6b6b;
-        }
-        
-        .warning strong {
-            color: #ff6b6b;
-            font-weight: 650;
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 18px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-        }
-        
-        .comparison-table th {
-            background: var(--bg-soft);
-            color: var(--text);
-            padding: 11px 15px;
-            text-align: left;
-            font-weight: 650;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .comparison-table td {
-            padding: 11px 15px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-soft);
-        }
-        
-        .comparison-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .comparison-table tr:hover td {
-            background: rgba(88,166,255,0.04);
-        }
-        
-        .flow-diagram {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        
-        .flow-step {
-            background: var(--bg-card);
-            border: 1.5px solid var(--accent);
-            color: var(--text);
-            padding: 12px 22px;
-            border-radius: 10px;
-            min-width: 120px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .flow-arrow {
-            font-size: 20px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            padding: 2px 0;
-        }
+        section { margin-bottom: 50px; }
     </style>
 </head>
 <body>
@@ -223,394 +15,365 @@
   <nav class="sidebar" id="sidebar"></nav>
   <main class="main">
     <div class="content">
-            <h1>Sub-Agents：多Agent协作</h1>
-            <p class="page-subtitle">DeerFlow 学习系列 - 第 14 章</p>
-            
-            <div class="toc">
-                <h2>📖 目录</h2>
-                <ul>
-                    <li><a href="#introduction">简介</a></li>
-                    <li><a href="#multi-agent-concept">多Agent的概念</a></li>
-                    <li><a href="#agent-coordination">Agent协调机制</a></li>
-                    <li><a href="#task-decomposition">任务分解与分配</a></li>
-                    <li><a href="#result-aggregation">结果聚合</a></li>
-                    <li><a href="#communication-patterns">通信模式</a></li>
-                    <li><a href="#conflict-resolution">冲突解决</a></li>
-                    <li><a href="#best-practices">最佳实践</a></li>
-                    <li><a href="#summary">总结</a></li>
-                </ul>
-            </div>
-            
-            <section id="introduction">
-                <h2>简介</h2>
-                <p>
-                    一个Agent可能无法完成所有任务。当面对复杂问题时，通过多个Agent的协作可以提高效率和准确性。本章讲解如何设计和实现多Agent系统，包括任务分解、Agent协调、结果聚合等关键技术。
-                </p>
-                <div class="key-point">
-                    <strong>学习目标：</strong>
-                    <ul>
-                        <li>理解多Agent协作的优势</li>
-                        <li>掌握Agent协调机制</li>
-                        <li>学会任务分解与分配</li>
-                        <li>了解结果聚合的方法</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <section id="multi-agent-concept">
-                <h2>多Agent的概念</h2>
-                <p>
-                    多Agent系统是指多个Agent协同工作以完成复杂任务的系统。每个Agent可以专注于特定的领域或任务，通过协调和通信来解决问题。
-                </p>
-                
-                <h3>多Agent的优势</h3>
-                <ul>
-                    <li><strong>任务分工</strong>：每个Agent专注于自己擅长的领域</li>
-                    <li><strong>并行处理</strong>：多个Agent可以并行执行不同的任务</li>
-                    <li><strong>容错能力</strong>：一个Agent失败不会导致整个系统失败</li>
-                    <li><strong>可扩展性</strong>：可以轻松添加新的Agent来处理新的任务</li>
-                </ul>
-                
-                <h3>多Agent架构</h3>
-                <div class="flow-diagram">
-                    <div class="flow-step">主Agent</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">任务分解</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">Sub-Agent 1</div>
-                </div>
-                <div style="text-align: center; margin: 10px 0;">↓</div>
-                <div class="flow-diagram">
-                    <div class="flow-step">Sub-Agent 2</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">结果聚合</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">最终结果</div>
-                </div>
-                
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>架构类型</th>
-                            <th>特点</th>
-                            <th>适用场景</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>主从架构</strong></td>
-                            <td>一个主Agent控制多个Sub-Agent</td>
-                            <td>任务清晰，分工明确</td>
-                        </tr>
-                        <tr>
-                            <td><strong>对等架构</strong></td>
-                            <td>多个Agent平等协作</td>
-                            <td>复杂问题，需要多角度思考</td>
-                        </tr>
-                        <tr>
-                            <td><strong>分层架构</strong></td>
-                            <td>多层级的Agent组织</td>
-                            <td>大规模系统，需要层级管理</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-            
-            <section id="agent-coordination">
-                <h2>Agent协调机制</h2>
-                <p>
-                    多个Agent需要通过某种机制进行协调，确保它们朝着共同的目标工作。常见的协调机制包括消息传递、共享状态、投票等。
-                </p>
-                
-                <h3>协调方式</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">AgentCoordinator</span>:
-    <span class="tok-str">"""Agent协调器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.agents = {}
-        <span class="tok-kw">self</span>.message_queue = []
-        <span class="tok-kw">self</span>.shared_state = {}
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">register_agent</span>(<span class="tok-kw">self</span>, agent_id: <span class="tok-str">str</span>, agent: <span class="tok-cls">Agent</span>):
-        <span class="tok-str">"""注册Agent"""</span>
-        <span class="tok-kw">self</span>.agents[agent_id] = agent
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">send_message</span>(<span class="tok-kw">self</span>, from_agent: <span class="tok-str">str</span>, to_agent: <span class="tok-str">str</span>, message: <span class="tok-str">str</span>):
-        <span class="tok-str">"""发送消息"""</span>
-        <span class="tok-kw">self</span>.message_queue.<span class="tok-fn">append</span>({
-            <span class="tok-str">"from"</span>: from_agent,
-            <span class="tok-str">"to"</span>: to_agent,
-            <span class="tok-str">"message"</span>: message
-        })
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">update_shared_state</span>(<span class="tok-kw">self</span>, key: <span class="tok-str">str</span>, value):
-        <span class="tok-str">"""更新共享状态"""</span>
-        <span class="tok-kw">self</span>.shared_state[key] = value
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">get_shared_state</span>(<span class="tok-kw">self</span>, key: <span class="tok-str">str</span>):
-        <span class="tok-str">"""获取共享状态"""</span>
-        <span class="tok-kw">return</span> <span class="tok-kw">self</span>.shared_state.<span class="tok-fn">get</span>(key)
-</code></div>
-                
-                <div class="key-point">
-                    <strong>关键点：</strong> 选择合适的协调机制很重要。消息传递适合异步通信，共享状态适合实时同步，投票适合决策。
-                </div>
-            </section>
-            
-            <section id="task-decomposition">
-                <h2>任务分解与分配</h2>
-                <p>
-                    将复杂任务分解为多个子任务，分配给不同的Agent执行，是多Agent系统的核心。分解的好坏直接影响系统的效率。
-                </p>
-                
-                <h3>任务分解的原则</h3>
-                <ul>
-                    <li><strong>独立性</strong>：子任务应该尽可能独立，减少依赖</li>
-                    <li><strong>均衡性</strong>：子任务的复杂度应该均衡，避免某个Agent过载</li>
-                    <li><strong>可测性</strong>：每个子任务的结果应该可以独立验证</li>
-                    <li><strong>可组合性</strong>：子任务的结果应该可以组合成最终结果</li>
-                </ul>
-                
-                <h3>任务分解的实现</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">TaskDecomposer</span>:
-    <span class="tok-str">"""任务分解器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">decompose</span>(<span class="tok-kw">self</span>, task: <span class="tok-cls">Task</span>) -> List[<span class="tok-cls">SubTask</span>]:
-        <span class="tok-str">"""分解任务"""</span>
-        subtasks = []
-        
-        <span class="tok-com"># 分析任务的复杂度</span>
-        complexity = <span class="tok-kw">self</span>.<span class="tok-fn">analyze_complexity</span>(task)
-        
-        <span class="tok-com"># 根据复杂度分解</span>
-        <span class="tok-kw">if</span> complexity > <span class="tok-num">10</span>:
-            <span class="tok-com"># 复杂任务分解为多个子任务</span>
-            subtasks = <span class="tok-kw">self</span>.<span class="tok-fn">split_into_subtasks</span>(task)
-        <span class="tok-kw">else</span>:
-            <span class="tok-com"># 简单任务直接执行</span>
-            subtasks = [<span class="tok-cls">SubTask</span>(task)]
-        
-        <span class="tok-kw">return</span> subtasks
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">assign_to_agents</span>(<span class="tok-kw">self</span>, subtasks: List[<span class="tok-cls">SubTask</span>], agents: List[<span class="tok-cls">Agent</span>]):
-        <span class="tok-str">"""分配子任务给Agent"""</span>
-        assignments = {}
-        
-        <span class="tok-com"># 根据Agent的能力分配任务</span>
-        <span class="tok-kw">for</span> subtask <span class="tok-kw">in</span> subtasks:
-            best_agent = <span class="tok-kw">self</span>.<span class="tok-fn">find_best_agent</span>(subtask, agents)
-            assignments[subtask.id] = best_agent
-        
-        <span class="tok-kw">return</span> assignments
-</code></div>
-                
-                <div class="example-case">
-                    <strong>示例：</strong> 任务分解的实际应用<br>
-                    <div class="code-block"><code>
-<span class="tok-com"># 原始任务："分析市场趋势并制定营销策略"</span>
-task = <span class="tok-cls">Task</span>(
-    description=<span class="tok-str">"分析市场趋势并制定营销策略"</span>
-)
+      <h1>Sub-Agents：多Agent协作</h1>
+      <p class="page-subtitle">DeerFlow 学习系列 - 第 14 章</p>
 
-<span class="tok-com"># 分解为子任务</span>
-subtasks = decomposer.<span class="tok-fn">decompose</span>(task)
-<span class="tok-com"># 结果：</span>
-<span class="tok-com"># - 子任务1：收集市场数据</span>
-<span class="tok-com"># - 子任务2：分析竞争对手</span>
-<span class="tok-com"># - 子任务3：制定营销策略</span>
+      <div class="deerflow-map">
+        <h3>本章讲的是 DeerFlow 如何做结构化委派，而不是群聊式多智能体</h3>
+        <p>DeerFlow 的 subagent 不是共享黑板式群体智能系统，也不是多个 agent 同时自由讨论。它的核心机制是：主 agent 通过 <code>task</code> tool 发起结构化委派，由独立的 <code>SubagentExecutor</code> 在隔离上下文中执行，再通过轮询、状态管理、超时和清理机制把结果带回父运行时。</p>
+      </div>
 
-<span class="tok-com"># 分配给Agent</span>
-assignments = decomposer.<span class="tok-fn">assign_to_agents</span>(subtasks, [agent1, agent2, agent3])
-</code></div>
-                </div>
-            </section>
-            
-            <section id="result-aggregation">
-                <h2>结果聚合</h2>
-                <p>
-                    当多个Agent完成各自的子任务后，需要将结果聚合成最终答案。聚合的方式取决于任务的性质。
-                </p>
-                
-                <h3>聚合方法</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>聚合方法</th>
-                            <th>说明</th>
-                            <th>适用场景</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>串联</strong></td>
-                            <td>后一个Agent的输入是前一个Agent的输出</td>
-                            <td>任务有顺序依赖</td>
-                        </tr>
-                        <tr>
-                            <td><strong>并联</strong></td>
-                            <td>多个Agent并行执行，结果合并</td>
-                            <td>任务相互独立</td>
-                        </tr>
-                        <tr>
-                            <td><strong>投票</strong></td>
-                            <td>多个Agent给出答案，选择多数意见</td>
-                            <td>需要提高准确性</td>
-                        </tr>
-                        <tr>
-                            <td><strong>加权</strong></td>
-                            <td>根据Agent的可靠性加权合并结果</td>
-                            <td>Agent能力不同</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <h3>结果聚合的实现</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">ResultAggregator</span>:
-    <span class="tok-kw">def</span> <span class="tok-fn">aggregate</span>(<span class="tok-kw">self</span>, results: Dict[<span class="tok-str">str</span>, any]) -> <span class="tok-str">str</span>:
-        <span class="tok-str">"""聚合结果"""</span>
-        <span class="tok-com"># 收集所有Agent的结果</span>
-        all_results = <span class="tok-fn">list</span>(results.<span class="tok-fn">values</span>())
-        
-        <span class="tok-com"># 检查结果的一致性</span>
-        <span class="tok-kw">if</span> <span class="tok-kw">self</span>.<span class="tok-fn">is_consistent</span>(all_results):
-            <span class="tok-kw">return</span> all_results[<span class="tok-num">0</span>]
-        <span class="tok-kw">else</span>:
-            <span class="tok-com"># 结果不一致，使用投票或加权</span>
-            <span class="tok-kw">return</span> <span class="tok-kw">self</span>.<span class="tok-fn">vote</span>(all_results)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">vote</span>(<span class="tok-kw">self</span>, results: List) -> <span class="tok-str">str</span>:
-        <span class="tok-str">"""投票选择最多数的结果"""</span>
-        <span class="tok-kw">from</span> collections <span class="tok-kw">import</span> Counter
-        counter = <span class="tok-cls">Counter</span>(results)
-        <span class="tok-kw">return</span> counter.<span class="tok-fn">most_common</span>(<span class="tok-num">1</span>)[<span class="tok-num">0</span>][<span class="tok-num">0</span>]
-</code></div>
-            </section>
-            
-            <section id="communication-patterns">
-                <h2>通信模式</h2>
-                <p>
-                    Agent之间的通信方式影响系统的效率和可靠性。常见的通信模式包括同步通信、异步通信、发布-订阅等。
-                </p>
-                
-                <h3>通信模式对比</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>通信模式</th>
-                            <th>特点</th>
-                            <th>适用场景</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>同步通信</strong></td>
-                            <td>发送方等待接收方的响应</td>
-                            <td>需要立即反馈</td>
-                        </tr>
-                        <tr>
-                            <td><strong>异步通信</strong></td>
-                            <td>发送方不等待响应</td>
-                            <td>高吞吐量，低延迟</td>
-                        </tr>
-                        <tr>
-                            <td><strong>发布-订阅</strong></td>
-                            <td>一个Agent发布消息，多个Agent订阅</td>
-                            <td>一对多通信</td>
-                        </tr>
-                        <tr>
-                            <td><strong>请求-回复</strong></td>
-                            <td>发送请求，等待回复</td>
-                            <td>需要确认的操作</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-            
-            <section id="conflict-resolution">
-                <h2>冲突解决</h2>
-                <p>
-                    当多个Agent给出不同的意见或决策时，需要有机制来解决冲突，达成一致。
-                </p>
-                
-                <h3>冲突解决策略</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">ConflictResolver</span>:
-    <span class="tok-str">"""冲突解决器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">resolve</span>(<span class="tok-kw">self</span>, opinions: Dict[<span class="tok-str">str</span>, any]) -> any:
-        <span class="tok-str">"""解决冲突"""</span>
-        <span class="tok-com"># 1. 检查是否有共识</span>
-        <span class="tok-kw">if</span> <span class="tok-kw">self</span>.<span class="tok-fn">has_consensus</span>(opinions):
-            <span class="tok-kw">return</span> <span class="tok-fn">list</span>(opinions.<span class="tok-fn">values</span>())[<span class="tok-num">0</span>]
-        
-        <span class="tok-com"># 2. 使用投票</span>
-        <span class="tok-kw">return</span> <span class="tok-kw">self</span>.<span class="tok-fn">vote</span>(opinions)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">has_consensus</span>(<span class="tok-kw">self</span>, opinions: Dict) -> <span class="tok-str">bool</span>:
-        <span class="tok-str">"""检查是否有共识"""</span>
-        values = <span class="tok-fn">list</span>(opinions.<span class="tok-fn">values</span>())
-        <span class="tok-kw">return</span> <span class="tok-fn">len</span>(<span class="tok-str">set</span>(values)) == <span class="tok-num">1</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">vote</span>(<span class="tok-kw">self</span>, opinions: Dict) -> any:
-        <span class="tok-str">"""投票选择"""</span>
-        <span class="tok-kw">from</span> collections <span class="tok-kw">import</span> Counter
-        counter = <span class="tok-cls">Counter</span>(opinions.<span class="tok-fn">values</span>())
-        <span class="tok-kw">return</span> counter.<span class="tok-fn">most_common</span>(<span class="tok-num">1</span>)[<span class="tok-num">0</span>][<span class="tok-num">0</span>]
-</code></div>
-            </section>
-            
-            <section id="best-practices">
-                <h2>最佳实践</h2>
-                
-                <h3>1. 清晰的任务定义</h3>
-                <p>
-                    每个子任务应该有清晰的定义和预期输出。模糊的任务定义会导致Agent之间的协调困难。
-                </p>
-                
-                <h3>2. 监控和日志</h3>
-                <p>
-                    记录每个Agent的执行过程和结果，便于调试和优化。
-                </p>
-                
-                <h3>3. 错误处理</h3>
-                <p>
-                    当某个Agent失败时，应该有备用方案。可以重新分配任务或使用其他Agent。
-                </p>
-                
-                <h3>4. 性能优化</h3>
-                <p>
-                    使用并行处理提高效率。避免不必要的同步等待。
-                </p>
-            </section>
-            
-            <section id="summary">
-                <h2>总结</h2>
-                <p>
-                    多Agent协作是解决复杂问题的有效方法。通过合理的任务分解、Agent协调、结果聚合、通信和冲突解决，可以构建高效的多Agent系统。本章深入讲解了多Agent系统的设计和实现。
-                </p>
-                <div class="highlight">
-                    <strong>核心要点总结：</strong>
-                    <ul>
-                        <li><strong>多Agent优势：</strong> 任务分工、并行处理、容错能力、可扩展性</li>
-                        <li><strong>协调机制：</strong> 消息传递、共享状态、投票等多种方式</li>
-                        <li><strong>任务分解：</strong> 遵循独立性、均衡性、可测性、可组合性原则</li>
-                        <li><strong>结果聚合：</strong> 串联、并联、投票、加权等多种方法</li>
-                        <li><strong>通信模式：</strong> 同步、异步、发布-订阅、请求-回复</li>
-                        <li><strong>冲突解决：</strong> 共识检查、投票机制</li>
-                        <li><strong>最佳实践：</strong> 清晰定义、监控日志、错误处理、性能优化</li>
-                    </ul>
-                </div>
-                
-                <div class="key-point">
-                    <strong>多Agent系统建议：</strong> 设计多Agent系统时，要充分考虑Agent之间的协调和通信成本。选择合适的架构和通信模式，可以显著提高系统的效率和可靠性。
-                </div>
-            </section>
-            
-            <div id="page-nav"></div>
+      <div class="toc">
+        <h3>目录</h3>
+        <ul>
+          <li><a href="#problem">这项能力在 DeerFlow 中解决什么问题</a></li>
+          <li><a href="#codebase">这项能力在代码库中的位置</a></li>
+          <li><a href="#flow">真实运行链路或数据链路</a></li>
+          <li><a href="#config">配置面与使用方式</a></li>
+          <li><a href="#tradeoffs">关键实现细节与权衡</a></li>
+          <li><a href="#limits">当前限制、边界与非目标</a></li>
+          <li><a href="#relations">它与 DeerFlow 其他能力的关系</a></li>
+        </ul>
+      </div>
+
+      <section id="problem">
+        <h2>这项能力在 DeerFlow 中解决什么问题</h2>
+        <p>主 agent 在长任务中经常会遇到一个问题：某个子任务既复杂又啰嗦，如果继续在同一个上下文里展开，会污染当前推理轨迹、推高 token 成本，还会让后续决策更混乱。DeerFlow 的 subagent 机制正是为了解决这种“需要委派但又不想共享全部上下文”的场景。</p>
+        <p>因此，DeerFlow 的 subagent 本质上是结构化委派与隔离执行机制。它不是多个 agent 共用一块黑板持续协商，也不是一套自治社会模拟。父 agent 明确发出任务，subagent 在自己的上下文里完成执行，结果再以状态化方式返回。</p>
+        <div class="key-point">
+          <strong>一句话边界：</strong>
+          DeerFlow 的 subagent 是“通过 <code>task</code> tool 触发的独立执行单元”，而不是“自动自组织的多智能体群体系统”。
         </div>
+      </section>
+
+      <section id="codebase">
+        <h2>这项能力在代码库中的位置</h2>
+        <table class="comparison-table">
+          <tr>
+            <th>路径</th>
+            <th>职责</th>
+            <th>为什么要看</th>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/tools/builtins/task_tool.py</code></td>
+            <td><code>task</code> 工具定义、后台任务启动、轮询、事件回写、usage 归因</td>
+            <td>这是父 agent 触发 subagent 的入口</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/subagents/executor.py</code></td>
+            <td>subagent 执行引擎、状态机、超时、清理、隔离 loop 与 token 收集</td>
+            <td>这是 DeerFlow subagent 运行语义的核心</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/subagents/registry.py</code></td>
+            <td>内置与自定义 subagent 注册表</td>
+            <td>解释名字如何映射到真正的配置</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/config/subagents_config.py</code></td>
+            <td>自定义 subagent 配置模型</td>
+            <td>说明哪些参数可以从配置层覆盖</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/subagents/config.py</code></td>
+            <td><code>SubagentConfig</code> 与模型解析</td>
+            <td>帮助理解 timeout、tools、skills、model 等字段如何进入执行器</td>
+          </tr>
+        </table>
+        <p>这些文件在 subagent 系统里也形成了清晰分工。<code>task_tool.py</code> 是父 agent 唯一能碰到的入口，它负责把一次委派请求包装成后台任务；<code>executor.py</code> 才是真正运行子 agent 的地方，里面维护状态机、独立 event loop、超时和取消逻辑；<code>registry.py</code> 与配置文件则负责把“bash”“general-purpose”或自定义名字，解析成具体能运行的 SubagentConfig。也就是说，task tool 负责发车，executor 负责开车，registry/config 负责决定这辆车能装什么。</p>
+      </section>
+
+      <section id="flow">
+        <h2>真实运行链路或数据链路</h2>
+        <p>DeerFlow 的 subagent 委派链很清晰，入口固定是 <code>backend/packages/harness/deerflow/tools/builtins/task_tool.py</code>：</p>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>子代理委派流程图</strong>
+            <span>重点是看父代理怎样把任务、安全边界和上下文一起交给子执行器</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>父代理先判断这件事该不该委派</strong>
+                <p>不是所有任务都会下放，只有父代理决定拆出去时才会进入这条链。</p>
+                <div class="flow-step-path"><code>parent agent decides to delegate</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>委派动作先表现成一次 task tool 调用</strong>
+                <p>对父代理来说，启动子代理的入口本质上就是一次工具调用。</p>
+                <div class="flow-step-path"><code>task tool call</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>task tool 负责解析要调用哪种子代理</strong>
+                <p>这里会结合 registry、配置和父运行时上下文，决定本次子任务的有效类型与限制。</p>
+                <div class="flow-step-path"><code>tools/builtins/task_tool.py</code> + <code>registry/config</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>系统创建一个子执行器并启动异步执行</strong>
+                <p>到了这一步，子代理才真正拥有自己的执行上下文和后台任务句柄。</p>
+                <div class="flow-step-path"><code>create SubagentExecutor(...)</code> + <code>execute_async(...)</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>执行器在后台运行并持续轮询状态</strong>
+                <p>它不是简单起个线程就结束，而是要持续管理运行状态、超时和结果回收。</p>
+                <div class="flow-step-path"><code>subagents/executor.py</code> + <code>background execution</code> + <code>polling</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">06</div>
+              <div class="flow-step-copy">
+                <strong>完成后整理状态、用量和清理动作</strong>
+                <p>终态、token usage 和清理逻辑都会在这一步收口，不会直接裸结果回传。</p>
+                <div class="flow-step-path"><code>terminal status</code> + <code>usage summary</code> + <code>cleanup</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">07</div>
+              <div class="flow-step-copy">
+                <strong>最后结果再回到父代理继续主线推理</strong>
+                <p>对子代理来说这是终点，但对父代理来说只是中间一步能力扩展。</p>
+                <div class="flow-step-path"><code>result returned to parent agent</code></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p>源码细节里有两个特别值得读的点。第一，<code>task_tool.py</code> 会从父 runtime 里提取 <code>sandbox_state</code>、<code>thread_data</code>、<code>thread_id</code>、trace 信息和父模型名，再结合 subagent config 计算出这次子任务的有效模型与技能/工具白名单。第二，<code>executor.py</code> 不是简单地“开个线程跑一下”，而是维护独立的 background task registry、持久 event loop 和可竞争的 terminal status 更新，确保超时、取消和正常完成不会互相覆盖状态。</p>
+        <p>这条链有几个非常 DeerFlow-specific 的细节。第一，父运行时会把 <code>sandbox_state</code>、<code>thread_data</code>、<code>thread_id</code>、<code>trace_id</code>、父模型名和可用 skill/tool 限制传给 subagent。第二，<code>task_tool.py</code> 会持续轮询后台结果并向流式 writer 发出 <code>task_started</code>、<code>task_running</code>、<code>task_completed</code> 等事件。第三，token usage 会在 subagent 侧收集，再回写到父运行时的 usage 记录与 cache 中。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码 1：task tool 怎样继承父上下文再创建子执行器</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/tools/builtins/task_tool.py</code>。这段代码最能说明 DeerFlow 的 subagent 不是凭空创建的。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">tools/builtins/task_tool.py :: task(...)</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># 1. 先从父 runtime 抽上下文，子 agent 不是凭空出生的</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-fn">sandbox_state</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-fn">thread_data</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-fn">thread_id</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-fn">parent_model</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src"><span class="tok-fn">trace_id</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"><span class="tok-fn">metadata</span>: <span class="tok-type">dict</span> <span class="tok-op">=</span> {}</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">runtime</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-fn">sandbox_state</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">state</span>.<span class="tok-fn">get</span>(<span class="tok-str">"sandbox"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-fn">thread_data</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">state</span>.<span class="tok-fn">get</span>(<span class="tok-str">"thread_data"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-fn">thread_id</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">context</span>.<span class="tok-fn">get</span>(<span class="tok-str">"thread_id"</span>) <span class="tok-kw">if</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">context</span> <span class="tok-kw">else</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">thread_id</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">        <span class="tok-fn">thread_id</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"configurable"</span>, {}).<span class="tok-fn">get</span>(<span class="tok-str">"thread_id"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-fn">metadata</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"metadata"</span>, {})</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-fn">parent_model</span> <span class="tok-op">=</span> <span class="tok-attr">metadata</span>.<span class="tok-fn">get</span>(<span class="tok-str">"model_name"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-fn">trace_id</span> <span class="tok-op">=</span> <span class="tok-attr">metadata</span>.<span class="tok-fn">get</span>(<span class="tok-str">"trace_id"</span>) <span class="tok-kw">or</span> <span class="tok-fn">str</span>(<span class="tok-fn">uuid4</span>())[:<span class="tok-num">8</span>]</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src"><span class="tok-fn">parent_available_skills</span> <span class="tok-op">=</span> <span class="tok-attr">metadata</span>.<span class="tok-fn">get</span>(<span class="tok-str">"available_skills"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-fn">parent_available_skills</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-attr">overrides</span>[<span class="tok-str">"skills"</span>] <span class="tok-op">=</span> <span class="tok-fn">_merge_skill_allowlists</span>(<span class="tok-fn">list</span>(<span class="tok-fn">parent_available_skills</span>), <span class="tok-attr">config</span>.<span class="tok-attr">skills</span>)</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">overrides</span>:</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">    <span class="tok-attr">config</span> <span class="tok-op">=</span> <span class="tok-fn">replace</span>(<span class="tok-attr">config</span>, <span class="tok-op">**</span><span class="tok-attr">overrides</span>)</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src"><span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">tools</span> <span class="tok-kw">import</span> <span class="tok-fn">get_available_tools</span></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src"><span class="tok-fn">parent_tool_groups</span> <span class="tok-op">=</span> <span class="tok-attr">metadata</span>.<span class="tok-fn">get</span>(<span class="tok-str">"tool_groups"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src"><span class="tok-fn">effective_model</span> <span class="tok-op">=</span> <span class="tok-fn">resolve_subagent_model_name</span>(<span class="tok-attr">config</span>, <span class="tok-fn">parent_model</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-com"># 2. 工具集不是继承全部父工具，而是重新按限制生成，并显式禁掉再次委派</span></span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src"><span class="tok-fn">available_tools_kwargs</span> <span class="tok-op">=</span> {</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">    <span class="tok-str">"model_name"</span>: <span class="tok-fn">effective_model</span>,</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">    <span class="tok-str">"groups"</span>: <span class="tok-fn">parent_tool_groups</span>,</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">    <span class="tok-str">"subagent_enabled"</span>: <span class="tok-kw">False</span>,</span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src">}</span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">resolved_app_config</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">37</span><span class="code-src">    <span class="tok-attr">available_tools_kwargs</span>[<span class="tok-str">"app_config"</span>] <span class="tok-op">=</span> <span class="tok-attr">resolved_app_config</span></span></div>
+                <div class="code-line"><span class="code-ln">38</span><span class="code-src"><span class="tok-fn">tools</span> <span class="tok-op">=</span> <span class="tok-fn">get_available_tools</span>(<span class="tok-op">**</span><span class="tok-attr">available_tools_kwargs</span>)</span></div>
+                <div class="code-line"><span class="code-ln">39</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">40</span><span class="code-src"><span class="tok-com"># 3. 直到这里才真正造 SubagentExecutor，把继承下来的上下文一起塞进去</span></span></div>
+                <div class="code-line"><span class="code-ln">41</span><span class="code-src"><span class="tok-fn">executor</span> <span class="tok-op">=</span> <span class="tok-cls">SubagentExecutor</span>(<span class="tok-attr">config</span><span class="tok-op">=</span><span class="tok-attr">config</span>, <span class="tok-attr">tools</span><span class="tok-op">=</span><span class="tok-fn">tools</span>, <span class="tok-attr">parent_model</span><span class="tok-op">=</span><span class="tok-fn">parent_model</span>, <span class="tok-attr">sandbox_state</span><span class="tok-op">=</span><span class="tok-fn">sandbox_state</span>, <span class="tok-attr">thread_data</span><span class="tok-op">=</span><span class="tok-fn">thread_data</span>, <span class="tok-attr">thread_id</span><span class="tok-op">=</span><span class="tok-fn">thread_id</span>, <span class="tok-attr">trace_id</span><span class="tok-op">=</span><span class="tok-fn">trace_id</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这段代码的第一层含义是“抽父上下文”。子 agent 在创建之前，已经继承了父运行时里的 <code>sandbox_state</code>、<code>thread_data</code>、<code>thread_id</code>、<code>metadata</code> 和 <code>trace_id</code>。</li>
+            <li>如果父级在 metadata 里限制了可用 skills，<code>_merge_skill_allowlists(...)</code> 会再做一次交集过滤，所以 subagent 继承的是受限能力，不是无限放权。</li>
+            <li><code>effective_model</code> 是在真正生成工具之前就算好的，因为 DeerFlow 要按模型能力决定可用工具集合。</li>
+            <li><code>subagent_enabled: False</code> 是整段代码里最关键的安全阀。它确保 subagent 不会再拿到 <code>task</code> 工具，从源码层面切断递归委派。</li>
+            <li>只有配置、工具、父上下文都准备好以后，才创建 <code>SubagentExecutor</code>。这说明 subagent 在 DeerFlow 里更像“一次完整的小运行时”，不是一个简单函数调用。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 2：subagent 模型继承规则其实非常直接</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/subagents/config.py</code>。这一小段代码把模型回退顺序说得很清楚。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">subagents/config.py :: resolve_subagent_model_name()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">resolve_subagent_model_name</span>(<span class="tok-attr">config</span>: <span class="tok-cls">SubagentConfig</span>, <span class="tok-attr">parent_model</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-op">*</span>, <span class="tok-attr">app_config</span>: <span class="tok-str">"AppConfig | None"</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com"># 规则 1：只要子 agent 明确写了模型，就尊重它自己的配置</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">config</span>.<span class="tok-attr">model</span> <span class="tok-op">!=</span> <span class="tok-str">"inherit"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">config</span>.<span class="tok-attr">model</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-com"># 规则 2：没显式指定时，优先继承父 agent 当前正在使用的模型</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">parent_model</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">parent_model</span></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-com"># 规则 3：父模型也缺失时，才去全局配置里找默认模型</span></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">app_config</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">config</span> <span class="tok-kw">import</span> <span class="tok-fn">get_app_config</span></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">        <span class="tok-attr">app_config</span> <span class="tok-op">=</span> <span class="tok-fn">get_app_config</span>()</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-fn">_default_model_name</span>(<span class="tok-attr">app_config</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这段实现虽然短，但它把 subagent 的模型选择顺序完全写死了，所以运行结果非常可预测。</li>
+            <li>第一优先级永远是子 agent 自己显式声明的模型；只要不是 <code>inherit</code>，父模型就完全不会参与。</li>
+            <li>第二优先级才是父模型，这让“继承父模型”变成一个显式配置行为，而不是默认偷偷发生。</li>
+            <li>最后才回退到全局默认模型，保证就算父上下文缺失、独立测试 subagent，也仍然能有一个可运行的兜底值。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 3：SubagentExecutor 自己就是一个小型后台执行引擎</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/subagents/executor.py</code>。这一段能把“subagent 不是简单线程池任务”讲得很清楚。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">subagents/executor.py :: SubagentStatus / SubagentResult / isolated loop</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># SubagentStatus: 子 agent 后台执行的状态机，父级轮询、取消和清理逻辑都依赖这些终态定义</span></span></div>
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">SubagentStatus</span>(<span class="tok-cls">Enum</span>):</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-attr">PENDING</span> <span class="tok-op">=</span> <span class="tok-str">"pending"</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-attr">RUNNING</span> <span class="tok-op">=</span> <span class="tok-str">"running"</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-attr">COMPLETED</span> <span class="tok-op">=</span> <span class="tok-str">"completed"</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-attr">FAILED</span> <span class="tok-op">=</span> <span class="tok-str">"failed"</span></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-attr">CANCELLED</span> <span class="tok-op">=</span> <span class="tok-str">"cancelled"</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-attr">TIMED_OUT</span> <span class="tok-op">=</span> <span class="tok-str">"timed_out"</span></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-dec">@property</span></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-com"># self: 当前状态值；这里只判断它是否已经进入不可再继续推进的终态</span></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">is_terminal</span>(<span class="tok-self">self</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">bool</span>:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-self">self</span> <span class="tok-kw">in</span> {<span class="tok-fn">type</span>(<span class="tok-self">self</span>).<span class="tok-attr">COMPLETED</span>, <span class="tok-fn">type</span>(<span class="tok-self">self</span>).<span class="tok-attr">FAILED</span>, <span class="tok-fn">type</span>(<span class="tok-self">self</span>).<span class="tok-attr">CANCELLED</span>, <span class="tok-fn">type</span>(<span class="tok-self">self</span>).<span class="tok-attr">TIMED_OUT</span>}</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-com"># SubagentResult: 单个子任务的共享结果槽，既存状态，也挂取消事件和并发保护锁</span></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-dec">@dataclass</span></span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">SubagentResult</span>:</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-attr">task_id</span>: <span class="tok-type">str</span></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-attr">trace_id</span>: <span class="tok-type">str</span></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-attr">status</span>: <span class="tok-cls">SubagentStatus</span></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-attr">cancel_event</span>: <span class="tok-attr">threading</span>.<span class="tok-cls">Event</span> <span class="tok-op">=</span> <span class="tok-fn">field</span>(<span class="tok-attr">default_factory</span><span class="tok-op">=</span><span class="tok-attr">threading</span>.<span class="tok-cls">Event</span>, <span class="tok-attr">repr</span><span class="tok-op">=</span><span class="tok-kw">False</span>)</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">    <span class="tok-attr">_state_lock</span>: <span class="tok-attr">threading</span>.<span class="tok-cls">Lock</span> <span class="tok-op">=</span> <span class="tok-fn">field</span>(<span class="tok-attr">default_factory</span><span class="tok-op">=</span><span class="tok-attr">threading</span>.<span class="tok-cls">Lock</span>, <span class="tok-attr">init</span><span class="tok-op">=</span><span class="tok-kw">False</span>, <span class="tok-attr">repr</span><span class="tok-op">=</span><span class="tok-kw">False</span>)</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-com"># self / status / result / error: 想把子任务推进到某个终态，并可附带成功结果或失败信息</span></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">try_set_terminal</span>(<span class="tok-self">self</span>, <span class="tok-attr">status</span>: <span class="tok-cls">SubagentStatus</span>, <span class="tok-op">*</span>, <span class="tok-attr">result</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">error</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">bool</span>:</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-com"># 先验证传入的确实是终态，再用锁保证多个竞争线程只有一个能成功落盘最终状态</span></span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">status</span>.<span class="tok-attr">is_terminal</span>:</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Status {status} is not terminal"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">        <span class="tok-kw">with</span> <span class="tok-self">self</span>.<span class="tok-attr">_state_lock</span>:</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-self">self</span>.<span class="tok-attr">status</span>.<span class="tok-attr">is_terminal</span>:</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">                <span class="tok-kw">return</span> <span class="tok-kw">False</span></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">            <span class="tok-self">self</span>.<span class="tok-attr">status</span> <span class="tok-op">=</span> <span class="tok-attr">status</span></span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">            <span class="tok-kw">return</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-com"># 这组全局对象负责复用后台线程池与专用事件循环，避免每次委派都新起一整套 asyncio 环境</span></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-attr">_scheduler_pool</span> <span class="tok-op">=</span> <span class="tok-cls">ThreadPoolExecutor</span>(<span class="tok-attr">max_workers</span><span class="tok-op">=</span><span class="tok-num">3</span>, <span class="tok-attr">thread_name_prefix</span><span class="tok-op">=</span><span class="tok-str">"subagent-scheduler-"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src"><span class="tok-attr">_isolated_subagent_loop</span>: <span class="tok-cls">asyncio</span>.<span class="tok-cls">AbstractEventLoop</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src"><span class="tok-com"># _get_isolated_subagent_loop(): 当前 loop 不可用时就在后台线程里重建一份持久事件循环给全部 subagent 共用</span></span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_get_isolated_subagent_loop</span>() <span class="tok-op">-&gt;</span> <span class="tok-cls">asyncio</span>.<span class="tok-cls">AbstractEventLoop</span>:</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">    <span class="tok-kw">with</span> <span class="tok-attr">_isolated_subagent_loop_lock</span>:</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-fn">loop_is_usable</span>:</span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src">            <span class="tok-fn">loop</span> <span class="tok-op">=</span> <span class="tok-attr">asyncio</span>.<span class="tok-fn">new_event_loop</span>()</span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src">            <span class="tok-fn">thread</span> <span class="tok-op">=</span> <span class="tok-attr">threading</span>.<span class="tok-cls">Thread</span>(<span class="tok-attr">target</span><span class="tok-op">=</span><span class="tok-attr">_run_isolated_subagent_loop</span>, <span class="tok-attr">args</span><span class="tok-op">=</span>(<span class="tok-attr">loop</span>, <span class="tok-attr">started_event</span>), <span class="tok-attr">name</span><span class="tok-op">=</span><span class="tok-str">"subagent-persistent-loop"</span>, <span class="tok-attr">daemon</span><span class="tok-op">=</span><span class="tok-kw">True</span>)</span></div>
+                <div class="code-line"><span class="code-ln">37</span><span class="code-src">            <span class="tok-attr">thread</span>.<span class="tok-fn">start</span>()</span></div>
+                <div class="code-line"><span class="code-ln">38</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">_isolated_subagent_loop</span></span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>`SubagentStatus` 已经说明这不是简单 future，而是一套完整的状态机，连 `timed_out` 都是显式终态。</li>
+            <li>`SubagentResult.try_set_terminal(...)` 非常关键，它用锁保证终态只会被设置一次，专门处理“执行线程、超时线程、取消线程互相抢状态”的竞争问题。</li>
+            <li>执行器还单独维护 `_scheduler_pool` 和持久化的 isolated event loop，说明 DeerFlow 不想为每次 subagent 都临时起停事件循环。</li>
+            <li>所以 subagent executor 的真实角色不是“帮 task_tool 开个后台线程”，而是“维护一个可超时、可取消、可回收、可并发的独立小运行时”。</li>
+          </ul>
+        </div>
+        <div class="highlight">
+          <strong>这里不是消息总线群聊：</strong>
+          subagent 并不会和主 agent 长时间共享同一消息列表。它是在 <code>backend/packages/harness/deerflow/subagents/executor.py</code> 中构建自己的初始 state、技能消息和工具集合，然后独立执行。
+        </div>
+      </section>
+
+      <section id="config">
+        <h2>配置面与使用方式</h2>
+        <p>subagent 的配置面主要集中在类型解析和执行参数上：</p>
+        <ul>
+          <li><code>backend/packages/harness/deerflow/subagents/registry.py</code> 负责把名称映射到内置或自定义配置。</li>
+          <li><code>backend/packages/harness/deerflow/config/subagents_config.py</code> 允许在配置层定义 custom agents，并覆盖 system prompt、tools、skills、timeout、model 等参数。</li>
+          <li><code>backend/packages/harness/deerflow/subagents/config.py</code> 中的 <code>SubagentConfig</code> 与 <code>resolve_subagent_model_name</code> 决定 subagent 是否继承父模型、最多运行多少轮以及允许哪些工具。</li>
+          <li><code>backend/packages/harness/deerflow/tools/builtins/task_tool.py</code> 会继承父级的 tool groups 与部分 skill allowlist，并显式关闭 subagent 再次拥有 subagent tools，避免递归嵌套失控。</li>
+        </ul>
+        <p>这里很能体现 DeerFlow 的“受控委派”思路：父级权限不是原封不动传给子级，而是要经过一轮再过滤。例如 skill allowlist 会做父子交集，subagent 模型名会通过 <code>resolve_subagent_model_name</code> 再解析一次，递归 task 还会被直接禁用。也就是说，subagent 继承的是运行上下文，不是无限制的父级权力。</p>
+        <p>换句话说，DeerFlow 并不是让任何 agent 随便“spawn 另一个 agent”。委派能力受注册表、配置、父级策略和执行器规则共同限制。</p>
+      </section>
+
+      <section id="tradeoffs">
+        <h2>关键实现细节与权衡</h2>
+        <ul>
+          <li><code>backend/packages/harness/deerflow/tools/builtins/task_tool.py</code> 采用后台执行加轮询，而不是让模型自己反复调用“查询任务状态”工具，这能减少 prompt 污染和控制复杂度。</li>
+          <li><code>backend/packages/harness/deerflow/subagents/executor.py</code> 维护独立的状态机，包含 <code>PENDING</code>、<code>RUNNING</code>、<code>COMPLETED</code>、<code>FAILED</code>、<code>CANCELLED</code>、<code>TIMED_OUT</code>，让清理与恢复逻辑有明确落点。</li>
+          <li>超时不是单点处理。既有执行超时，也有父侧轮询超时；如果后台线程卡住，还会通过 cooperative cancellation 与 deferred cleanup 收尾。</li>
+          <li>token usage attribution 是这套设计很重要的细节：subagent 的模型调用成本不会消失，而是会被收集、汇总并归因回父级运行。</li>
+          <li>subagent 自己也会重新装配 skills、tools 和 deferred tool search，这使它是独立执行单元，而不是父 agent 的一个“函数调用回调”。</li>
+        </ul>
+        <div class="key-point">
+          <strong>核心取舍：</strong>
+          DeerFlow 用显式委派、后台状态机、轮询与清理机制换来了上下文隔离和更可控的长任务执行，但它并不追求“无限递归、自发协商”的多智能体幻想。
+        </div>
+      </section>
+
+      <section id="limits">
+        <h2>当前限制、边界与非目标</h2>
+        <ul>
+          <li>subagent 不是共享黑板系统，也不是多个 agent 同时读写一个公共工作记忆的群体智能框架。</li>
+          <li>DeerFlow 明确禁止 subagent 再拥有 subagent tools，避免递归委派无界增长。</li>
+          <li>超时、polling 和 cleanup 机制说明后台执行并非“发出去就不管”，也说明这套能力仍依赖当前进程内任务管理模型，而不是分布式任务队列。</li>
+          <li>虽然 subagent 可以继承父级 sandbox 与 thread data，但 ACP agent 的工作空间又是独立的，因此不能把所有“子执行单元”都等同为同一种路径语义。</li>
+        </ul>
+      </section>
+
+      <section id="relations">
+        <h2>它与 DeerFlow 其他能力的关系</h2>
+        <p>subagent 机制处在 DeerFlow 多个能力的交汇点：</p>
+        <ul>
+          <li>它和第 10 章执行引擎相连，因为 subagent 自己也会重新构建 agent、middlewares、state 和 tool 面，只是运行在独立执行器中。</li>
+          <li>它和第 11 章 skills 系统相连，因为 <code>backend/packages/harness/deerflow/subagents/executor.py</code> 会按配置重新加载 skill 内容，并在子上下文里注入。</li>
+          <li>它和第 12 章 sandbox 相连，因为 subagent 会继承父级的 <code>sandbox_state</code>、<code>thread_data</code> 与 thread_id，从而共享 DeerFlow 的虚拟路径与工具边界。</li>
+          <li>它和 token usage、streaming、Gateway 运行所有权相连，因为 subagent 的状态变化、结果和 usage 都要回流到父任务的事件流与统计体系中。</li>
+        </ul>
+        <div class="highlight">
+          建议把 <code>backend/packages/harness/deerflow/tools/builtins/task_tool.py</code>、<code>backend/packages/harness/deerflow/subagents/executor.py</code>、<code>backend/packages/harness/deerflow/subagents/registry.py</code>、<code>backend/packages/harness/deerflow/config/subagents_config.py</code> 和 <code>backend/packages/harness/deerflow/subagents/config.py</code> 一起读。这样最容易同时看到委派入口、执行器、注册表、配置模型和 timeout / cleanup / usage attribution 的完整闭环。
+        </div>
+      </section>
+
+      <div id="page-nav"></div>
+    </div>
   </main>
 </div>
 <script src="assets/nav.js"></script>

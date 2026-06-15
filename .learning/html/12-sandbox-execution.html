@@ -6,215 +6,7 @@
     <title>Sandbox与安全执行环境 · DeerFlow 学习系列</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
-        /* 页面特定样式 - 与深色主题兼容 */
-        
-        .toc {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--accent);
-            padding: 20px;
-            margin-bottom: 40px;
-            border-radius: 8px;
-        }
-        
-        .toc h2 {
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .toc li:before {
-            content: "▸";
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: bold;
-        }
-        
-        .toc a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .toc a:hover {
-            color: var(--accent-2);
-            text-decoration: underline;
-        }
-        
-        section {
-            margin-bottom: 50px;
-        }
-        
-        /* 代码块样式 */
-        .code-block {
-            background: var(--bg-code);
-            color: var(--text-soft);
-            padding: 18px 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 18px 0;
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 13.5px;
-            line-height: 1.65;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-        }
-        
-        .code-block code {
-            background: none;
-            border: none;
-            padding: 0;
-            color: var(--text-soft);
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            white-space: pre;
-            display: block;
-        }
-        
-        .code-block::-webkit-scrollbar {
-            height: 9px;
-        }
-        
-        .code-block::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-        
-        /* 提示框样式 */
-        .highlight {
-            background: var(--bg-soft);
-            padding: 15px 18px;
-            border-left: 4px solid var(--orange);
-            margin: 18px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .key-point {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--green);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--green);
-        }
-        
-        .key-point strong {
-            color: var(--green-soft);
-            font-weight: 650;
-        }
-        
-        .example-case {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--orange);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .example-case strong {
-            color: var(--orange);
-            font-weight: 650;
-        }
-        
-        .warning {
-            background: var(--bg-soft);
-            border-left: 4px solid #ff6b6b;
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid #ff6b6b;
-        }
-        
-        .warning strong {
-            color: #ff6b6b;
-            font-weight: 650;
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 18px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-        }
-        
-        .comparison-table th {
-            background: var(--bg-soft);
-            color: var(--text);
-            padding: 11px 15px;
-            text-align: left;
-            font-weight: 650;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .comparison-table td {
-            padding: 11px 15px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-soft);
-        }
-        
-        .comparison-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .comparison-table tr:hover td {
-            background: rgba(88,166,255,0.04);
-        }
-        
-        .flow-diagram {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        
-        .flow-step {
-            background: var(--bg-card);
-            border: 1.5px solid var(--accent);
-            color: var(--text);
-            padding: 12px 22px;
-            border-radius: 10px;
-            min-width: 120px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .flow-arrow {
-            font-size: 20px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            padding: 2px 0;
-        }
+        section { margin-bottom: 50px; }
     </style>
 </head>
 <body>
@@ -223,534 +15,376 @@
   <nav class="sidebar" id="sidebar"></nav>
   <main class="main">
     <div class="content">
-            <h1>Sandbox与安全执行环境</h1>
-            <p class="page-subtitle">DeerFlow 学习系列 - 第 12 章</p>
-            
-            <div class="toc">
-                <h2>📖 目录</h2>
-                <ul>
-                    <li><a href="#introduction">简介</a></li>
-                    <li><a href="#sandbox-importance">为什么需要 Sandbox</a></li>
-                    <li><a href="#sandbox-design">Sandbox 的设计</a></li>
-                    <li><a href="#permission-control">权限控制机制</a></li>
-                    <li><a href="#code-execution">代码执行的安全性</a></li>
-                    <li><a href="#isolation-techniques">隔离技术</a></li>
-                    <li><a href="#monitoring-audit">监控与审计</a></li>
-                    <li><a href="#best-practices">最佳实践</a></li>
-                    <li><a href="#summary">总结</a></li>
-                </ul>
-            </div>
-            
-            <section id="introduction">
-                <h2>简介</h2>
-                <p>
-                    Sandbox 是 Agent 的安全保护子。当 Agent 执行代码、调用外部服务或访问文件系统时，Sandbox 会检查这些操作是否安全、是否符合权限。本章讲解 Sandbox 的设计原理、权限控制機制、代码执行的安全性。
-                </p>
-                <div class="key-point">
-                    <strong>学习目标：</strong>
-                    <ul>
-                        <li>理解 Sandbox 的重要性</li>
-                        <li>掌握 Sandbox 的设计原理</li>
-                        <li>学会实现权限控制</li>
-                        <li>了解代码执行的安全性最佳实践</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <section id="sandbox-importance">
-                <h2>为什么需要 Sandbox</h2>
-                <p>
-                    想象一个场景：Agent 接收了一个恶意的用户输入，不幸的是 LLM 不幸中了提示注入攻击，调用了一个应该删除数据的 Skill。没有 Sandbox 的情况下，数据会被立即删除。有了 Sandbox，即使 LLM 中了攻击，也会先检查这个操作是否安全、是否符合权限。
-                </p>
-                
-                <h3>没有 Sandbox 的风险</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>风险类型</th>
-                            <th>描述</th>
-                            <th>后果</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>提示注入</strong></td>
-                            <td>LLM 中了提示注入攻击</td>
-                            <td>执行恶意操作</td>
-                        </tr>
-                        <tr>
-                            <td><strong>权限推溌</strong></td>
-                            <td>Agent 执行超出权限的操作</td>
-                            <td>数据泄露或系统破坡</td>
-                        </tr>
-                        <tr>
-                            <td><strong>资源浪費</strong></td>
-                            <td>Agent 执行超量计算或存储</td>
-                            <td>系统资源耗尽</td>
-                        </tr>
-                        <tr>
-                            <td><strong>侧道攻击</strong></td>
-                            <td>通过时序或其他侧道推溌信息</td>
-                            <td>信息泄露</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <div class="key-point">
-                    <strong>关键点：</strong> Sandbox 是 Agent 系统中不可或缺的一部分。它不是可选的优化，而是必需的安全措施。
-                </div>
-            </section>
-            
-            <section id="sandbox-design">
-                <h2>Sandbox 的设计</h2>
-                <p>
-                    Sandbox 的核心思想是：<strong>不信任任何事物</strong>。每一个操作都需要经过严格的验证。
-                </p>
-                
-                <h3>Sandbox 的分层设计</h3>
-                <div class="flow-diagram">
-                    <div class="flow-step">操作请求</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">身份验证</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">权限检查</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">安全上下文</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">执行</div>
-                </div>
-                
-                <h3>Sandbox 的实现</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">Sandbox</span>:
-    <span class="tok-str">"""Sandbox 安全执行环境"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, config: <span class="tok-cls">SandboxConfig</span>):
-        <span class="tok-kw">self</span>.config = config
-        <span class="tok-kw">self</span>.permissions = <span class="tok-cls">PermissionManager</span>(config)
-        <span class="tok-kw">self</span>.audit_log = <span class="tok-cls">AuditLog</span>()
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, operation: <span class="tok-cls">Operation</span>, context: <span class="tok-cls">ExecutionContext</span>):
-        <span class="tok-str">"""\u5728 Sandbox 中执行操作"""</span>
-        <span class="tok-kw">try</span>:
-            <span class="tok-com"># 1. 身份验证</span>
-            <span class="tok-kw">self</span>.<span class="tok-fn">verify_identity</span>(context)
-            
-            <span class="tok-com"># 2. 权限检查</span>
-            <span class="tok-kw">self</span>.permissions.<span class="tok-fn">check</span>(context.user, operation)
-            
-            <span class="tok-com"># 3. 安全上下文检查</span>
-            <span class="tok-kw">self</span>.<span class="tok-fn">verify_context</span>(context, operation)
-            
-            <span class="tok-com"># 4. 执行操作</span>
-            result = operation.<span class="tok-fn">execute</span>()
-            
-            <span class="tok-com"># 5. 记录审计日志</span>
-            <span class="tok-kw">self</span>.audit_log.<span class="tok-fn">log</span>(context, operation, result)
-            
-            <span class="tok-kw">return</span> result
-        
-        <span class="tok-kw">except</span> <span class="tok-cls">PermissionDenied</span> <span class="tok-kw">as</span> e:
-            <span class="tok-kw">self</span>.audit_log.<span class="tok-fn">log_denied</span>(context, operation, e)
-            <span class="tok-kw">raise</span>
-        
-        <span class="tok-kw">except</span> <span class="tok-cls">Exception</span> <span class="tok-kw">as</span> e:
-            <span class="tok-kw">self</span>.audit_log.<span class="tok-fn">log_error</span>(context, operation, e)
-            <span class="tok-kw">raise</span>
-</code></div>
-            </section>
-            
-            <section id="permission-control">
-                <h2>权限控制机制</h2>
-                <p>
-                    权限控制是 Sandbox 的核心。它定义了不同的 Agent 或用户可以执行哪些操作。
-                </p>
-                
-                <h3>权限模型</h3>
-                <p>
-                    DeerFlow 使用基于角色的权限控制 (RBAC) 模型：
-                </p>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">Role</span>:
-    <span class="tok-str">"""\u6743限角色"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, name: <span class="tok-str">str</span>, permissions: List[<span class="tok-str">str</span>]):
-        <span class="tok-kw">self</span>.name = name
-        <span class="tok-kw">self</span>.permissions = <span class="tok-str">set</span>(permissions)
+      <h1>Sandbox与安全执行环境</h1>
+      <p class="page-subtitle">DeerFlow 学习系列 - 第 12 章</p>
 
-<span class="tok-com"># 预定义的角色</span>
-ROLE_ADMIN = <span class="tok-cls">Role</span>(
-    <span class="tok-str">"admin"</span>,
-    [<span class="tok-str">"read"</span>, <span class="tok-str">"write"</span>, <span class="tok-str">"delete"</span>, <span class="tok-str">"execute_code"</span>]
-)
+      <div class="deerflow-map">
+        <h3>本章讲的是 DeerFlow 如何把“文件与命令执行”收进受控边界</h3>
+        <p>DeerFlow 的 sandbox 不是抽象上的“安全盒子”概念，而是一组真实的路径映射、provider 选择、延迟获取、命令约束和文件工具实现。理解这一章的关键，是分清虚拟路径契约、provider 差异以及 shell 能力的安全边界，而不是把 Local sandbox 误解成强隔离容器。</p>
+      </div>
 
-ROLE_USER = <span class="tok-cls">Role</span>(
-    <span class="tok-str">"user"</span>,
-    [<span class="tok-str">"read"</span>, <span class="tok-str">"write"</span>]
-)
+      <div class="toc">
+        <h3>目录</h3>
+        <ul>
+          <li><a href="#problem">这项能力在 DeerFlow 中解决什么问题</a></li>
+          <li><a href="#codebase">这项能力在代码库中的位置</a></li>
+          <li><a href="#flow">真实运行链路或数据链路</a></li>
+          <li><a href="#config">配置面与使用方式</a></li>
+          <li><a href="#tradeoffs">关键实现细节与权衡</a></li>
+          <li><a href="#limits">当前限制、边界与非目标</a></li>
+          <li><a href="#relations">它与 DeerFlow 其他能力的关系</a></li>
+        </ul>
+      </div>
 
-ROLE_GUEST = <span class="tok-cls">Role</span>(
-    <span class="tok-str">"guest"</span>,
-    [<span class="tok-str">"read"</span>]
-)
-</code></div>
-                
-                <h3>权限检查的实现</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">PermissionManager</span>:
-    <span class="tok-kw">def</span> <span class="tok-fn">check</span>(<span class="tok-kw">self</span>, user: <span class="tok-cls">User</span>, operation: <span class="tok-cls">Operation</span>) -> <span class="tok-str">bool</span>:
-        <span class="tok-str">"""\u68c0查用户是否有权限执行操作"""</span>
-        required_permission = operation.required_permission
-        
-        <span class="tok-com"># 检查用户的角色是否有所需权限</span>
-        <span class="tok-kw">if</span> required_permission <span class="tok-kw">not</span> <span class="tok-kw">in</span> user.role.permissions:
-            <span class="tok-kw">raise</span> <span class="tok-cls">PermissionDenied</span>(
-                <span class="tok-str">f"User {user.id} lacks permission: {required_permission}"</span>
-            )
-        
-        <span class="tok-kw">return</span> <span class="tok-num">True</span>
-</code></div>
-                
-                <div class="example-case">
-                    <strong>示例：</strong> 权限检查的实际应用<br>
-                    <div class="code-block"><code>
-<span class="tok-com"># 创建用户</span>
-admin_user = <span class="tok-cls">User</span>(id=<span class="tok-str">"admin1"</span>, role=ROLE_ADMIN)
-guest_user = <span class="tok-cls">User</span>(id=<span class="tok-str">"guest1"</span>, role=ROLE_GUEST)
-
-<span class="tok-com"># 删除操作（需要 delete 权限）</span>
-delete_op = <span class="tok-cls">Operation</span>(
-    type=<span class="tok-str">"delete"</span>,
-    required_permission=<span class="tok-str">"delete"</span>
-)
-
-<span class="tok-com"># Admin 可以执行</span>
-sandbox.<span class="tok-fn">execute</span>(delete_op, <span class="tok-cls">ExecutionContext</span>(user=admin_user))
-
-<span class="tok-com"># Guest 无法执行，会抛出 PermissionDenied 异常</span>
-sandbox.<span class="tok-fn">execute</span>(delete_op, <span class="tok-cls">ExecutionContext</span>(user=guest_user))
-</code></div>
-                </div>
-            </section>
-            
-            <section id="code-execution">
-                <h2>代码执行的安全性</h2>
-                <p>
-                    当 Agent 需要执行代码（比如执行 Python 脚本）时，Sandbox 需要提供一个安全的执行环境。
-                </p>
-                
-                <h3>代码执行的安全需求</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>安全需求</th>
-                            <th>说明</th>
-                            <th>实现方案</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>资源限制</strong></td>
-                            <td>限制 CPU、内存、磁盘使用</td>
-                            <td>使用 cgroups 或 Docker</td>
-                        </tr>
-                        <tr>
-                            <td><strong>文件系统隔离</strong></td>
-                            <td>限制文件访问范围</td>
-                            <td>使用 chroot 或 Docker</td>
-                        </tr>
-                        <tr>
-                            <td><strong>网络隔离</strong></td>
-                            <td>控制网络访问</td>
-                            <td>使用防火墙或网络策略</td>
-                        </tr>
-                        <tr>
-                            <td><strong>时间限制</strong></td>
-                            <td>限制执行时间</td>
-                            <td>使用 timeout 或信号</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <h3>安全代码执行的实现</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">CodeExecutor</span>:
-    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, code: <span class="tok-str">str</span>, timeout: <span class="tok-num">int</span> = <span class="tok-num">30</span>) -> <span class="tok-str">str</span>:
-        <span class="tok-str">"""\u5b89全执行代码"""</span>
-        <span class="tok-kw">try</span>:
-            <span class="tok-com"># 1. 代码静态分析（检查危险的操作）</span>
-            <span class="tok-kw">self</span>.<span class="tok-fn">validate_code</span>(code)
-            
-            <span class="tok-com"># 2. 在隔离的环境中执行</span>
-            <span class="tok-kw">with</span> <span class="tok-cls">IsolatedEnvironment</span>() <span class="tok-kw">as</span> env:
-                result = env.<span class="tok-fn">execute</span>(code, timeout=timeout)
-            
-            <span class="tok-kw">return</span> result
-        
-        <span class="tok-kw">except</span> <span class="tok-cls">DangerousCodeDetected</span> <span class="tok-kw">as</span> e:
-            <span class="tok-kw">raise</span> <span class="tok-cls">SecurityError</span>(<span class="tok-str">f"Dangerous code detected: {e}"</span>)
-        
-        <span class="tok-kw">except</span> <span class="tok-cls">TimeoutError</span>:
-            <span class="tok-kw">raise</span> <span class="tok-cls">ExecutionTimeout</span>(<span class="tok-str">"Code execution timeout"</span>)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">validate_code</span>(<span class="tok-kw">self</span>, code: <span class="tok-str">str</span>):
-        <span class="tok-str">"""\u68c0查代码是否包含危险操作"""</span>
-        dangerous_patterns = [
-            <span class="tok-str">"os.system"</span>,
-            <span class="tok-str">"subprocess"</span>,
-            <span class="tok-str">"__import__"</span>,
-            <span class="tok-str">"eval"</span>,
-            <span class="tok-str">"exec"</span>
-        ]
-        
-        <span class="tok-kw">for</span> pattern <span class="tok-kw">in</span> dangerous_patterns:
-            <span class="tok-kw">if</span> pattern <span class="tok-kw">in</span> code:
-                <span class="tok-kw">raise</span> <span class="tok-cls">DangerousCodeDetected</span>(
-                    <span class="tok-str">f"Dangerous pattern found: {pattern}"</span>
-                )
-</code></div>
-                
-                <div class="warning">
-                    <strong>警告：</strong> 不要信任任何代码。即使是你自己的代码，也应该经过 Sandbox 执行。不要直接使用 eval() 或 exec() 执行用户提供的代码。
-                </div>
-            </section>
-            
-            <section id="isolation-techniques">
-                <h2>隔离技术</h2>
-                <p>
-                    Sandbox 可以使用多种隔离技术来实现安全执行环境。不同的技术有不同的权衡。
-                </p>
-                
-                <h3>隔离技术对比</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>技术</th>
-                            <th>隔离程度</th>
-                            <th>性能开销</th>
-                            <th>适用场景</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>进程隔离</strong></td>
-                            <td>中等</td>
-                            <td>低</td>
-                            <td>轻量级任务</td>
-                        </tr>
-                        <tr>
-                            <td><strong>容器隔离</strong></td>
-                            <td>高</td>
-                            <td>中等</td>
-                            <td>中等复杂度任务</td>
-                        </tr>
-                        <tr>
-                            <td><strong>虚拟机隔离</strong></td>
-                            <td>非常高</td>
-                            <td>高</td>
-                            <td>高风险任务</td>
-                        </tr>
-                        <tr>
-                            <td><strong>语言级隔离</strong></td>
-                            <td>低</td>
-                            <td>很低</td>
-                            <td>受信任的代码</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <h3>Docker 容器隔离示例</h3>
-                <p>
-                    使用 Docker 容器提供强大的隔离：
-                </p>
-                <div class="code-block"><code>
-<span class="tok-kw">import</span> docker
-<span class="tok-kw">from</span> typing <span class="tok-kw">import</span> Dict
-
-<span class="tok-kw">class</span> <span class="tok-cls">DockerSandbox</span>:
-    <span class="tok-str">"""使用 Docker 容器的 Sandbox"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, image: <span class="tok-str">str</span> = <span class="tok-str">"python:3.9"</span>):
-        <span class="tok-kw">self</span>.client = docker.<span class="tok-cls">DockerClient</span>()
-        <span class="tok-kw">self</span>.image = image
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, code: <span class="tok-str">str</span>, timeout: <span class="tok-num">30</span>) -> <span class="tok-str">str</span>:
-        <span class="tok-str">"""在 Docker 容器中执行代码"""</span>
-        <span class="tok-kw">try</span>:
-            <span class="tok-com"># 创建容器</span>
-            container = <span class="tok-kw">self</span>.client.containers.<span class="tok-fn">run</span>(
-                <span class="tok-kw">self</span>.image,
-                <span class="tok-str">f"python -c {code}"</span>,
-                detach=<span class="tok-kw">True</span>,
-                mem_limit=<span class="tok-str">"512m"</span>,  <span class="tok-com"># 限制内存</span>
-                cpus=<span class="tok-str">"1"</span>,  <span class="tok-com"># 限制 CPU</span>
-                network_disabled=<span class="tok-kw">True</span>  <span class="tok-com"># 禁用网络</span>
-            )
-            
-            <span class="tok-com"># 等待执行完成</span>
-            exit_code = container.<span class="tok-fn">wait</span>(timeout=timeout)
-            
-            <span class="tok-com"># 获取输出</span>
-            output = container.<span class="tok-fn">logs</span>().<span class="tok-fn">decode</span>()
-            
-            <span class="tok-com"># 清理容器</span>
-            container.<span class="tok-fn">remove</span>()
-            
-            <span class="tok-kw">return</span> output
-        
-        <span class="tok-kw">except</span> <span class="tok-cls">Exception</span> <span class="tok-kw">as</span> e:
-            <span class="tok-kw">raise</span> <span class="tok-cls">SandboxError</span>(<span class="tok-str">f"Execution failed: {e}"</span>)
-</code></div>
-                
-                <h3>资源限制配置</h3>
-                <p>
-                    Sandbox 应该配置合理的资源限制：
-                </p>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">ResourceLimits</span>:
-    <span class="tok-str">"""资源限制配置"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.max_memory = <span class="tok-str">"512m"</span>  <span class="tok-com"># 最大内存</span>
-        <span class="tok-kw">self</span>.max_cpu = <span class="tok-str">"1"</span>  <span class="tok-com"># 最大 CPU 核心数</span>
-        <span class="tok-kw">self</span>.max_timeout = <span class="tok-num">30</span>  <span class="tok-com"># 最大执行时间（秒）</span>
-        <span class="tok-kw">self</span>.max_file_size = <span class="tok-num">10</span> * <span class="tok-num">1024</span> * <span class="tok-num">1024</span>  <span class="tok-com"># 最大文件大小（字节）</span>
-        <span class="tok-kw">self</span>.max_processes = <span class="tok-num">10</span>  <span class="tok-com"># 最大进程数</span>
-</code></div>
-            </section>
-            
-            <section id="monitoring-audit">
-                <h2>监控与审计</h2>
-                <p>
-                    Sandbox 应该提供完整的监控和审计能力，记录所有的操作，便于事后分析和安全审查。
-                </p>
-                
-                <h3>审计日志的内容</h3>
-                <p>
-                    审计日志应该记录以下信息：
-                </p>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">AuditLog</span>:
-    <span class="tok-str">"""审计日志"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">log</span>(<span class="tok-kw">self</span>, event: <span class="tok-cls">AuditEvent</span>):
-        <span class="tok-str">"""记录审计事件"""</span>
-        log_entry = {
-            <span class="tok-str">"timestamp"</span>: <span class="tok-fn">time</span>.<span class="tok-fn">time</span>(),
-            <span class="tok-str">"user_id"</span>: event.user_id,
-            <span class="tok-str">"action"</span>: event.action,
-            <span class="tok-str">"resource"</span>: event.resource,
-            <span class="tok-str">"result"</span>: event.result,  <span class="tok-com"># success / denied / error</span>
-            <span class="tok-str">"reason"</span>: event.reason,
-            <span class="tok-str">"details"</span>: event.details
-        }
-        
-        <span class="tok-com"># 存储到数据库或日志文件</span>
-        <span class="tok-kw">self</span>.<span class="tok-fn">store</span>(log_entry)
-
-<span class="tok-kw">class</span> <span class="tok-cls">AuditEvent</span>:
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(
-        <span class="tok-kw">self</span>,
-        user_id: <span class="tok-str">str</span>,
-        action: <span class="tok-str">str</span>,
-        resource: <span class="tok-str">str</span>,
-        result: <span class="tok-str">str</span>,
-        reason: <span class="tok-str">str</span> = <span class="tok-str">""</span>,
-        details: <span class="tok-cls">Dict</span> = <span class="tok-kw">None</span>
-    ):
-        <span class="tok-kw">self</span>.user_id = user_id
-        <span class="tok-kw">self</span>.action = action
-        <span class="tok-kw">self</span>.resource = resource
-        <span class="tok-kw">self</span>.result = result
-        <span class="tok-kw">self</span>.reason = reason
-        <span class="tok-kw">self</span>.details = details <span class="tok-kw">or</span> {}
-</code></div>
-                
-                <h3>实时监控</h3>
-                <p>
-                    除了审计日志，还应该进行实时监控，检测异常行为：
-                </p>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">SandboxMonitor</span>:
-    <span class="tok-str">"""Sandbox 监控器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">detect_anomalies</span>(<span class="tok-kw">self</span>, logs: List[<span class="tok-cls">AuditEvent</span>]):
-        <span class="tok-str">"""检测异常行为"""</span>
-        anomalies = []
-        
-        <span class="tok-com"># 检测频繁的权限拒绝</span>
-        denied_count = <span class="tok-fn">sum</span>(<span class="tok-num">1</span> <span class="tok-kw">for</span> log <span class="tok-kw">in</span> logs <span class="tok-kw">if</span> log.result == <span class="tok-str">"denied"</span>)
-        <span class="tok-kw">if</span> denied_count > <span class="tok-num">10</span>:
-            anomalies.<span class="tok-fn">append</span>({
-                <span class="tok-str">"type"</span>: <span class="tok-str">"frequent_denials"</span>,
-                <span class="tok-str">"count"</span>: denied_count
-            })
-        
-        <span class="tok-com"># 检测异常的资源使用</span>
-        <span class="tok-kw">for</span> log <span class="tok-kw">in</span> logs:
-            <span class="tok-kw">if</span> log.details.<span class="tok-fn">get</span>(<span class="tok-str">"memory_usage"</span>, <span class="tok-num">0</span>) > <span class="tok-num">400</span>:  <span class="tok-com"># MB</span>
-                anomalies.<span class="tok-fn">append</span>({
-                    <span class="tok-str">"type"</span>: <span class="tok-str">"high_memory_usage"</span>,
-                    <span class="tok-str">"usage"</span>: log.details[<span class="tok-str">"memory_usage"</span>]
-                })
-        
-        <span class="tok-kw">return</span> anomalies
-</code></div>
-                
-                <div class="key-point">
-                    <strong>监控建议：</strong> 设置告警阈值，当检测到异常行为时立即告警。同时定期分析审计日志，发现潜在的安全问题。
-                </div>
-            </section>
-            
-            <section id="best-practices">
-                <h2>最佳实践</h2>
-                
-                <h3>1. 最小权限原则</h3>
-                <p>
-                    仅给予 Agent 它真正需要的权限。不要给予过广泛的权限。
-                </p>
-                
-                <h3>2. 定期审计</h3>
-                <p>
-                    定期检查 Sandbox 的审计日志，发现不正常的活动。
-                </p>
-                
-                <h3>3. 分层防御</h3>
-                <p>
-                    不要仅依赖一个安全措施。应该使用多个安全层次。
-                </p>
-                
-                <h3>4. 定期更新</h3>
-                <p>
-                    定期更新 Sandbox 的依赖项目和安全补丁。
-                </p>
-            </section>
-            
-            <section id="summary">
-                <h2>总结</h2>
-                <p>
-                    Sandbox 是 Agent 系统中的安全保护层。它确保了 Agent 的操作不会对系统造成危害。本章深入讲解了 Sandbox 的设计、权限控制、代码执行安全、隔离技术和监控审计。
-                </p>
-                <div class="highlight">
-                    <strong>核心要点总结：</strong>
-                    <ul>
-                        <li><strong>安全重要性：</strong> Sandbox 是必需的，不是可选的优化</li>
-                        <li><strong>分层设计：</strong> 身份验证 → 权限检查 → 安全上下文 → 执行 → 审计</li>
-                        <li><strong>权限控制：</strong> 使用 RBAC 模型，遵守最小权限原则</li>
-                        <li><strong>代码执行安全：</strong> 静态分析 + 资源限制 + 时间限制</li>
-                        <li><strong>隔离技术：</strong> 进程隔离、容器隔离、虚拟机隔离等多种选择</li>
-                        <li><strong>监控审计：</strong> 完整的审计日志 + 实时异常检测</li>
-                        <li><strong>最佳实践：</strong> 最小权限、定期审计、分层防御、定期更新</li>
-                    </ul>
-                </div>
-                
-                <div class="key-point">
-                    <strong>安全建议：</strong> Sandbox 的安全性取决于多个因素的综合。不要仅依赖一个安全措施，而应该使用多层防御。同时，要定期审查和更新安全策略，应对新的威胁。
-                </div>
-            </section>
-            
-            <div id="page-nav"></div>
+      <section id="problem">
+        <h2>这项能力在 DeerFlow 中解决什么问题</h2>
+        <p>DeerFlow 需要让 agent 读写文件、搜索目录、执行命令、产出工件，但又不能把宿主机文件系统和 shell 直接裸露给模型。sandbox 层正是为这个矛盾服务：一方面给 agent 一个稳定、可推理的工作空间视图，另一方面把真实宿主路径、权限范围和命令访问方式收敛到受控工具里。</p>
+        <p>在 DeerFlow 里，sandbox 的职责不只是“执行 bash”。它更重要的职责是建立统一的虚拟路径契约，例如 <code>/mnt/user-data/workspace</code>、<code>/mnt/user-data/uploads</code>、<code>/mnt/user-data/outputs</code> 与 <code>/mnt/acp-workspace</code>，让 prompt、tool、artifact API 与不同 provider 都围绕同一套路径语义工作。</p>
+        <div class="key-point">
+          <strong>最重要的认知边界：</strong>
+          Local sandbox 是主机侧便利模式，不是强隔离 shell 边界。它解决的是 DeerFlow 的统一执行接口问题，不等于容器级安全隔离。
         </div>
+      </section>
+
+      <section id="codebase">
+        <h2>这项能力在代码库中的位置</h2>
+        <table class="comparison-table">
+          <tr>
+            <th>路径</th>
+            <th>职责</th>
+            <th>为什么要看</th>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/sandbox/tools.py</code></td>
+            <td>文件工具、bash 工具、虚拟路径解析、边界校验</td>
+            <td>这是 DeerFlow sandbox 能力真正暴露给 agent 的实现入口</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/sandbox/local/local_sandbox_provider.py</code></td>
+            <td>本地 provider、线程级 path mapping、LRU 缓存</td>
+            <td>解释 LocalSandboxProvider 如何兑现 <code>/mnt/user-data/...</code> 契约</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/sandbox/middleware.py</code></td>
+            <td>sandbox state 注入与 lazy acquisition</td>
+            <td>说明 sandbox 并不是每次 run 一开始就立即创建</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/sandbox/security.py</code></td>
+            <td>本地 bash 安全提示与 <code>allow_host_bash</code> 判断</td>
+            <td>理解为什么默认禁用宿主机 bash</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/community/aio_sandbox/aio_sandbox_provider.py</code></td>
+            <td>容器化 provider</td>
+            <td>用于和本地 provider 对照，理解 DeerFlow 的“强隔离”路径在哪里</td>
+          </tr>
+          <tr>
+            <td><code>backend/docs/AUTH_DESIGN.md</code> 与 <code>backend/docs/CONFIGURATION.md</code></td>
+            <td>用户隔离设计、provider 配置与 bash 策略说明</td>
+            <td>帮助把实现细节放回 DeerFlow 的部署与安全模型中理解</td>
+          </tr>
+        </table>
+        <p>如果按“谁真正干活”来读，<code>backend/packages/harness/deerflow/sandbox/tools.py</code> 是最核心的，因为 agent 看到的读文件、列目录、bash 等能力最终都在这里实现。<code>backend/packages/harness/deerflow/sandbox/middleware.py</code> 负责把 sandbox 句柄挂到运行时 state 上，但它本身不直接执行文件操作；<code>local_sandbox_provider.py</code> 和 <code>aio_sandbox_provider.py</code> 则分别决定这些工具背后到底操作宿主机路径，还是容器里的挂载路径。</p>
+        <p>这意味着 sandbox 相关源码要从“工具层 -> provider 层 -> 安全策略层”往下读，而不是只盯着 provider 文件。因为对用户来说真正可见的是工具行为，不是 provider 类名。</p>
+      </section>
+
+      <section id="flow">
+        <h2>真实运行链路或数据链路</h2>
+        <p>DeerFlow 默认不是“run 开始就先启动 sandbox”。它采用 lazy sandbox acquisition：只有当运行真的触碰到文件/命令工具时，sandbox 才通过 middleware 和 provider 被获取。这一点在 <code>backend/packages/harness/deerflow/sandbox/middleware.py</code> 与 <code>backend/packages/harness/deerflow/agents/factory.py</code> 的 lazy init 组合里非常明确。</p>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>Sandbox 延迟获取流程图</strong>
+            <span>不是一开跑就建沙箱，而是等真正碰到文件或命令能力时再拿</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>主 Agent 或子 Agent 先正常开始运行</strong>
+                <p>这时候系统还没有急着创建实际沙箱，只是先把运行链装起来。</p>
+                <div class="flow-step-path"><code>lead agent / subagent runtime</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>中间件先挂上“延迟初始化”入口</strong>
+                <p>Sandbox middleware 先把获取逻辑埋好，等后面真需要时再触发。</p>
+                <div class="flow-step-path"><code>sandbox middleware (lazy_init=True)</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>第一次调用文件或命令类工具时才真正触发</strong>
+                <p>只有当运行碰到读文件、列目录、bash 这类能力时，沙箱才会被真正请求。</p>
+                <div class="flow-step-path"><code>first sandbox-backed tool call</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>工具层开始申请线程专属沙箱句柄</strong>
+                <p>真正发起 acquire 的不是文档配置，而是工具实现本身。</p>
+                <div class="flow-step-path"><code>sandbox/tools.py</code> + <code>acquire(thread_id)</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>底层 provider 决定实际跑在宿主机还是容器里</strong>
+                <p>这一层才区分是本地沙箱，还是 Aio 容器沙箱，但对上层接口仍然统一。</p>
+                <div class="flow-step-path"><code>LocalSandboxProvider</code> / <code>AioSandboxProvider</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">06</div>
+              <div class="flow-step-copy">
+                <strong>路径映射和边界检查通过后才执行操作</strong>
+                <p>虚拟路径会先映射到真实路径，并确认仍在当前线程允许的范围内，之后才真正执行。</p>
+                <div class="flow-step-path"><code>path mapping</code> + <code>bounds check</code> + <code>tool execution</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">07</div>
+              <div class="flow-step-copy">
+                <strong>返回给模型的仍然是统一的虚拟路径视图</strong>
+                <p>这样上层 agent 不需要知道底下到底是宿主机目录还是容器挂载目录。</p>
+                <div class="flow-step-path"><code>virtual-path view</code></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p>源码层面更具体一点，是 <code>sandbox/tools.py</code> 先拿到用户传来的虚拟路径，再根据 provider 暴露的 path mapping 把它解析成真实路径，然后检查是否落在当前 thread 允许的边界内；只有边界通过之后，才真正执行读写或 shell 操作。所以“路径契约”不是写在文档里的口头约定，而是工具函数里反复参与解析和校验的实际逻辑。</p>
+        <p>如果当前 provider 是 <code>backend/packages/harness/deerflow/sandbox/local/local_sandbox_provider.py</code>，那么它会为每个线程建立独立的 path mappings，把真实宿主目录映射成统一的 <code>/mnt/user-data/workspace</code>、<code>/mnt/user-data/uploads</code>、<code>/mnt/user-data/outputs</code> 和 <code>/mnt/acp-workspace</code>。如果当前 provider 是 <code>AioSandboxProvider</code>，这些路径则会在容器内以 bind mount 形式呈现。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码：虚拟 skills 路径怎样解析成宿主机路径</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/sandbox/tools.py</code>。这一段很能说明 DeerFlow 的路径契约不是写在文档里，而是写在工具实现里。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">sandbox/tools.py :: _get_skills_host_path() / _resolve_skills_path()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># 无入参: 直接从全局配置推导宿主机 skills 根目录，并在成功时做函数级缓存</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_get_skills_host_path</span>() <span class="tok-op">-&gt;</span> <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com">"""从配置里拿真实 skills 目录；只有成功时才缓存。"""</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-fn">cached</span> <span class="tok-op">=</span> <span class="tok-fn">getattr</span>(<span class="tok-fn">_get_skills_host_path</span>, <span class="tok-str">"_cached"</span>, <span class="tok-kw">None</span>)</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">cached</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-fn">cached</span></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-kw">try</span>:</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">config</span> <span class="tok-kw">import</span> <span class="tok-fn">get_app_config</span></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">        <span class="tok-fn">config</span> <span class="tok-op">=</span> <span class="tok-fn">get_app_config</span>()</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">        <span class="tok-fn">skills_path</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-attr">skills</span>.<span class="tok-fn">get_skills_path</span>()</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-com"># 只有真实目录存在，才允许 agent 通过虚拟路径读它</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">skills_path</span>.<span class="tok-fn">exists</span>():</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">            <span class="tok-fn">value</span> <span class="tok-op">=</span> <span class="tok-fn">str</span>(<span class="tok-fn">skills_path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">            <span class="tok-fn">_get_skills_host_path</span>.<span class="tok-attr">_cached</span> <span class="tok-op">=</span> <span class="tok-fn">value</span></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">            <span class="tok-kw">return</span> <span class="tok-fn">value</span></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-kw">except</span> <span class="tok-cls">Exception</span>:</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-kw">pass</span></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src"><span class="tok-com"># path: agent 侧看到的虚拟 skills 路径，职责是把它翻译成真实宿主机路径并在缺目录时立即报错</span></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_resolve_skills_path</span>(<span class="tok-attr">path</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-com"># path 是 agent 看到的虚拟路径，例如 /mnt/skills/public/bootstrap/SKILL.md</span></span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-fn">skills_container</span> <span class="tok-op">=</span> <span class="tok-fn">_get_skills_container_path</span>()</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">    <span class="tok-fn">skills_host</span> <span class="tok-op">=</span> <span class="tok-fn">_get_skills_host_path</span>()</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">skills_host</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">FileNotFoundError</span>(<span class="tok-str">f"Skills directory not available for path: {path}"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">path</span> <span class="tok-op">==</span> <span class="tok-fn">skills_container</span>:</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-fn">skills_host</span></span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-com"># 去掉虚拟前缀以后，剩下的相对路径再拼回宿主机真实目录</span></span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">    <span class="tok-fn">relative</span> <span class="tok-op">=</span> <span class="tok-attr">path</span>[<span class="tok-fn">len</span>(<span class="tok-fn">skills_container</span>) :].<span class="tok-fn">lstrip</span>(<span class="tok-str">"/"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-fn">_join_path_preserving_style</span>(<span class="tok-fn">skills_host</span>, <span class="tok-fn">relative</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第一步先查函数级缓存，而不是每次都重新读配置。这说明 DeerFlow 把“路径解析”当成高频运行时逻辑来优化。</li>
+            <li>真正读取的是 <code>config.skills.get_skills_path()</code>，所以 skills 目录来自配置，不是工具层写死的固定目录。</li>
+            <li>只有 <code>skills_path.exists()</code> 为真时才缓存成功值，失败不会缓存。这一点很重要，因为临时不可用不会把系统永久锁死在错误状态。</li>
+            <li><code>_resolve_skills_path(...)</code> 接收的仍然是虚拟路径，不是宿主机路径。也就是说 agent 从头到尾都不知道真实磁盘布局。</li>
+            <li>最后一行的 <code>_join_path_preserving_style(...)</code> 才是真正把“容器视角路径”翻译成“宿主机视角路径”的位置，文件工具后续读写都依赖这一步结果。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：Local provider 为什么要拒绝保留前缀挂载</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/sandbox/local/local_sandbox_provider.py</code>。这段代码体现了 sandbox 的边界控制不是口头约定。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">sandbox/local/local_sandbox_provider.py :: _build_static_path_mappings()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">try</span>:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">config</span> <span class="tok-kw">import</span> <span class="tok-fn">get_app_config</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-fn">config</span> <span class="tok-op">=</span> <span class="tok-fn">get_app_config</span>()</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-fn">skills_path</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-attr">skills</span>.<span class="tok-fn">get_skills_path</span>()</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-fn">container_path</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-attr">skills</span>.<span class="tok-attr">container_path</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">skills_path</span>.<span class="tok-fn">exists</span>():</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">        <span class="tok-attr">mappings</span>.<span class="tok-fn">append</span>(<span class="tok-cls">PathMapping</span>(<span class="tok-attr">container_path</span><span class="tok-op">=</span><span class="tok-fn">container_path</span>, <span class="tok-attr">local_path</span><span class="tok-op">=</span><span class="tok-fn">str</span>(<span class="tok-fn">skills_path</span>), <span class="tok-attr">read_only</span><span class="tok-op">=</span><span class="tok-kw">True</span>))</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-fn">_RESERVED_CONTAINER_PREFIXES</span> <span class="tok-op">=</span> [</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-fn">container_path</span>,</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-attr">_ACP_WORKSPACE_VIRTUAL_PREFIX</span>,</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">        <span class="tok-attr">_USER_DATA_VIRTUAL_PREFIX</span>,</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    ]</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-fn">sandbox_config</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-attr">sandbox</span></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">sandbox_config</span> <span class="tok-kw">and</span> <span class="tok-attr">sandbox_config</span>.<span class="tok-attr">mounts</span>:</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">        <span class="tok-kw">for</span> <span class="tok-fn">mount</span> <span class="tok-kw">in</span> <span class="tok-attr">sandbox_config</span>.<span class="tok-attr">mounts</span>:</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">            <span class="tok-fn">host_path</span> <span class="tok-op">=</span> <span class="tok-cls">Path</span>(<span class="tok-attr">mount</span>.<span class="tok-attr">host_path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">            <span class="tok-fn">container_path</span> <span class="tok-op">=</span> <span class="tok-attr">mount</span>.<span class="tok-attr">container_path</span>.<span class="tok-fn">rstrip</span>(<span class="tok-str">"/"</span>) <span class="tok-kw">or</span> <span class="tok-str">"/"</span></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">            <span class="tok-com"># 这一段在保护 DeerFlow 自己的虚拟路径协议不被外部 mount 覆盖</span></span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">any</span>(<span class="tok-fn">container_path</span> <span class="tok-op">==</span> <span class="tok-fn">p</span> <span class="tok-kw">or</span> <span class="tok-fn">container_path</span>.<span class="tok-fn">startswith</span>(<span class="tok-fn">p</span> <span class="tok-op">+</span> <span class="tok-str">"/"</span>) <span class="tok-kw">for</span> <span class="tok-fn">p</span> <span class="tok-kw">in</span> <span class="tok-fn">_RESERVED_CONTAINER_PREFIXES</span>):</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">                <span class="tok-attr">logger</span>.<span class="tok-fn">warning</span>(<span class="tok-str">"Mount container_path conflicts with reserved prefix, skipping: %s"</span>, <span class="tok-attr">mount</span>.<span class="tok-attr">container_path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">                <span class="tok-kw">continue</span></span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-attr">host_path</span>.<span class="tok-fn">exists</span>():</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">                <span class="tok-attr">mappings</span>.<span class="tok-fn">append</span>(<span class="tok-cls">PathMapping</span>(<span class="tok-attr">container_path</span><span class="tok-op">=</span><span class="tok-fn">container_path</span>, <span class="tok-attr">local_path</span><span class="tok-op">=</span><span class="tok-fn">str</span>(<span class="tok-attr">host_path</span>.<span class="tok-fn">resolve</span>()), <span class="tok-attr">read_only</span><span class="tok-op">=</span><span class="tok-attr">mount</span>.<span class="tok-attr">read_only</span>))</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">            <span class="tok-kw">else</span>:</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">                <span class="tok-attr">logger</span>.<span class="tok-fn">error</span>(<span class="tok-str">"sandbox.mounts entry %s -> %s ignored: host_path %s does not exist"</span>, <span class="tok-attr">mount</span>.<span class="tok-attr">host_path</span>, <span class="tok-attr">mount</span>.<span class="tok-attr">container_path</span>, <span class="tok-attr">mount</span>.<span class="tok-attr">host_path</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这段代码不是“顺便做一下防御”，而是在 provider 建立映射时就先定义了保留前缀白名单边界。</li>
+            <li><code>skills</code>、<code>/mnt/acp-workspace</code>、<code>/mnt/user-data</code> 被集中收进 <code>_RESERVED_CONTAINER_PREFIXES</code>，表示这些前缀属于 DeerFlow runtime 自己管理。</li>
+            <li>后续每一条自定义 mount 都会先做冲突判断；一旦想覆盖保留路径，直接 <code>continue</code>，连映射都不会加进去。</li>
+            <li>即使前缀不冲突，也还要检查 <code>host_path.exists()</code>。不存在的宿主目录不会静默接受，而是打 error，避免“看起来挂载成功，实际上读到空目录”的隐性故障。</li>
+            <li>所以 Local provider 的真实工作不是“给本地 shell 开个口子”，而是严格维护一张线程级、前缀受保护的路径映射表。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 3：thread data middleware 才是 thread 目录和消息元信息真正进入运行时的入口</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/agents/middlewares/thread_data_middleware.py</code>。这一段能把 sandbox 和执行引擎之间的连接讲得非常具体。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">agents/middlewares/thread_data_middleware.py :: before_agent()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">ThreadDataMiddleware</span>(<span class="tok-cls">AgentMiddleware</span>[<span class="tok-cls">ThreadDataMiddlewareState</span>]):</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com">"""为每个线程执行准备 workspace / uploads / outputs 三个目录。"""</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-com"># self / thread_id / user_id: 根据当前线程和用户，推导 workspace、uploads、outputs 三类真实目录</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">_get_thread_paths</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">str</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">        <span class="tok-kw">return</span> {</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">            <span class="tok-str">"workspace_path"</span>: <span class="tok-fn">str</span>(<span class="tok-self">self</span>.<span class="tok-attr">_paths</span>.<span class="tok-fn">sandbox_work_dir</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)),</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">            <span class="tok-str">"uploads_path"</span>: <span class="tok-fn">str</span>(<span class="tok-self">self</span>.<span class="tok-attr">_paths</span>.<span class="tok-fn">sandbox_uploads_dir</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)),</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">            <span class="tok-str">"outputs_path"</span>: <span class="tok-fn">str</span>(<span class="tok-self">self</span>.<span class="tok-attr">_paths</span>.<span class="tok-fn">sandbox_outputs_dir</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)),</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">        }</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-com"># self / thread_id / user_id: 在推导出路径后顺手确保目录存在，给后续 sandbox 和上传流程做物理准备</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">_create_thread_directories</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">user_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">str</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_paths</span>.<span class="tok-fn">ensure_thread_dirs</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-self">self</span>.<span class="tok-fn">_get_thread_paths</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-dec">@override</span></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-com"># state: 当前线程状态快照；runtime: LangGraph 运行时上下文，这里要把 thread 目录和用户语义提前注入进去</span></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">before_agent</span>(<span class="tok-self">self</span>, <span class="tok-attr">state</span>: <span class="tok-cls">ThreadDataMiddlewareState</span>, <span class="tok-attr">runtime</span>: <span class="tok-cls">Runtime</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-fn">context</span> <span class="tok-op">=</span> <span class="tok-attr">runtime</span>.<span class="tok-attr">context</span> <span class="tok-kw">or</span> {}</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">        <span class="tok-fn">thread_id</span> <span class="tok-op">=</span> <span class="tok-attr">context</span>.<span class="tok-fn">get</span>(<span class="tok-str">"thread_id"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">thread_id</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">            <span class="tok-fn">config</span> <span class="tok-op">=</span> <span class="tok-fn">get_config</span>()</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">            <span class="tok-attr">thread_id</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"configurable"</span>, {}).<span class="tok-fn">get</span>(<span class="tok-str">"thread_id"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">thread_id</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"Thread ID is required in runtime context or config.configurable"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">        <span class="tok-fn">user_id</span> <span class="tok-op">=</span> <span class="tok-fn">get_effective_user_id</span>()</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-self">self</span>.<span class="tok-attr">_lazy_init</span>:</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">            <span class="tok-fn">paths</span> <span class="tok-op">=</span> <span class="tok-self">self</span>.<span class="tok-fn">_get_thread_paths</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">        <span class="tok-kw">else</span>:</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">            <span class="tok-fn">paths</span> <span class="tok-op">=</span> <span class="tok-self">self</span>.<span class="tok-fn">_create_thread_directories</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-attr">user_id</span>)</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">        <span class="tok-fn">messages</span> <span class="tok-op">=</span> <span class="tok-fn">list</span>(<span class="tok-attr">state</span>.<span class="tok-fn">get</span>(<span class="tok-str">"messages"</span>, []))</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">        <span class="tok-fn">last_message</span> <span class="tok-op">=</span> <span class="tok-attr">messages</span>[-<span class="tok-num">1</span>] <span class="tok-kw">if</span> <span class="tok-attr">messages</span> <span class="tok-kw">else</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">last_message</span> <span class="tok-kw">and</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">last_message</span>, <span class="tok-cls">HumanMessage</span>):</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">            <span class="tok-attr">messages</span>[-<span class="tok-num">1</span>] <span class="tok-op">=</span> <span class="tok-cls">HumanMessage</span>(<span class="tok-attr">content</span><span class="tok-op">=</span><span class="tok-attr">last_message</span>.<span class="tok-attr">content</span>, <span class="tok-attr">id</span><span class="tok-op">=</span><span class="tok-attr">last_message</span>.<span class="tok-attr">id</span>, <span class="tok-attr">name</span><span class="tok-op">=</span><span class="tok-attr">last_message</span>.<span class="tok-attr">name</span> <span class="tok-kw">or</span> <span class="tok-str">"user-input"</span>, <span class="tok-attr">additional_kwargs</span><span class="tok-op">=</span>{<span class="tok-op">**</span><span class="tok-attr">last_message</span>.<span class="tok-attr">additional_kwargs</span>, <span class="tok-str">"run_id"</span>: <span class="tok-attr">runtime</span>.<span class="tok-attr">context</span>.<span class="tok-fn">get</span>(<span class="tok-str">"run_id"</span>), <span class="tok-str">"timestamp"</span>: <span class="tok-fn">datetime</span>.<span class="tok-fn">now</span>(<span class="tok-attr">UTC</span>).<span class="tok-fn">isoformat</span>()})</span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src">        <span class="tok-kw">return</span> {<span class="tok-str">"thread_data"</span>: {<span class="tok-op">**</span><span class="tok-attr">paths</span>}, <span class="tok-str">"messages"</span>: <span class="tok-attr">messages</span>}</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>`ThreadDataMiddleware` 是 DeerFlow thread 目录模型真正进入 graph state 的第一站。没有它，后面 sandbox、uploads、artifacts 都拿不到统一的线程路径。</li>
+            <li>第 17 到 23 行体现了一个现实问题: `thread_id` 既可能来自新的 `runtime.context`，也可能来自旧的 `configurable`。这个中间件自己就在做兼容桥接。</li>
+            <li>`lazy_init=True` 时只计算路径不建目录，这和 DeerFlow 整体的 lazy sandbox acquisition 思路是一致的，避免每次 run 都提前创建大量目录。</li>
+            <li>最后还会回写最后一条 `HumanMessage` 的 `run_id` 和 `timestamp`，说明 thread middleware 不只是路径层，也顺手给消息补了运行元信息。</li>
+          </ul>
+        </div>
+        <div class="highlight">
+          <strong>必须记住的运行语义：</strong>
+          对 agent 来说，看到的是稳定的虚拟路径；对 DeerFlow 来说，真正的隔离能力取决于 provider。路径契约是一致的，隔离强度并不一致。
+        </div>
+      </section>
+
+      <section id="config">
+        <h2>配置面与使用方式</h2>
+        <p>从配置和使用层看，sandbox 至少有四个关键面：</p>
+        <ul>
+          <li><code>backend/docs/CONFIGURATION.md</code> 里的 <code>sandbox.use</code> 决定当前采用本地 provider 还是 <code>AioSandboxProvider</code>。</li>
+          <li><code>backend/docs/CONFIGURATION.md</code> 里的 <code>allow_host_bash: false</code> 默认关闭宿主机 bash；只有显式启用后，本地模式才允许 host bash。</li>
+          <li><code>backend/packages/harness/deerflow/sandbox/local/local_sandbox_provider.py</code> 会根据线程和用户上下文建立 <code>/mnt/user-data/...</code> 映射，这意味着路径不是全局固定磁盘目录，而是和 thread/user 绑定。</li>
+          <li><code>sandbox.mounts</code> 可以额外挂载自定义目录，但不能覆盖保留前缀，例如 <code>/mnt/user-data</code> 与 <code>/mnt/acp-workspace</code>。</li>
+        </ul>
+        <p>这也是为什么 prompt、artifact API、上传系统和文件工具都坚持使用虚拟路径。只要契约不变，provider 可以更换，部署方式也可以变化。</p>
+      </section>
+
+      <section id="tradeoffs">
+        <h2>关键实现细节与权衡</h2>
+        <ul>
+          <li><code>backend/packages/harness/deerflow/sandbox/tools.py</code> 不只是执行工具，还负责把 <code>/mnt/user-data/*</code> 虚拟路径解析成线程级真实路径，并校验是否越界。</li>
+          <li>lazy sandbox acquisition 避免了每次 run 都预先创建 provider 资源，尤其对容器化 provider 更重要；代价是第一次工具调用时才真正拿到 sandbox，读源码时要把这一步考虑进去。</li>
+          <li><code>LocalSandboxProvider</code> 通过每线程 sandbox 和 LRU 缓存保持路径一致性与一定的性能，但它本质上仍然是在宿主机文件系统上工作。</li>
+          <li><code>AioSandboxProvider</code> 提供更接近强隔离的容器化边界，因此 DeerFlow 文档明确把它作为需要隔离 shell 访问时的优先方案。</li>
+          <li><code>allow_host_bash: false</code> 默认值不是保守过度，而是显式承认“本地模式不是安全 shell 边界”的设计现实。</li>
+        </ul>
+        <p><code>backend/packages/harness/deerflow/sandbox/security.py</code> 的价值也在这里体现出来了。它不只是给出警告文案，而是在代码层明确区分“LocalSandboxProvider + host bash”是一种需要显式信任的模式。这让文档里的安全边界和实际运行开关保持一致。</p>
+        <div class="key-point">
+          <strong>核心取舍：</strong>
+          DeerFlow 优先保证统一的虚拟路径与工具接口，再通过 provider 分层提供不同隔离强度，而不是假装所有运行模式都具有相同安全属性。
+        </div>
+      </section>
+
+      <section id="limits">
+        <h2>当前限制、边界与非目标</h2>
+        <ul>
+          <li>Local sandbox 不是容器安全边界。即使它对 agent 暴露的是受控工具接口，也不应被当成不可信代码执行的强隔离环境。</li>
+          <li>设置 <code>allow_host_bash: true</code> 只适用于完全受信任的本地单用户场景；这不是 DeerFlow 推荐的默认部署模式。</li>
+          <li><code>/mnt/user-data/...</code> 是 DeerFlow 对 agent 暴露的逻辑契约，不意味着宿主机上真实目录结构必须和它逐字对应。</li>
+          <li>本章不展开每个文件工具的全部参数，也不替代 artifact API 文档；重点是 sandbox 语义、provider 边界和路径模型。</li>
+        </ul>
+        <div class="highlight">
+          如果你的目标是“让 agent 能安全跑 shell”，正确的问题不是“怎么把 Local sandbox 配得更像容器”，而是“为什么这里不直接使用 <code>AioSandboxProvider</code>”。</div>
+      </section>
+
+      <section id="relations">
+        <h2>它与 DeerFlow 其他能力的关系</h2>
+        <p>sandbox 是 DeerFlow 运行时的基础设施层，不是孤立能力：</p>
+        <ul>
+          <li>它和第 10 章执行引擎相连，因为 sandbox 通过 runtime middleware 进入主执行链，而且采用 lazy acquisition，而不是 eager boot。</li>
+          <li>它和第 13 章长期记忆相连，因为 memory、uploads、artifacts 等很多数据最终都依赖线程级路径与用户隔离设计，而 <code>backend/docs/AUTH_DESIGN.md</code> 正是这层语义的背景文档。</li>
+          <li>它和第 14 章 sub-agents 相连，因为 subagent 也会继承父运行时的 <code>sandbox_state</code>、<code>thread_data</code> 和虚拟路径语义，但 ACP agent 又明确不在 <code>/mnt/user-data</code> 工作。</li>
+          <li>它和 Gateway/API/文件展示链路相连，因为 artifact URL 暴露的是 DeerFlow 对虚拟路径工件的 HTTP 访问面，而不是直接公开宿主机真实路径。</li>
+        </ul>
+        <div class="highlight">
+          建议把 <code>backend/packages/harness/deerflow/sandbox/tools.py</code>、<code>backend/packages/harness/deerflow/sandbox/local/local_sandbox_provider.py</code>、<code>backend/packages/harness/deerflow/sandbox/middleware.py</code>、<code>backend/docs/CONFIGURATION.md</code> 和 <code>backend/docs/AUTH_DESIGN.md</code> 连起来读。这样最容易看清 DeerFlow 的路径契约、provider 分层与安全边界。
+        </div>
+      </section>
+
+      <div id="page-nav"></div>
+    </div>
   </main>
 </div>
 <script src="assets/nav.js"></script>

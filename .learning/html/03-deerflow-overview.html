@@ -6,259 +6,7 @@
     <title>DeerFlow 整体架构概览 · DeerFlow 学习系列</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
-        /* 页面特定样式 - 与深色主题兼容 */
-        
-        .toc {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--accent);
-            padding: 20px;
-            margin-bottom: 40px;
-            border-radius: 8px;
-        }
-        
-        .toc h2 {
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .toc li:before {
-            content: "▸";
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: bold;
-        }
-        
-        .toc a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .toc a:hover {
-            color: var(--accent-2);
-            text-decoration: underline;
-        }
-        
-        section {
-            margin-bottom: 50px;
-        }
-        
-        /* 代码块样式 */
-        .code-block {
-            background: var(--bg-code);
-            color: var(--text-soft);
-            padding: 18px 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 18px 0;
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 13.5px;
-            line-height: 1.65;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-        }
-        
-        .code-block code {
-            background: none;
-            border: none;
-            padding: 0;
-            color: var(--text-soft);
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            white-space: pre;
-            display: block;
-        }
-        
-        .code-block::-webkit-scrollbar {
-            height: 9px;
-        }
-        
-        .code-block::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-        
-        /* 提示框样式 */
-        .highlight {
-            background: var(--bg-soft);
-            padding: 15px 18px;
-            border-left: 4px solid var(--orange);
-            margin: 18px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 18px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-        }
-        
-        .comparison-table th {
-            background: var(--bg-soft);
-            color: var(--text);
-            padding: 11px 15px;
-            text-align: left;
-            font-weight: 650;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .comparison-table td {
-            padding: 11px 15px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-soft);
-        }
-        
-        .comparison-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .comparison-table tr:hover td {
-            background: rgba(88,166,255,0.04);
-        }
-        
-        .key-point {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--green);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--green);
-        }
-        
-        .key-point strong {
-            color: var(--green-soft);
-            font-weight: 650;
-        }
-        
-        .example-case {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--orange);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .example-case strong {
-            color: var(--orange);
-            font-weight: 650;
-        }
-        
-        .warning {
-            background: var(--bg-soft);
-            border-left: 4px solid #ff6b6b;
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid #ff6b6b;
-        }
-        
-        .warning strong {
-            color: #ff6b6b;
-            font-weight: 650;
-        }
-        
-        .architecture-box {
-            background: var(--bg-soft);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 18px 20px;
-            margin: 18px 0;
-            color: var(--text-soft);
-        }
-        
-        .architecture-box h4 {
-            color: var(--accent-2);
-            margin-bottom: 10px;
-            font-weight: 650;
-        }
-        
-        .component-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-            margin: 18px 0;
-        }
-        
-        .component-card {
-            background: var(--bg-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--accent);
-            padding: 18px 20px;
-            border-radius: 8px;
-            color: var(--text-soft);
-        }
-        
-        .component-card h4 {
-            color: var(--accent-2);
-            margin-bottom: 8px;
-            font-weight: 650;
-        }
-        
-        .component-card p {
-            font-size: 14px;
-            margin-bottom: 8px;
-            color: var(--text-soft);
-        }
-        
-        /* 流程图样式 */
-        .flow-diagram {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        
-        .flow-step {
-            background: var(--bg-card);
-            border: 1.5px solid var(--accent);
-            color: var(--text);
-            padding: 12px 22px;
-            border-radius: 10px;
-            min-width: 120px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .flow-arrow {
-            font-size: 20px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            padding: 2px 0;
-        }
+        section { margin-bottom: 50px; }
     </style>
 </head>
 <body>
@@ -267,618 +15,424 @@
   <nav class="sidebar" id="sidebar"></nav>
   <main class="main">
     <div class="content">
-            <div class="toc">
-                <h2>📖 目录</h2>
-                <ul>
-                    <li><a href="#deerflow-intro">DeerFlow是什么？</a></li>
-                    <li><a href="#design-philosophy">设计哲学：从Deep Research到Super Agent Harness</a></li>
-                    <li><a href="#core-components">核心组件</a></li>
-                    <li><a href="#architecture">整体架构图</a></li>
-                    <li><a href="#data-flow">数据流：从输入到输出</a></li>
-                    <li><a href="#comparison">与其他框架的对比</a></li>
-                    <li><a href="#use-cases">适用场景</a></li>
-                </ul>
+      <h1>DeerFlow 整体架构概览</h1>
+      <p class="page-subtitle">DeerFlow 学习系列 - 第 3 章</p>
+
+      <div class="deerflow-map">
+        <h3>默认主路径先记住</h3>
+        <p>DeerFlow 的默认服务主路径不是“单独起 LangGraph Server，再额外挂一层 API”，而是 Gateway-embedded runtime。也就是说，请求通常先进入 Gateway，再在其中直接触发 agent runtime。</p>
+        <div class="deerflow-map-grid">
+          <div class="deerflow-map-item">
+            <strong>文档总入口</strong>
+            <p><code>README.md</code> 说明 DeerFlow 是 super agent harness。</p>
+          </div>
+          <div class="deerflow-map-item">
+            <strong>架构说明</strong>
+            <p><code>backend/docs/ARCHITECTURE.md</code> 定义了系统主图。</p>
+          </div>
+          <div class="deerflow-map-item">
+            <strong>服务入口</strong>
+            <p><code>backend/app/gateway/app.py</code> 是默认 HTTP 入口。</p>
+          </div>
+          <div class="deerflow-map-item">
+            <strong>嵌入式路径</strong>
+            <p><code>backend/packages/harness/deerflow/client.py</code> 提供 in-process client。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="toc">
+        <h3>目录</h3>
+        <ul>
+          <li><a href="#problem">这项能力在 DeerFlow 中解决什么问题</a></li>
+          <li><a href="#codebase">这项能力在代码库中的位置</a></li>
+          <li><a href="#flow">真实运行链路或数据链路</a></li>
+          <li><a href="#config">配置面与使用方式</a></li>
+          <li><a href="#tradeoffs">关键实现细节与权衡</a></li>
+          <li><a href="#limits">当前限制、边界与非目标</a></li>
+          <li><a href="#relations">它与 DeerFlow 其他能力的关系</a></li>
+        </ul>
+      </div>
+
+      <section id="problem">
+        <h2>这项能力在 DeerFlow 中解决什么问题</h2>
+        <p>这一章负责把 DeerFlow 作为一个“完整系统”讲清楚。读者需要知道 DeerFlow 不只是几个 agent 模块，而是一个以 Gateway-embedded runtime 为默认主路径的整合型 harness：它同时提供前端、HTTP Gateway、LangGraph-compatible routes、skills、uploads、artifacts、channels、sandbox、memory 和 embedded client。</p>
+        <p>如果没有这一层总图，后面各章会变成局部知识堆叠。读者可能知道某个工具、某个 middleware、某个 router 在做什么，却不知道它在 DeerFlow 全局中处于哪一层，最终还是无法建立真实心智模型。</p>
+      </section>
+
+      <section id="codebase">
+        <h2>这项能力在代码库中的位置</h2>
+        <table class="comparison-table">
+          <tr>
+            <th>路径</th>
+            <th>架构含义</th>
+            <th>阅读价值</th>
+          </tr>
+          <tr>
+            <td><code>README.md</code></td>
+            <td>产品级定位、部署方式、embedded client、核心功能说明</td>
+            <td>确认 DeerFlow 的官方叙事与默认运行方式</td>
+          </tr>
+          <tr>
+            <td><code>backend/docs/ARCHITECTURE.md</code></td>
+            <td>系统图、组件关系、Gateway embedded runtime 说明</td>
+            <td>这是本章最重要的一手结构文档</td>
+          </tr>
+          <tr>
+            <td><code>backend/app/gateway/app.py</code></td>
+            <td>FastAPI Gateway 入口，挂载 DeerFlow 对外服务面</td>
+            <td>解释为什么 Gateway 是默认入口，而不是附属层</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/client.py</code></td>
+            <td>DeerFlowClient 的嵌入式调用路径</td>
+            <td>帮助区分 HTTP 路径和 in-process 路径</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/agents/lead_agent/agent.py</code></td>
+            <td>lead agent 构建与中间件装配入口</td>
+            <td>总图最终都会落到这条执行主线</td>
+          </tr>
+        </table>
+        <p>如果你真的顺着源码读，会发现这五个锚点承担的是五种不同层级的职责。<code>README.md</code> 和 <code>backend/docs/ARCHITECTURE.md</code> 先定义“系统应该长什么样”；<code>backend/app/gateway/app.py</code> 负责把这个系统启动起来，挂上 routers、auth、CORS、CSRF 和 runtime 生命周期；<code>backend/packages/harness/deerflow/client.py</code> 则提供不经过 HTTP 的另一条接入方式；最后 <code>backend/packages/harness/deerflow/agents/lead_agent/agent.py</code> 才真正开始组装模型、工具和中间件，把一条请求变成可执行 agent。</p>
+        <p>所以这里不是“哪几个文件重要”的清单，而是一条分层阅读路线：先看谁接请求，再看谁建运行时，再看谁拼出 agent，最后才去追 memory、sandbox、skills 这些横切能力是怎样挂上去的。</p>
+      </section>
+
+      <section id="flow">
+        <h2>真实运行链路或数据链路</h2>
+        <p>默认 Web 路径下，DeerFlow 的流向大致是：</p>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>默认 Web 调用链流程图</strong>
+            <span>适合先看清外部请求怎样一步步落到 DeerFlow 运行时</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>浏览器、IM 或 API 调用方先发起请求</strong>
+                <p>所有外部入口都从这里开始，只是来源不同。</p>
+                <div class="flow-step-path"><code>Browser / IM / API caller</code></div>
+              </div>
             </div>
-            
-            <!-- Section 1 -->
-            <section id="deerflow-intro">
-                <h2>1. DeerFlow是什么？</h2>
-                
-                <p>
-                    <strong>DeerFlow</strong>（鹿流）是由字节跳动开源的一个生产级Agent框架。
-                    它的全称是"Deep Exploration and Efficient Research Flow"，
-                    但在2.0版本中，它已经演变成了一个通用的Super Agent Harness。
-                </p>
-                
-                <div class="key-point">
-                    <strong>DeerFlow 2.0的定位：</strong><br>
-                    一个开源的超级Agent框架，能够编排Sub-Agents、Memory和Sandboxes，
-                    通过可扩展的Skills来完成几乎任何事情。
-                </div>
-                
-                <h3>DeerFlow的主要特点</h3>
-                
-                <ul>
-                    <li><strong>开箱即用：</strong> 内置了大量功能，无需从零开始</li>
-                    <li><strong>完全可扩展：</strong> 可以轻松添加自定义Skills、Tools和Agents</li>
-                    <li><strong>生产就绪：</strong> 经过字节跳动等大厂的实际使用验证</li>
-                    <li><strong>多渠道支持：</strong> 支持Web UI、API、IM（Telegram、Slack等）</li>
-                    <li><strong>完整的可观测性：</strong> 与LangSmith、Langfuse集成</li>
-                    <li><strong>安全隔离：</strong> 支持多种Sandbox模式</li>
-                    <li><strong>长期记忆：</strong> 内置记忆系统，支持跨会话学习</li>
-                </ul>
-                
-                <h3>DeerFlow的版本演进</h3>
-                
-                <table class="comparison-table">
-                    <tr>
-                        <th>版本</th>
-                        <th>定位</th>
-                        <th>主要特点</th>
-                        <th>状态</th>
-                    </tr>
-                    <tr>
-                        <td><strong>1.x</strong></td>
-                        <td>Deep Research框架</td>
-                        <td>专注于研究任务</td>
-                        <td>维护中</td>
-                    </tr>
-                    <tr>
-                        <td><strong>2.0</strong></td>
-                        <td>Super Agent Harness</td>
-                        <td>通用Agent框架，完全重写</td>
-                        <td>活跃开发</td>
-                    </tr>
-                </table>
-                
-                <div class="highlight">
-                    <strong>重要：</strong> 本教程主要讲解DeerFlow 2.0。
-                    如果你使用的是1.x版本，请参考官方文档。
-                </div>
-            </section>
-            
-            <!-- Section 2 -->
-            <section id="design-philosophy">
-                <h2>2. 设计哲学：从Deep Research到Super Agent Harness</h2>
-                
-                <p>
-                    理解DeerFlow的设计哲学，有助于我们更好地使用和扩展它。
-                </p>
-                
-                <h3>DeerFlow 1.x：Deep Research框架</h3>
-                
-                <p>
-                    DeerFlow最初是为了解决一个特定问题：
-                    如何让Agent能够进行深度研究，生成高质量的研究报告。
-                </p>
-                
-                <div class="example-case">
-                    <strong>1.x的典型工作流：</strong><br>
-                    1. 接收研究课题<br>
-                    2. 制定研究计划<br>
-                    3. 执行多个搜索任务<br>
-                    4. 整理和分析信息<br>
-                    5. 生成研究报告
-                </div>
-                
-                <h3>DeerFlow 2.0：Super Agent Harness</h3>
-                
-                <p>
-                    在2.0版本中，DeerFlow的目标发生了变化。
-                    团队意识到，DeerFlow不仅仅是一个研究工具，
-                    而是一个通用的Agent框架。
-                </p>
-                
-                <div class="key-point">
-                    <strong>2.0的核心理念：</strong><br>
-                    "一个框架，无限可能"<br>
-                    <br>
-                    DeerFlow提供了构建任何类型Agent所需的基础设施，
-                    用户可以通过Skills和Tools来定制功能。
-                </div>
-                
-                <h3>从1.x到2.0的变化</h3>
-                
-                <table class="comparison-table">
-                    <tr>
-                        <th>方面</th>
-                        <th>1.x</th>
-                        <th>2.0</th>
-                    </tr>
-                    <tr>
-                        <td><strong>定位</strong></td>
-                        <td>Deep Research框架</td>
-                        <td>通用Agent框架</td>
-                    </tr>
-                    <tr>
-                        <td><strong>架构</strong></td>
-                        <td>基于Chain的顺序流程</td>
-                        <td>基于LangGraph的Graph流程</td>
-                    </tr>
-                    <tr>
-                        <td><strong>可扩展性</strong></td>
-                        <td>有限，需要修改核心代码</td>
-                        <td>高，通过Skills和Tools扩展</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Sub-Agents</strong></td>
-                        <td>不支持</td>
-                        <td>原生支持</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Memory</strong></td>
-                        <td>简单的会话记忆</td>
-                        <td>完整的长期记忆系统</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Sandbox</strong></td>
-                        <td>基础支持</td>
-                        <td>多种模式，完整隔离</td>
-                    </tr>
-                </table>
-                
-                <h3>设计原则</h3>
-                
-                <div class="key-point">
-                    <strong>1. 电池包含（Batteries Included）</strong><br>
-                    DeerFlow开箱即用，内置了大量功能，
-                    用户可以立即开始构建Agent。
-                </div>
-                
-                <div class="key-point">
-                    <strong>2. 完全可扩展（Fully Extensible）</strong><br>
-                    虽然内置功能完整，但用户可以轻松替换或扩展任何部分。
-                </div>
-                
-                <div class="key-point">
-                    <strong>3. 生产就绪（Production Ready）</strong><br>
-                    DeerFlow不是一个实验性框架，而是经过大规模验证的生产级系统。
-                </div>
-                
-                <div class="key-point">
-                    <strong>4. 清晰的抽象（Clear Abstractions）</strong><br>
-                    DeerFlow定义了清晰的概念（Skills、Tools、Agents等），
-                    使得系统易于理解和使用。
-                </div>
-            </section>
-            
-            <!-- Section 3 -->
-            <section id="core-components">
-                <h2>3. 核心组件</h2>
-                
-                <p>
-                    DeerFlow由几个核心组件组成，每个组件都有明确的职责。
-                </p>
-                
-                <div class="component-grid">
-                    <div class="component-card">
-                        <h4>🧠 Agent Runtime</h4>
-                        <p>Agent的执行引擎，负责Agent的生命周期管理和执行。</p>
-                        <p><strong>职责：</strong> 状态管理、工具调用、决策制定</p>
-                    </div>
-                    
-                    <div class="component-card">
-                        <h4>🛠️ Skills</h4>
-                        <p>Agent的能力模块，定义了Agent能做什么。</p>
-                        <p><strong>职责：</strong> 提供高级能力，如研究、代码生成等</p>
-                    </div>
-                    
-                    <div class="component-card">
-                        <h4>🔧 Tools</h4>
-                        <p>Agent的工具集，提供具体的操作能力。</p>
-                        <p><strong>职责：</strong> 网络搜索、文件操作、代码执行等</p>
-                    </div>
-                    
-                    <div class="component-card">
-                        <h4>📦 Sandbox</h4>
-                        <p>隔离执行环境，保证安全性。</p>
-                        <p><strong>职责：</strong> 代码执行隔离、文件系统隔离</p>
-                    </div>
-                    
-                    <div class="component-card">
-                        <h4>💾 Memory</h4>
-                        <p>长期记忆系统，支持跨会话学习。</p>
-                        <p><strong>职责：</strong> 存储、检索、更新用户信息</p>
-                    </div>
-                    
-                    <div class="component-card">
-                        <h4>🌐 Gateway</h4>
-                        <p>API网关，提供HTTP接口。</p>
-                        <p><strong>职责：</strong> 请求路由、认证、响应格式化</p>
-                    </div>
-                </div>
-                
-                <h3>组件之间的关系</h3>
-                
-                <div class="architecture-box">
-                    <h4>Agent Runtime（核心）</h4>
-                    <p>
-                        Agent Runtime是DeerFlow的核心，
-                        它协调其他所有组件的工作。
-                    </p>
-                    <ul>
-                        <li>使用Skills定义Agent的能力</li>
-                        <li>使用Tools执行具体操作</li>
-                        <li>使用Sandbox隔离代码执行</li>
-                        <li>使用Memory存储长期信息</li>
-                        <li>通过Gateway暴露API</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <!-- Section 4 -->
-            <section id="architecture">
-                <h2>4. 整体架构图</h2>
-                
-                <p>
-                    让我们看一个DeerFlow的整体架构图。
-                </p>
-                
-                <div class="architecture-box">
-                    <h4>DeerFlow架构（简化版）</h4>
-                    <div class="code-block"><code>
-┌─────────────────────────────────────────────────────────────┐
-│                     用户界面层                              │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │ <span class="tok-cls">Web</span> <span class="tok-cls">UI</span>   │  │ <span class="tok-cls">Telegram</span> │  │  <span class="tok-cls">Slack</span>   │  │ <span class="tok-cls">REST</span> <span class="tok-cls">API</span> │   │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘   │
-└───────┼─────────────┼─────────────┼─────────────┼──────────┘
-        │             │             │             │
-        └─────────────┴─────────────┴─────────────┘
-                      │
-        ┌─────────────▼──────────────┐
-        │      <span class="tok-cls">Gateway</span> (<span class="tok-cls">API</span>)         │
-        │  - 请求路由               │
-        │  - 认证授权               │
-        │  - 响应格式化             │
-        └─────────────┬──────────────┘
-                      │
-        ┌─────────────▼──────────────────────────────┐
-        │       <span class="tok-cls">Agent</span> <span class="tok-cls">Runtime</span> (<span class="tok-cls">LangGraph</span>)            │
-        │  ┌──────────────────────────────────────┐  │
-        │  │  <span class="tok-cls">Agent</span> <span class="tok-cls">Executor</span>                      │  │
-        │  │  - 状态管理                          │  │
-        │  │  - 工具调用                          │  │
-        │  │  - 决策制定                          │  │
-        │  └──────────────────────────────────────┘  │
-        └────┬────────────────────────────────┬──────┘
-             │                                │
-    ┌────────▼────────┐          ┌───────────▼────────┐
-    │  <span class="tok-cls">Skills</span> <span class="tok-cls">Layer</span>   │          │  <span class="tok-cls">Tools</span> <span class="tok-cls">Layer</span>       │
-    │  - <span class="tok-cls">Research</span>     │          │  - <span class="tok-cls">Web</span> <span class="tok-cls">Search</span>      │
-    │  - <span class="tok-cls">CodeGen</span>      │          │  - <span class="tok-cls">File</span> <span class="tok-cls">Ops</span>        │
-    │  - <span class="tok-cls">ReportGen</span>    │          │  - <span class="tok-cls">Code</span> <span class="tok-cls">Exec</span>       │
-    │  - <span class="tok-cls">Custom</span>       │          │  - <span class="tok-cls">Custom</span>          │
-    └────────┬────────┘          └───────────┬────────┘
-             │                                │
-    ┌────────▼────────────────────────────────▼────────┐
-    │         <span class="tok-cls">Sandbox</span> (<span class="tok-cls">Execution</span> <span class="tok-cls">Environment</span>)         │
-    │  ┌──────────────────────────────────────────┐   │
-    │  │  <span class="tok-cls">Local</span> / <span class="tok-cls">Docker</span> / <span class="tok-cls">Kubernetes</span>             │   │
-    │  │  - <span class="tok-cls">File</span> <span class="tok-cls">System</span> <span class="tok-cls">Isolation</span>                 │   │
-    │  │  - <span class="tok-cls">Process</span> <span class="tok-cls">Isolation</span>                     │   │
-    │  │  - <span class="tok-cls">Resource</span> <span class="tok-cls">Limits</span>                       │   │
-    │  └──────────────────────────────────────────┘   │
-    └────────────────────────────────────────────────┘
-             │
-    ┌────────▼────────────────────────────────┐
-    │      <span class="tok-cls">Storage</span> & <span class="tok-cls">Memory</span> <span class="tok-cls">Layer</span>             │
-    │  ┌──────────────┐  ┌──────────────┐    │
-    │  │  <span class="tok-cls">Memory</span> <span class="tok-cls">DB</span>   │  │  <span class="tok-cls">File</span> <span class="tok-cls">Store</span>  │    │
-    │  │  - <span class="tok-cls">Facts</span>     │  │  - <span class="tok-cls">Uploads</span>   │    │
-    │  │  - <span class="tok-cls">Prefs</span>     │  │  - <span class="tok-cls">Outputs</span>   │    │
-    │  └──────────────┘  └──────────────┘    │
-    └─────────────────────────────────────────┘
-                    </code></div>
-                </div>
-                
-                <h3>架构的分层</h3>
-                
-                <table class="comparison-table">
-                    <tr>
-                        <th>层级</th>
-                        <th>组件</th>
-                        <th>职责</th>
-                    </tr>
-                    <tr>
-                        <td><strong>表现层</strong></td>
-                        <td>Web UI、IM、API</td>
-                        <td>与用户交互</td>
-                    </tr>
-                    <tr>
-                        <td><strong>网关层</strong></td>
-                        <td>Gateway</td>
-                        <td>请求路由、认证</td>
-                    </tr>
-                    <tr>
-                        <td><strong>执行层</strong></td>
-                        <td>Agent Runtime</td>
-                        <td>Agent执行和协调</td>
-                    </tr>
-                    <tr>
-                        <td><strong>能力层</strong></td>
-                        <td>Skills、Tools</td>
-                        <td>提供具体能力</td>
-                    </tr>
-                    <tr>
-                        <td><strong>隔离层</strong></td>
-                        <td>Sandbox</td>
-                        <td>安全执行</td>
-                    </tr>
-                    <tr>
-                        <td><strong>存储层</strong></td>
-                        <td>Memory、FileStore</td>
-                        <td>数据持久化</td>
-                    </tr>
-                </table>
-            </section>
-            
-            <!-- Section 5 -->
-            <section id="data-flow">
-                <h2>5. 数据流：从输入到输出</h2>
-                
-                <p>
-                    让我们追踪一个用户请求在DeerFlow中的完整流程。
-                </p>
-                
-                <h3>完整的数据流</h3>
-                
-                <div class="flow-diagram">
-                    <div class="flow-step">用户输入</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">Gateway</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">Agent Runtime</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">Skills/Tools</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">Sandbox</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">Memory</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">输出</div>
-                </div>
-                
-                <h3>详细的步骤</h3>
-                
-                <div class="example-case">
-                    <strong>步骤1：用户输入</strong><br>
-                    用户通过Web UI、API或IM发送请求。
-                    例如："请帮我分析这份数据"
-                </div>
-                
-                <div class="example-case">
-                    <strong>步骤2：Gateway处理</strong><br>
-                    Gateway接收请求，进行认证和授权，
-                    然后将请求转发给Agent Runtime。
-                </div>
-                
-                <div class="example-case">
-                    <strong>步骤3：Agent Runtime分析</strong><br>
-                    Agent Runtime（基于LangGraph）分析请求，
-                    决定需要使用哪些Skills或Tools。
-                </div>
-                
-                <div class="example-case">
-                    <strong>步骤4：Skills/Tools执行</strong><br>
-                    Agent调用相应的Skills（如数据分析Skill）或Tools（如代码执行）。
-                </div>
-                
-                <div class="example-case">
-                    <strong>步骤5：Sandbox隔离</strong><br>
-                    如果需要执行代码，Sandbox提供隔离的执行环境。
-                </div>
-                
-                <div class="example-case">
-                    <strong>步骤6：Memory更新</strong><br>
-                    Agent的执行结果和用户信息被保存到Memory中，
-                    用于未来的请求。
-                </div>
-                
-                <div class="example-case">
-                    <strong>步骤7：输出</strong><br>
-                    Agent生成最终答案，通过Gateway返回给用户。
-                </div>
-                
-                <h3>一个具体的例子</h3>
-                
-                <div class="architecture-box">
-                    <h4>例子：用户请求"写一个Python函数"</h4>
-                    <ol>
-                        <li><strong>输入：</strong> "请写一个Python函数来计算斐波那契数列"</li>
-                        <li><strong>Gateway：</strong> 验证用户身份，创建新的会话</li>
-                        <li><strong>Agent Runtime：</strong> 分析请求，决定使用CodeGen Skill</li>
-                        <li><strong>CodeGen Skill：</strong> 调用LLM生成代码</li>
-                        <li><strong>Sandbox：</strong> 执行生成的代码进行测试</li>
-                        <li><strong>Agent Runtime：</strong> 收集结果，生成最终答案</li>
-                        <li><strong>Memory：</strong> 保存用户的编程偏好</li>
-                        <li><strong>输出：</strong> 返回代码和执行结果</li>
-                    </ol>
-                </div>
-            </section>
-            
-            <!-- Section 6 -->
-            <section id="comparison">
-                <h2>6. 与其他框架的对比</h2>
-                
-                <p>
-                    理解DeerFlow与其他框架的区别，有助于你选择合适的工具。
-                </p>
-                
-                <table class="comparison-table">
-                    <tr>
-                        <th>框架</th>
-                        <th>定位</th>
-                        <th>优点</th>
-                        <th>缺点</th>
-                    </tr>
-                    <tr>
-                        <td><strong>DeerFlow</strong></td>
-                        <td>通用Agent框架</td>
-                        <td>功能完整、生产就绪、可扩展</td>
-                        <td>学习曲线陡峭</td>
-                    </tr>
-                    <tr>
-                        <td><strong>LangChain</strong></td>
-                        <td>LLM应用框架</td>
-                        <td>灵活、生态丰富</td>
-                        <td>不专注于Agent</td>
-                    </tr>
-                    <tr>
-                        <td><strong>AutoGPT</strong></td>
-                        <td>自主Agent</td>
-                        <td>自主性强</td>
-                        <td>不稳定、难以控制</td>
-                    </tr>
-                    <tr>
-                        <td><strong>CrewAI</strong></td>
-                        <td>多Agent框架</td>
-                        <td>多Agent协作</td>
-                        <td>功能有限</td>
-                    </tr>
-                    <tr>
-                        <td><strong>MetaGPT</strong></td>
-                        <td>软件开发Agent</td>
-                        <td>专注于代码生成</td>
-                        <td>应用场景有限</td>
-                    </tr>
-                </table>
-                
-                <h3>DeerFlow的竞争优势</h3>
-                
-                <div class="key-point">
-                    <strong>1. 完整性：</strong> 不仅是框架，还包括完整的生产系统
-                </div>
-                
-                <div class="key-point">
-                    <strong>2. 可靠性：</strong> 经过字节跳动等大厂的实际使用验证
-                </div>
-                
-                <div class="key-point">
-                    <strong>3. 可扩展性：</strong> 通过Skills和Tools轻松扩展
-                </div>
-                
-                <div class="key-point">
-                    <strong>4. 多渠道：</strong> 支持Web、API、IM等多种接入方式
-                </div>
-                
-                <div class="key-point">
-                    <strong>5. 安全性：</strong> 完整的Sandbox隔离机制
-                </div>
-            </section>
-            
-            <!-- Section 7 -->
-            <section id="use-cases">
-                <h2>7. 适用场景</h2>
-                
-                <p>
-                    DeerFlow适合哪些场景？让我们看一些例子。
-                </p>
-                
-                <h3>适合的场景</h3>
-                
-                <div class="example-case">
-                    <strong>📊 数据分析Agent</strong><br>
-                    接收数据分析需求 → 查询数据库 → 执行分析 → 生成报告
-                </div>
-                
-                <div class="example-case">
-                    <strong>🔬 研究Agent</strong><br>
-                    接收研究课题 → 网络搜索 → 信息整理 → 生成报告
-                </div>
-                
-                <div class="example-case">
-                    <strong>💻 编程Agent</strong><br>
-                    接收功能需求 → 代码生成 → 测试执行 → Bug修复
-                </div>
-                
-                <div class="example-case">
-                    <strong>📝 内容创作Agent</strong><br>
-                    接收创作需求 → 信息收集 → 内容创作 → 质量审查
-                </div>
-                
-                <div class="example-case">
-                    <strong>🤖 客服Agent</strong><br>
-                    接收用户问题 → 知识库查询 → 问题分类 → 生成回复
-                </div>
-                
-                <div class="example-case">
-                    <strong>🎯 任务自动化Agent</strong><br>
-                    接收任务 → 任务分解 → 执行子任务 → 结果汇聚
-                </div>
-                
-                <h3>不适合的场景</h3>
-                
-                <div class="warning">
-                    <strong>1. 简单的Chatbot</strong><br>
-                    如果只需要简单的对话功能，使用LangChain或其他轻量级框架更合适。
-                </div>
-                
-                <div class="warning">
-                    <strong>2. 实时系统</strong><br>
-                    DeerFlow的Agent执行可能比较慢，不适合对延迟要求极高的系统。
-                </div>
-                
-                <div class="warning">
-                    <strong>3. 成本敏感的应用</strong><br>
-                    DeerFlow会调用LLM多次，成本可能较高。
-                </div>
-                
-                <div class="warning">
-                    <strong>4. 完全自主的系统</strong><br>
-                    DeerFlow需要明确的目标和约束，不适合完全自主的系统。
-                </div>
-            </section>
-            
-            <!-- Summary -->
-            <section>
-                <h2>📝 关键要点总结</h2>
-                
-                <div class="key-point">
-                    <strong>1. DeerFlow是什么：</strong> 生产级的通用Agent框架
-                </div>
-                
-                <div class="key-point">
-                    <strong>2. 核心组件：</strong> Agent Runtime、Skills、Tools、Sandbox、Memory、Gateway
-                </div>
-                
-                <div class="key-point">
-                    <strong>3. 设计哲学：</strong> 电池包含 + 完全可扩展 + 生产就绪
-                </div>
-                
-                <div class="key-point">
-                    <strong>4. 架构分层：</strong> 表现层 → 网关层 → 执行层 → 能力层 → 隔离层 → 存储层
-                </div>
-                
-                <div class="key-point">
-                    <strong>5. 数据流：</strong> 用户输入 → Gateway → Agent Runtime → Skills/Tools → Sandbox → Memory → 输出
-                </div>
-                
-                <div class="key-point">
-                    <strong>6. 竞争优势：</strong> 完整、可靠、可扩展、多渠道、安全
-                </div>
-            </section>
-            
-            <!-- Next Steps -->
-            <section>
-                <h2>🚀 下一步</h2>
-                
-                <p>
-                    现在你已经理解了DeerFlow的整体架构。
-                    下一步是深入学习各个核心模块的实现。
-                </p>
-                
-                <div class="highlight">
-                    <strong>推荐阅读顺序：</strong><br>
-                    1. 00-agent-fundamentals.html：Agent基础概念 ✓<br>
-                    2. 01-langgraph-basics.html：LangGraph框架基础 ✓<br>
-                    3. 02-llm-and-tools.html：LLM调用与工具系统 ✓<br>
-                    4. 03-deerflow-overview.html：DeerFlow整体架构 ✓<br>
-                    5. 10-agent-execution-engine.html：Agent执行引擎深度学习<br>
-                    6. 11-skills-system.html：Skills系统<br>
-                    7. 12-sandbox-execution.html：Sandbox与安全执行
-                </div>
-            </section>
+            <div class="flow-step">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>常见部署下会先经过前置代理</strong>
+                <p>像 nginx 这种前置层通常负责统一入口和转发，但不属于 DeerFlow 核心本体。</p>
+                <div class="flow-step-path"><code>front proxy</code> such as <code>nginx</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>Gateway 应用接住这次请求</strong>
+                <p>真正属于 DeerFlow 的默认 HTTP 入口，是 Gateway 这层 FastAPI 应用。</p>
+                <div class="flow-step-path"><code>backend/app/gateway/app.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>不同 router 决定进入哪条业务路径</strong>
+                <p>runs、threads、skills、uploads、models 等能力，都会在这里被分发到各自入口。</p>
+                <div class="flow-step-path"><code>Gateway routers</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>Lead Agent 运行时开始真正组装和执行</strong>
+                <p>到了这里，模型、工具和上下文能力才会进入实际运行。</p>
+                <div class="flow-step-path"><code>lead agent runtime</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">06</div>
+              <div class="flow-step-copy">
+                <strong>横切能力在运行中持续介入</strong>
+                <p>sandbox、memory、skills、tools 和 subagents 都会在这一层参与同一轮执行。</p>
+                <div class="flow-step-path"><code>sandbox</code> / <code>memory</code> / <code>skills</code> / <code>tools</code> / <code>subagents</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">07</div>
+              <div class="flow-step-copy">
+                <strong>结果再通过 Gateway 回到外部调用方</strong>
+                <p>最终流式输出或普通响应，都会沿着 Gateway 这条主线返回用户。</p>
+                <div class="flow-step-path"><code>streaming response back through Gateway</code></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p>这里把 <code>nginx</code> 放进链路，是为了描述统一入口部署中的常见前置代理，不是说 DeerFlow 架构本体必须依赖它。真正属于 DeerFlow 本体的默认 HTTP 入口仍然是 <code>backend/app/gateway/app.py</code>。</p>
+        <p>把这条链再翻译成“代码里谁接谁”的版本，会更好懂：浏览器请求先被 <code>backend/app/gateway/app.py</code> 创建出来的 FastAPI 应用接住；具体进入哪个 router，由 <code>app.include_router(...)</code> 的挂载关系决定；run 类请求进一步落到 <code>backend/app/gateway/routers/thread_runs.py</code> 和 Gateway service 层，再交给 runtime worker；worker 安装好 run_id、thread_id、callbacks、stream bridge 等运行上下文后，才调用 <code>backend/packages/harness/deerflow/agents/lead_agent/agent.py</code> 产出的 agent graph。也就是说，Gateway 不只是“外壳”，它实际负责把请求改造成 DeerFlow 内部能运行的那种形态。</p>
+        <p>而嵌入式 Python 路径则是：</p>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>嵌入式 Python 调用链流程图</strong>
+            <span>不走 HTTP，也能复用同一套核心运行能力</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>Python 调用方直接在进程内发起请求</strong>
+                <p>这一条链不经过 Gateway HTTP 路由，而是直接从 SDK 风格入口进入。</p>
+                <div class="flow-step-path"><code>Python caller</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>客户端入口接手构建调用上下文</strong>
+                <p>嵌入式路径的关键入口是 DeerFlowClient，而不是 Web 层。</p>
+                <div class="flow-step-path"><code>backend/packages/harness/deerflow/client.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>随后仍然会创建 Agent 并进入同一套运行时</strong>
+                <p>虽然入口不同，但真正执行时仍会走到 lead agent runtime 这条核心主线。</p>
+                <div class="flow-step-path"><code>create agent</code> / <code>lead agent runtime</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>底层可复用的能力并没有变</strong>
+                <p>memory、sandbox、skills、tools 等核心能力在这条链里依然是同一套。</p>
+                <div class="flow-step-path"><code>same core runtime capabilities</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>最后按 SDK 方式返回同步结果或流式结果</strong>
+                <p>区别主要在入口和返回形式，而不是执行引擎完全重写了一套。</p>
+                <div class="flow-step-path"><code>sync stream or chat result</code></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：为什么说 Gateway 真的是整个系统的统一入口</h4>
+          <p class="source-caption">节选自 <code>backend/app/gateway/app.py</code>。总览页只要看懂这段，就能先建立 DeerFlow 的“入口层”心智模型。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">gateway/app.py :: create_app()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># Auth: reject unauthenticated requests to non-public paths</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">add_middleware</span>(<span class="tok-cls">AuthMiddleware</span>)</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-com"># CSRF: browser state-changing requests must pass the same gateway guard</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">add_middleware</span>(<span class="tok-cls">CSRFMiddleware</span>)</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"><span class="tok-fn">cors_origins</span> <span class="tok-op">=</span> <span class="tok-fn">sorted</span>(<span class="tok-fn">get_configured_cors_origins</span>())</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-fn">cors_origins</span>:</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-attr">app</span>.<span class="tok-fn">add_middleware</span>(<span class="tok-cls">CORSMiddleware</span>, <span class="tok-attr">allow_origins</span><span class="tok-op">=</span><span class="tok-fn">cors_origins</span>, <span class="tok-attr">allow_credentials</span><span class="tok-op">=</span><span class="tok-kw">True</span>, <span class="tok-attr">allow_methods</span><span class="tok-op">=</span>[<span class="tok-str">"*"</span>], <span class="tok-attr">allow_headers</span><span class="tok-op">=</span>[<span class="tok-str">"*"</span>])</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src"><span class="tok-com"># 下面开始把 DeerFlow 的所有外部能力面统一挂到同一个 app 上</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">models</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">mcp</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">memory</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">skills</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">artifacts</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">uploads</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">threads</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">thread_runs</span>.<span class="tok-attr">router</span>)</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src"><span class="tok-attr">app</span>.<span class="tok-fn">include_router</span>(<span class="tok-attr">runs</span>.<span class="tok-attr">router</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>总览页最重要的不是背目录，而是看懂 Gateway 入口在源码里怎么成立。这段代码就是答案。</li>
+            <li>前几行先挂鉴权、CSRF、CORS，说明 DeerFlow 对外入口不是裸的 agent 服务，而是完整 Web runtime。</li>
+            <li>真正体现“统一入口”的是后面连续的 <code>include_router(...)</code>。模型、记忆、技能、工件、上传、线程、运行，全都挂在同一个 app 上。</li>
+            <li>所以后面每一章细节虽然不同，但从系统视角看，几乎都能回到这一个 Gateway app 上找到进入点。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 2：嵌入式 DeerFlowClient 为什么不是“调用 Gateway 的壳”</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/client.py</code>。这一段用来对照 HTTP 路径，帮助读者建立第二条入口链。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">deerflow/client.py :: DeerFlowClient.__init__() / _get_runnable_config()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># DeerFlowClient: 嵌入式 Python 入口，把本地函数调用装配成 DeerFlow 标准运行时</span></span></div>
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">DeerFlowClient</span>:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com">"""Embedded Python client for DeerFlow agent system."""</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-com"># config_path / checkpointer: 配置来源和状态持久化入口；后面的开关则决定默认模型、技能、模式和附加中间件</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-self">self</span>, <span class="tok-attr">config_path</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">checkpointer</span><span class="tok-op">=</span><span class="tok-kw">None</span>, <span class="tok-op">*</span>, <span class="tok-attr">model_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">thinking_enabled</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">True</span>, <span class="tok-attr">subagent_enabled</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-attr">plan_mode</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-attr">agent_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">available_skills</span>: <span class="tok-type">set</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">middlewares</span>: <span class="tok-type">Sequence</span>[<span class="tok-cls">AgentMiddleware</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">environment</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>):</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">        <span class="tok-com"># 初始化阶段先读配置，再把这些默认开关缓存起来，真正造 agent 会延后到首个实际调用时</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">config_path</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">            <span class="tok-fn">reload_app_config</span>(<span class="tok-attr">config_path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_app_config</span> <span class="tok-op">=</span> <span class="tok-fn">get_app_config</span>()</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_checkpointer</span> <span class="tok-op">=</span> <span class="tok-attr">checkpointer</span></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_model_name</span> <span class="tok-op">=</span> <span class="tok-attr">model_name</span></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_thinking_enabled</span> <span class="tok-op">=</span> <span class="tok-attr">thinking_enabled</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_subagent_enabled</span> <span class="tok-op">=</span> <span class="tok-attr">subagent_enabled</span></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_plan_mode</span> <span class="tok-op">=</span> <span class="tok-attr">plan_mode</span></span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_agent_name</span> <span class="tok-op">=</span> <span class="tok-attr">agent_name</span></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_available_skills</span> <span class="tok-op">=</span> <span class="tok-fn">set</span>(<span class="tok-attr">available_skills</span>) <span class="tok-kw">if</span> <span class="tok-attr">available_skills</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span> <span class="tok-kw">else</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_middlewares</span> <span class="tok-op">=</span> <span class="tok-fn">list</span>(<span class="tok-attr">middlewares</span>) <span class="tok-kw">if</span> <span class="tok-attr">middlewares</span> <span class="tok-kw">else</span> []</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">        <span class="tok-com"># 这里故意做 lazy agent：第一次真正调用 chat/stream 时才组装 runtime</span></span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_agent</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_agent_config_key</span>: <span class="tok-type">tuple</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-com"># self / thread_id / overrides: 当前 client 实例、这次运行归属线程，以及本轮临时覆盖值</span></span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">_get_runnable_config</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-op">**</span><span class="tok-attr">overrides</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">RunnableConfig</span>:</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">        <span class="tok-com"># 这里把实例默认值和本轮覆盖值折叠成统一 configurable，保证嵌入式路径和 Gateway 路径语义一致</span></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">        <span class="tok-fn">configurable</span> <span class="tok-op">=</span> {</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">            <span class="tok-str">"thread_id"</span>: <span class="tok-attr">thread_id</span>,</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">            <span class="tok-str">"model_name"</span>: <span class="tok-attr">overrides</span>.<span class="tok-fn">get</span>(<span class="tok-str">"model_name"</span>, <span class="tok-self">self</span>.<span class="tok-attr">_model_name</span>),</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">            <span class="tok-str">"thinking_enabled"</span>: <span class="tok-attr">overrides</span>.<span class="tok-fn">get</span>(<span class="tok-str">"thinking_enabled"</span>, <span class="tok-self">self</span>.<span class="tok-attr">_thinking_enabled</span>),</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">            <span class="tok-str">"is_plan_mode"</span>: <span class="tok-attr">overrides</span>.<span class="tok-fn">get</span>(<span class="tok-str">"plan_mode"</span>, <span class="tok-self">self</span>.<span class="tok-attr">_plan_mode</span>),</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">            <span class="tok-str">"subagent_enabled"</span>: <span class="tok-attr">overrides</span>.<span class="tok-fn">get</span>(<span class="tok-str">"subagent_enabled"</span>, <span class="tok-self">self</span>.<span class="tok-attr">_subagent_enabled</span>),</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">        }</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-cls">RunnableConfig</span>(<span class="tok-attr">configurable</span><span class="tok-op">=</span><span class="tok-fn">configurable</span>, <span class="tok-attr">recursion_limit</span><span class="tok-op">=</span><span class="tok-attr">overrides</span>.<span class="tok-fn">get</span>(<span class="tok-str">"recursion_limit"</span>, <span class="tok-num">100</span>))</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这段代码最直接地证明了 `DeerFlowClient` 不是去请求 Gateway API。它在本进程里直接加载配置、持有 checkpointer、保存模型和运行开关。</li>
+            <li>初始化阶段只存参数，不立刻创建 agent，这和 Gateway 某些懒加载策略是同一路数，说明两条入口共享的是运行时思想，不只是共享某几个类名。</li>
+            <li><code>_get_runnable_config(...)</code> 组出来的也是同一种 `RunnableConfig` 语义：`thread_id`、`model_name`、`thinking_enabled`、`is_plan_mode`、`subagent_enabled` 都在这里落地。</li>
+            <li>所以嵌入式路径和 HTTP 路径的差异，核心不在“有没有 agent runtime”，而在“谁来提供请求协议、谁来持有流式输出、谁来触发运行”。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 3：HTTP 请求是怎样从 thread run 路由真正发车的</h4>
+          <p class="source-caption">节选自 <code>backend/app/gateway/routers/thread_runs.py</code>。这一段把“Gateway 是入口”继续往后推进了一层，能直接看到 run 是怎样创建、等待和流式返回的。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">gateway/routers/thread_runs.py :: create_run() / stream_run() / wait_run()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># thread_id / body / request: 线程标识、本次 run 输入和 HTTP 请求对象，路由层先把它们编排成统一启动入口</span></span></div>
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-dec">@router.post</span>(<span class="tok-str">"/{thread_id}/runs"</span>, <span class="tok-attr">response_model</span><span class="tok-op">=</span><span class="tok-cls">RunResponse</span>)</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-dec">@require_permission</span>(<span class="tok-str">"runs"</span>, <span class="tok-str">"create"</span>, <span class="tok-attr">owner_check</span><span class="tok-op">=</span><span class="tok-kw">True</span>, <span class="tok-attr">require_existing</span><span class="tok-op">=</span><span class="tok-kw">True</span>)</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">create_run</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">body</span>: <span class="tok-cls">RunCreateRequest</span>, <span class="tok-attr">request</span>: <span class="tok-cls">Request</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">RunResponse</span>:</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-com"># 这里只返回 run 记录，真正执行在后台 task 里继续跑</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-fn">record</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">start_run</span>(<span class="tok-attr">body</span>, <span class="tok-attr">thread_id</span>, <span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-fn">_record_to_response</span>(<span class="tok-attr">record</span>)</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-com"># stream_run 参数和 create_run 一样，但这里的目标是把后台 run 挂到一条 SSE 连接上</span></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-dec">@router.post</span>(<span class="tok-str">"/{thread_id}/runs/stream"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-dec">@require_permission</span>(<span class="tok-str">"runs"</span>, <span class="tok-str">"create"</span>, <span class="tok-attr">owner_check</span><span class="tok-op">=</span><span class="tok-kw">True</span>, <span class="tok-attr">require_existing</span><span class="tok-op">=</span><span class="tok-kw">True</span>)</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">stream_run</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">body</span>: <span class="tok-cls">RunCreateRequest</span>, <span class="tok-attr">request</span>: <span class="tok-cls">Request</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">StreamingResponse</span>:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-com"># 先拿 bridge 和 run manager，再启动 run，确保第一批事件从一开始就有消费者接住</span></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-fn">bridge</span> <span class="tok-op">=</span> <span class="tok-fn">get_stream_bridge</span>(<span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-fn">run_mgr</span> <span class="tok-op">=</span> <span class="tok-fn">get_run_manager</span>(<span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">    <span class="tok-fn">record</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">start_run</span>(<span class="tok-attr">body</span>, <span class="tok-attr">thread_id</span>, <span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-com"># StreamingResponse 只是出口包装，真正的执行生命周期仍然在后台 worker + sse_consumer 那一侧</span></span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-cls">StreamingResponse</span>(</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-fn">sse_consumer</span>(<span class="tok-attr">bridge</span>, <span class="tok-attr">record</span>, <span class="tok-attr">request</span>, <span class="tok-attr">run_mgr</span>),</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">        <span class="tok-attr">media_type</span><span class="tok-op">=</span><span class="tok-str">"text/event-stream"</span>,</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-attr">headers</span><span class="tok-op">=</span>{</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">            <span class="tok-str">"Cache-Control"</span>: <span class="tok-str">"no-cache"</span>,</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">            <span class="tok-str">"Connection"</span>: <span class="tok-str">"keep-alive"</span>,</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">            <span class="tok-str">"X-Accel-Buffering"</span>: <span class="tok-str">"no"</span>,</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">            <span class="tok-str">"Content-Location"</span>: <span class="tok-str">f"/api/threads/{thread_id}/runs/{record.run_id}"</span>,</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">        },</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">    )</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src"><span class="tok-com"># wait_run 仍走同一套后台 run，只是这里会主动等它结束，并把最终 checkpoint 摘要同步返回</span></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src"><span class="tok-dec">@router.post</span>(<span class="tok-str">"/{thread_id}/runs/wait"</span>, <span class="tok-attr">response_model</span><span class="tok-op">=</span><span class="tok-type">dict</span>)</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">wait_run</span>(<span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-attr">body</span>: <span class="tok-cls">RunCreateRequest</span>, <span class="tok-attr">request</span>: <span class="tok-cls">Request</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>:</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-fn">bridge</span> <span class="tok-op">=</span> <span class="tok-fn">get_stream_bridge</span>(<span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">    <span class="tok-fn">run_mgr</span> <span class="tok-op">=</span> <span class="tok-fn">get_run_manager</span>(<span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">    <span class="tok-fn">record</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">start_run</span>(<span class="tok-attr">body</span>, <span class="tok-attr">thread_id</span>, <span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-com"># 如果后台 task 存在就阻塞等待，等完再从 checkpointer 拿最终 channel_values 给同步调用方</span></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-fn">completed</span> <span class="tok-op">=</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">record</span>.<span class="tok-attr">task</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">        <span class="tok-fn">completed</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">wait_for_run_completion</span>(<span class="tok-attr">bridge</span>, <span class="tok-attr">record</span>, <span class="tok-attr">request</span>, <span class="tok-attr">run_mgr</span>)</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">completed</span>:</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">        <span class="tok-fn">checkpointer</span> <span class="tok-op">=</span> <span class="tok-fn">get_checkpointer</span>(<span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src">        <span class="tok-fn">checkpoint_tuple</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-attr">checkpointer</span>.<span class="tok-fn">aget_tuple</span>({<span class="tok-str">"configurable"</span>: {<span class="tok-str">"thread_id"</span>: <span class="tok-attr">thread_id</span>}})</span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">checkpoint_tuple</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">37</span><span class="code-src">            <span class="tok-fn">checkpoint</span> <span class="tok-op">=</span> <span class="tok-fn">getattr</span>(<span class="tok-attr">checkpoint_tuple</span>, <span class="tok-str">"checkpoint"</span>, {}) <span class="tok-kw">or</span> {}</span></div>
+                <div class="code-line"><span class="code-ln">38</span><span class="code-src">            <span class="tok-kw">return</span> <span class="tok-fn">serialize_channel_values</span>(<span class="tok-attr">checkpoint</span>.<span class="tok-fn">get</span>(<span class="tok-str">"channel_values"</span>, {}))</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这段代码把 Gateway 的三种典型 run 入口一次讲透了: `runs` 创建后台任务、`runs/stream` 走 SSE、`runs/wait` 等待结束后返回最终 state。</li>
+            <li>你会发现三条路的共同点都是先调用 `start_run(...)`，这说明不管前端想流式还是同步结果，真正的 DeerFlow run 生命周期是在同一个 service 层里发起的。</li>
+            <li>`stream_run(...)` 最关键的不是 `StreamingResponse` 本身，而是它把 `bridge`、`run_mgr` 和 `record` 交给 `sse_consumer(...)`，这就把“后台 agent 执行”和“前台 HTTP 连接”桥接起来了。</li>
+            <li>`wait_run(...)` 则说明同步等待路径并没有绕开运行时，而是仍然等待同一条后台 task，然后从 checkpoint 拿回最终 `channel_values`。</li>
+            <li>所以从总览角度看，Gateway 不是“收到请求直接调 agent”，而是先把请求纳入统一的 run 语义，再决定怎么把结果返回给调用方。</li>
+          </ul>
+        </div>
+        <div class="highlight">
+          <strong>关键认识：</strong>
+          Gateway 路径和 <code>DeerFlowClient</code> 路径不是两套无关系统。它们共享核心 runtime 能力，但消费方式不同：一个面向 HTTP/SSE 和多外部入口，一个面向本地 in-process 调用。
+        </div>
+      </section>
+
+      <section id="config">
+        <h2>配置面与使用方式</h2>
+        <p>从部署和使用角度看，DeerFlow 的架构图会被几个配置面共同塑形：</p>
+        <ul>
+          <li><code>config.yaml</code>：决定模型、工具、sandbox、memory、summarization 等运行参数。</li>
+          <li><code>extensions_config.json</code>：决定 MCP servers 与 skills 状态。</li>
+          <li>Gateway 相关环境变量：决定 worker、线程目录、运行时主目录等。</li>
+          <li>skills / deer-flow home 相关路径：决定本地状态、技能和运行时产物的持久化位置。</li>
+        </ul>
+        <p>这也是为什么 DeerFlow 总体架构不能只用“几个 Python 包”来理解。很多能力边界并不写死在 agent 代码里，而是由 Gateway 路由、共享配置和本地持久化路径一起决定。</p>
+      </section>
+
+      <section id="tradeoffs">
+        <h2>关键实现细节与权衡</h2>
+        <p>DeerFlow 选择 Gateway-embedded runtime，有几个直接结果：</p>
+        <ul>
+          <li>公共 API 可以对外保持 LangGraph-compatible 形态，但默认服务入口仍由 Gateway 统一承载。</li>
+          <li>skills、uploads、artifacts、threads 清理、模型列表等非纯 agent 能力，都可以在同一进程服务面里管理。</li>
+          <li>运行态所有权更集中，但也意味着 run state 与 stream bridge 默认持有在 Gateway 进程内。</li>
+        </ul>
+        <div class="key-point">
+          <strong>设计取向：</strong>
+          DeerFlow 优先选择“统一系统入口和一致体验”，而不是把所有能力拆成一组松散微服务。
+        </div>
+      </section>
+
+      <section id="limits">
+        <h2>当前限制、边界与非目标</h2>
+        <p>这张总图必须明确几个边界，否则很容易产生错误理解。</p>
+        <ul>
+          <li>Gateway-embedded runtime 是默认主路径，但 <code>langgraph.json</code> 仍保留兼容用途，不代表默认运行方式被反转。</li>
+          <li>Gateway 默认持有 run state，因此生产部署不能简单通过增加 worker 数来横向扩展，否则会破坏取消、重连和部分渠道语义。</li>
+          <li><code>DeerFlowClient</code> 不是“调用 Gateway 的轻封装”，它是直接复用核心 runtime 的 in-process 路径。</li>
+          <li>这一章不细讲单个 subsystem 的内部机制，例如 memory 更新策略、sandbox provider 差异、skills 安装安全扫描；那些属于后续分章。</li>
+        </ul>
+      </section>
+
+      <section id="relations">
+        <h2>它与 DeerFlow 其他能力的关系</h2>
+        <p>本章是后面所有实现章的公共地图：</p>
+        <ul>
+          <li>第 10 章会沿着 <code>backend/packages/harness/deerflow/agents/lead_agent/agent.py</code> 把执行主线拆开。</li>
+          <li>第 11 章会解释技能为什么是“运行时扩展面”而不是孤立插件系统。</li>
+          <li>Gateway、channels、embedded client 三章都要回到这里确认自己只是不同接入面，而非独立产品。</li>
+          <li>sandbox、memory、sub-agents 都应被理解为共享 runtime 的能力组件，而不是架构外接挂件。</li>
+        </ul>
+        <div class="highlight">
+          读完这一章后，建议把 <code>README.md</code>、<code>backend/docs/ARCHITECTURE.md</code>、<code>backend/app/gateway/app.py</code>、<code>backend/packages/harness/deerflow/client.py</code> 和 <code>backend/packages/harness/deerflow/agents/lead_agent/agent.py</code> 当成 DeerFlow 的五个总图锚点反复对照。只要你能说清“请求从哪进、run 谁拥有、agent 谁装配、上下文谁注入”，后面各章其实都只是往这张总图里补细节。
+        </div>
+      </section>
+
       <div id="page-nav"></div>
     </div>
   </main>

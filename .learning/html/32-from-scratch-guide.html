@@ -6,215 +6,7 @@
     <title>从零构建Agent系统 · DeerFlow 学习系列</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
-        /* 页面特定样式 - 与深色主题兼容 */
-        
-        .toc {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--accent);
-            padding: 20px;
-            margin-bottom: 40px;
-            border-radius: 8px;
-        }
-        
-        .toc h2 {
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .toc li:before {
-            content: "▸";
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: bold;
-        }
-        
-        .toc a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .toc a:hover {
-            color: var(--accent-2);
-            text-decoration: underline;
-        }
-        
-        section {
-            margin-bottom: 50px;
-        }
-        
-        /* 代码块样式 */
-        .code-block {
-            background: var(--bg-code);
-            color: var(--text-soft);
-            padding: 18px 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 18px 0;
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 13.5px;
-            line-height: 1.65;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-        }
-        
-        .code-block code {
-            background: none;
-            border: none;
-            padding: 0;
-            color: var(--text-soft);
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            white-space: pre;
-            display: block;
-        }
-        
-        .code-block::-webkit-scrollbar {
-            height: 9px;
-        }
-        
-        .code-block::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-        
-        /* 提示框样式 */
-        .highlight {
-            background: var(--bg-soft);
-            padding: 15px 18px;
-            border-left: 4px solid var(--orange);
-            margin: 18px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .key-point {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--green);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--green);
-        }
-        
-        .key-point strong {
-            color: var(--green-soft);
-            font-weight: 650;
-        }
-        
-        .example-case {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--orange);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .example-case strong {
-            color: var(--orange);
-            font-weight: 650;
-        }
-        
-        .warning {
-            background: var(--bg-soft);
-            border-left: 4px solid #ff6b6b;
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid #ff6b6b;
-        }
-        
-        .warning strong {
-            color: #ff6b6b;
-            font-weight: 650;
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 18px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-        }
-        
-        .comparison-table th {
-            background: var(--bg-soft);
-            color: var(--text);
-            padding: 11px 15px;
-            text-align: left;
-            font-weight: 650;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .comparison-table td {
-            padding: 11px 15px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-soft);
-        }
-        
-        .comparison-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .comparison-table tr:hover td {
-            background: rgba(88,166,255,0.04);
-        }
-        
-        .flow-diagram {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        
-        .flow-step {
-            background: var(--bg-card);
-            border: 1.5px solid var(--accent);
-            color: var(--text);
-            padding: 12px 22px;
-            border-radius: 10px;
-            min-width: 120px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .flow-arrow {
-            font-size: 20px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            padding: 2px 0;
-        }
+        section { margin-bottom: 50px; }
     </style>
 </head>
 <body>
@@ -223,268 +15,309 @@
   <nav class="sidebar" id="sidebar"></nav>
   <main class="main">
     <div class="content">
-            <h1>从零构建Agent系统</h1>
-            <p class="page-subtitle">DeerFlow 学习系列 - 第 32 章</p>
-            
-            <div class="toc">
-                <h2>📖 目录</h2>
-                <ul>
-                    <li><a href="#introduction">简介</a></li>
-                    <li><a href="#project-setup">项目初始化</a></li>
-                    <li><a href="#architecture-design">架构设计</a></li>
-                    <li><a href="#implementation">实现</a></li>
-                    <li><a href="#testing-deployment">测试和部署</a></li>
-                    <li><a href="#summary">总结</a></li>
-                </ul>
+      <h1>从零构建Agent系统</h1>
+      <p class="page-subtitle">DeerFlow 学习系列 - 第 32 章</p>
+
+      <div class="deerflow-map">
+        <h3>本章讲的是如果你参考 DeerFlow 从零做系统，哪些部分是当前真实架构经验，哪些不是</h3>
+        <p>这不是通用创业教程，也不是“照着搭一个一模一样的 DeerFlow”。它的目标是帮助读者从 DeerFlow 当前仓库里抽出最关键的系统设计经验：外部接口、认证与多用户边界、运行时承载体、文件路径契约和扩展点应该怎样组合。</p>
+      </div>
+
+      <div class="toc">
+        <h3>目录</h3>
+        <ul>
+          <li><a href="#problem">这项能力在 DeerFlow 中解决什么问题</a></li>
+          <li><a href="#codebase">这项能力在代码库中的位置</a></li>
+          <li><a href="#flow">真实运行链路或数据链路</a></li>
+          <li><a href="#config">配置面与使用方式</a></li>
+          <li><a href="#tradeoffs">关键实现细节与权衡</a></li>
+          <li><a href="#limits">当前限制、边界与非目标</a></li>
+          <li><a href="#relations">它与 DeerFlow 其他能力的关系</a></li>
+        </ul>
+      </div>
+
+      <section id="problem">
+        <h2>这项能力在 DeerFlow 中解决什么问题</h2>
+        <p>很多人会把“从零构建 Agent 系统”理解成列一份通用组件清单，但 DeerFlow 给出的更有价值答案是：哪些边界必须一开始就想清楚，否则后面会不断返工。比如 API 是否只是代理、认证和用户隔离是否内建、文件路径是否有统一虚拟契约、运行时是否支持浏览器和嵌入式双消费面。</p>
+      </section>
+
+      <section id="codebase">
+        <h2>这项能力在代码库中的位置</h2>
+        <table class="comparison-table">
+          <tr>
+            <th>路径</th>
+            <th>职责</th>
+            <th>为什么要看</th>
+          </tr>
+          <tr>
+            <td><code>backend/docs/ARCHITECTURE.md</code></td>
+            <td>整体系统图、Gateway embedded runtime、部署主路径</td>
+            <td>这是 DeerFlow 级别的系统设计总览</td>
+          </tr>
+          <tr>
+            <td><code>backend/docs/API.md</code></td>
+            <td>LangGraph-compatible API 与 Gateway API 边界</td>
+            <td>说明外部接口不应只靠内部对象拼接</td>
+          </tr>
+          <tr>
+            <td><code>backend/docs/AUTH_DESIGN.md</code></td>
+            <td>认证、CSRF、用户隔离、internal channel 调用</td>
+            <td>说明系统从一开始就要考虑多用户和内部调用边界</td>
+          </tr>
+        </table>
+      </section>
+
+      <section id="flow">
+        <h2>真实运行链路或数据链路</h2>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>从零搭完整 Agent 系统的主线流程图</strong>
+            <span>先把外部接口和运行主线打通，再往里面加能力层</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>先明确系统要接什么输入入口</strong>
+                <p>无论是浏览器、IM 还是其他客户端，第一步都是把入口统一起来。</p>
+                <div class="flow-step-path"><code>public client / browser / IM</code></div>
+              </div>
             </div>
-            
-            <section id="introduction">
-                <h2>简介</h2>
-                <p>
-                    本章通过一个完整的项目示例，讲解如何从零开始构建一个完整的 Agent 系统。包括项目初始化、架构设计、实现、测试和部署的完整流程。
-                </p>
-                <div class="key-point">
-                    <strong>学习目标：</strong>
-                    <ul>
-                        <li>理解 Agent 系统的完整开发流程</li>
-                        <li>掌握项目初始化和架构设计</li>
-                        <li>学会实现完整的 Agent 系统</li>
-                        <li>了解测试和部署的方法</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <section id="project-setup">
-                <h2>项目初始化</h2>
-                <p>
-                    从创建项目目录开始，设置开发环境。
-                </p>
-                
-                <h3>项目结构</h3>
-                <div class="code-block"><code>
-my-agent-system/
-├── agent/
-│   ├── __init__.py
-│   ├── core.py
-│   ├── skills/
-│   │   ├── __init__.py
-│   │   └── builtin.py
-│   └── memory.py
-├── config/
-│   ├── agent_config.yaml
-│   └── llm_config.yaml
-├── tests/
-│   ├── __init__.py
-│   ├── test_agent.py
-│   └── test_skills.py
-├── requirements.txt
-├── setup.py
-└── README.md
-</code></div>
-                
-                <h3>依赖管理</h3>
-                <div class="code-block"><code>
-<span class="tok-str">"""requirements.txt"""</span>
-langchain==<span class="tok-num">0.1</span>.<span class="tok-num">0</span>
-openai==<span class="tok-num">1.3</span>.<span class="tok-num">0</span>
-pydantic==<span class="tok-num">2.0</span>.<span class="tok-num">0</span>
-pyyaml==<span class="tok-num">6.0</span>
-pytest==<span class="tok-num">7.4</span>.<span class="tok-num">0</span>
-python-dotenv==<span class="tok-num">1.0</span>.<span class="tok-num">0</span>
-</code></div>
-            </section>
-            
-            <section id="architecture-design">
-                <h2>架构设计</h2>
-                <p>
-                    设计 Agent 系统的架构，定义各个组件的职责。
-                </p>
-                
-                <h3>架构流程</h3>
-                <div class="flow-diagram">
-                    <div class="flow-step">用户输入</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">任务分析</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">计划生成</div>
-                </div>
-                <div style="text-align: center; margin: 10px 0;">↓</div>
-                <div class="flow-diagram">
-                    <div class="flow-step">Skill 执行</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">结果聚合</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">返回结果</div>
-                </div>
-                
-                <h3>核心类设计</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">from</span> abc <span class="tok-kw">import</span> <span class="tok-cls">ABC</span>, abstractmethod
-<span class="tok-kw">from</span> typing <span class="tok-kw">import</span> <span class="tok-cls">Any</span>, <span class="tok-cls">Dict</span>, <span class="tok-cls">List</span>
-
-<span class="tok-kw">class</span> <span class="tok-cls">Agent</span>(<span class="tok-cls">ABC</span>):
-    <span class="tok-str">"""Agent 基类"""</span>
-    
-    @abstractmethod
-    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, task: <span class="tok-str">str</span>) -> <span class="tok-cls">Any</span>:
-        <span class="tok-kw">pass</span>
-
-<span class="tok-kw">class</span> <span class="tok-cls">Skill</span>(<span class="tok-cls">ABC</span>):
-    <span class="tok-str">"""Skill 基类"""</span>
-    
-    @abstractmethod
-    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, **kwargs) -> <span class="tok-cls">Any</span>:
-        <span class="tok-kw">pass</span>
-
-<span class="tok-kw">class</span> <span class="tok-cls">Memory</span>(<span class="tok-cls">ABC</span>):
-    <span class="tok-str">"""Memory 基类"""</span>
-    
-    @abstractmethod
-    <span class="tok-kw">def</span> <span class="tok-fn">store</span>(<span class="tok-kw">self</span>, key: <span class="tok-str">str</span>, value: <span class="tok-cls">Any</span>):
-        <span class="tok-kw">pass</span>
-    
-    @abstractmethod
-    <span class="tok-kw">def</span> <span class="tok-fn">retrieve</span>(<span class="tok-kw">self</span>, key: <span class="tok-str">str</span>) -> <span class="tok-cls">Any</span>:
-        <span class="tok-kw">pass</span>
-</code></div>
-            </section>
-            
-            <section id="implementation">
-                <h2>实现</h2>
-                <p>
-                    实现 Agent 系统的核心组件。
-                </p>
-                
-                <h3>Agent 核心实现</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">SimpleAgent</span>(<span class="tok-cls">Agent</span>):
-    <span class="tok-str">"""简单 Agent 实现"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, llm, skills: <span class="tok-cls">Dict</span>, memory: <span class="tok-cls">Memory</span>):
-        <span class="tok-kw">self</span>.llm = llm
-        <span class="tok-kw">self</span>.skills = skills
-        <span class="tok-kw">self</span>.memory = memory
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, task: <span class="tok-str">str</span>) -> <span class="tok-cls">Any</span>:
-        <span class="tok-str">"""执行任务"""</span>
-        <span class="tok-com"># 1. 分析任务</span>
-        analysis = <span class="tok-kw">self</span>.<span class="tok-fn">analyze</span>(task)
-        
-        <span class="tok-com"># 2. 选择 Skill</span>
-        skill_name = <span class="tok-kw">self</span>.<span class="tok-fn">select_skill</span>(analysis)
-        
-        <span class="tok-com"># 3. 执行 Skill</span>
-        <span class="tok-kw">if</span> skill_name <span class="tok-kw">in</span> <span class="tok-kw">self</span>.skills:
-            result = <span class="tok-kw">self</span>.skills[skill_name].<span class="tok-fn">execute</span>(task)
-        <span class="tok-kw">else</span>:
-            result = <span class="tok-str">"No suitable skill found"</span>
-        
-        <span class="tok-com"># 4. 存储结果</span>
-        <span class="tok-kw">self</span>.memory.<span class="tok-fn">store</span>(task, result)
-        
-        <span class="tok-kw">return</span> result
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">analyze</span>(<span class="tok-kw">self</span>, task: <span class="tok-str">str</span>):
-        <span class="tok-str">"""分析任务"""</span>
-        <span class="tok-kw">return</span> <span class="tok-kw">self</span>.llm.<span class="tok-fn">invoke</span>(task)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">select_skill</span>(<span class="tok-kw">self</span>, analysis):
-        <span class="tok-str">"""选择合适的 Skill"""</span>
-        <span class="tok-kw">return</span> <span class="tok-str">"default"</span>
-</code></div>
-            </section>
-            
-            <section id="testing-deployment">
-                <h2>测试和部署</h2>
-                <p>
-                    测试 Agent 系统并部署到生产环境。
-                </p>
-                
-                <h3>单元测试</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">import</span> unittest
-<span class="tok-kw">from</span> agent.core <span class="tok-kw">import</span> <span class="tok-cls">SimpleAgent</span>
-
-<span class="tok-kw">class</span> <span class="tok-cls">TestAgent</span>(unittest.<span class="tok-cls">TestCase</span>):
-    <span class="tok-kw">def</span> <span class="tok-fn">setUp</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.agent = <span class="tok-cls">SimpleAgent</span>(llm, skills, memory)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">test_execute</span>(<span class="tok-kw">self</span>):
-        <span class="tok-str">"""测试执行"""</span>
-        result = <span class="tok-kw">self</span>.agent.<span class="tok-fn">execute</span>(<span class="tok-str">"test task"</span>)
-        <span class="tok-kw">self</span>.<span class="tok-fn">assertIsNotNone</span>(result)
-
-<span class="tok-kw">if</span> <span class="tok-str">__name__</span> == <span class="tok-str">"__main__"</span>:
-    unittest.<span class="tok-fn">main</span>()
-</code></div>
-                
-                <h3>部署检查清单</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>项目</th>
-                            <th>说明</th>
-                            <th>状态</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>代码审查</strong></td>
-                            <td>代码质量和风格检查</td>
-                            <td>✓</td>
-                        </tr>
-                        <tr>
-                            <td><strong>单元测试</strong></td>
-                            <td>所有单元测试通过</td>
-                            <td>✓</td>
-                        </tr>
-                        <tr>
-                            <td><strong>集成测试</strong></td>
-                            <td>系统集成测试通过</td>
-                            <td>✓</td>
-                        </tr>
-                        <tr>
-                            <td><strong>性能测试</strong></td>
-                            <td>性能指标达到要求</td>
-                            <td>✓</td>
-                        </tr>
-                        <tr>
-                            <td><strong>安全审计</strong></td>
-                            <td>安全问题已解决</td>
-                            <td>✓</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <div class="key-point">
-                    <strong>关键点：</strong> 部署前必须通过所有测试和检查。不要跳过任何步骤。
-                </div>
-            </section>
-            
-            <section id="summary">
-                <h2>总结</h2>
-                <p>
-                    从零构建 Agent 系统需要经过完整的开发流程。从项目初始化、架构设计、实现、测试到部署，每一步都很重要。本章提供了从零开始构建 Agent 系统的完整指南。
-                </p>
-                <div class="highlight">
-                    <strong>核心要点总结：</strong>
-                    <ul>
-                        <li><strong>项目初始化：</strong> 合理的项目结构和依赖管理</li>
-                        <li><strong>架构设计：</strong> 清晰的组件划分和职责定义</li>
-                        <li><strong>实现：</strong> 遵循设计，实现核心功能</li>
-                        <li><strong>测试：</strong> 单元测试、集成测试、性能测试</li>
-                        <li><strong>部署：</strong> 通过所有检查后才能部署到生产环境</li>
-                        <li><strong>维护：</strong> 监控、日志、性能优化、持续改进</li>
-                    </ul>
-                </div>
-                
-                <div class="key-point">
-                    <strong>系统构建建议：</strong> 从零构建 Agent 系统是一个复杂的工程。需要充分的规划、设计和测试。不要急于求成，每一步都要做扎实。同时要保持灵活性，根据实际情况进行调整。
-                </div>
-            </section>
-            
-            <div id="page-nav"></div>
+            <div class="flow-step">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>用 Gateway 统一承接外部 API 面</strong>
+                <p>这一层负责把不同来源的请求收进来，并转换成系统内部统一的调用协议。</p>
+                <div class="flow-step-path"><code>Gateway API surface</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>把线程、认证和运行生命周期先定清楚</strong>
+                <p>如果 thread、user、auth、run 这些主语不统一，后面 files、memory、channels 都会越做越乱。</p>
+                <div class="flow-step-path"><code>authenticated thread + run lifecycle</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>再把 Agent 运行时嵌进这条主线</strong>
+                <p>到了这里，模型、工具和中间件才能在统一上下文里运行，而不是各自为战。</p>
+                <div class="flow-step-path"><code>embedded agent runtime</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>围绕主线继续挂沙箱、上传、产物和记忆</strong>
+                <p>这些都应该附着在统一 thread/user 语义上，而不是零散外挂。</p>
+                <div class="flow-step-path"><code>sandbox</code> / <code>uploads</code> / <code>artifacts</code> / <code>memory</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">06</div>
+              <div class="flow-step-copy">
+                <strong>最后再把结果送回 Gateway 或嵌入式客户端</strong>
+                <p>这样系统才形成完整闭环，外部入口和内部运行时之间不会断层。</p>
+                <div class="flow-step-path"><code>Gateway</code> / <code>embedded client</code></div>
+              </div>
+            </div>
+          </div>
         </div>
+        <p>如果把 DeerFlow 当作一个“从零构建系统”的样本，最值得学的不是单个算法，而是这条主线：先定义好外部接口与内部运行时的关系，再让文件、记忆、channels、skills、subagents 都围绕同一 thread/user 语义工作。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码：从零做系统时，为什么认证中间件必须是“默认拒绝”</h4>
+          <p class="source-caption">节选自 <code>backend/app/gateway/auth_middleware.py</code>。如果你想抄走 DeerFlow 最有价值的系统设计经验，这段比很多概念图都重要。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">gateway/auth_middleware.py :: AuthMiddleware.dispatch()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># path: 当前请求路径，用来判断它是不是认证中间件允许匿名放行的公开入口</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_is_public</span>(<span class="tok-attr">path</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">bool</span>:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-fn">stripped</span> <span class="tok-op">=</span> <span class="tok-attr">path</span>.<span class="tok-fn">rstrip</span>(<span class="tok-str">"/"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">stripped</span> <span class="tok-kw">in</span> <span class="tok-attr">_PUBLIC_EXACT_PATHS</span>:</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-fn">any</span>(<span class="tok-attr">path</span>.<span class="tok-fn">startswith</span>(<span class="tok-attr">prefix</span>) <span class="tok-kw">for</span> <span class="tok-attr">prefix</span> <span class="tok-kw">in</span> <span class="tok-attr">_PUBLIC_PATH_PREFIXES</span>)</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"><span class="tok-com"># self: 认证中间件实例；request: 当前 HTTP 请求；call_next: 认证通过后把请求继续交给后续 FastAPI 链路</span></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">dispatch</span>(<span class="tok-self">self</span>, <span class="tok-attr">request</span>: <span class="tok-cls">Request</span>, <span class="tok-attr">call_next</span>: <span class="tok-type">Callable</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">Response</span>:</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">_is_public</span>(<span class="tok-attr">request</span>.<span class="tok-attr">url</span>.<span class="tok-attr">path</span>):</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-kw">await</span> <span class="tok-fn">call_next</span>(<span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-fn">internal_user</span> <span class="tok-op">=</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">is_valid_internal_auth_token</span>(<span class="tok-attr">request</span>.<span class="tok-attr">headers</span>.<span class="tok-fn">get</span>(<span class="tok-attr">INTERNAL_AUTH_HEADER_NAME</span>)):</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-fn">internal_user</span> <span class="tok-op">=</span> <span class="tok-fn">get_internal_user</span>()</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-fn">auth_source</span> <span class="tok-op">=</span> <span class="tok-attr">AUTH_SOURCE_SESSION</span></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-fn">access_token</span> <span class="tok-op">=</span> <span class="tok-attr">request</span>.<span class="tok-attr">cookies</span>.<span class="tok-fn">get</span>(<span class="tok-str">"access_token"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">internal_user</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">        <span class="tok-fn">user</span> <span class="tok-op">=</span> <span class="tok-fn">internal_user</span></span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">        <span class="tok-fn">auth_source</span> <span class="tok-op">=</span> <span class="tok-attr">AUTH_SOURCE_INTERNAL</span></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-kw">elif</span> <span class="tok-fn">access_token</span>:</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-kw">from</span> <span class="tok-attr">app</span>.<span class="tok-attr">gateway</span>.<span class="tok-attr">deps</span> <span class="tok-kw">import</span> <span class="tok-fn">get_current_user_from_request</span></span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">        <span class="tok-kw">try</span>:</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">            <span class="tok-fn">user</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">get_current_user_from_request</span>(<span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">        <span class="tok-kw">except</span> <span class="tok-cls">HTTPException</span> <span class="tok-kw">as</span> <span class="tok-fn">exc</span>:</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">            <span class="tok-kw">return</span> <span class="tok-cls">JSONResponse</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-attr">exc</span>.<span class="tok-attr">status_code</span>, <span class="tok-attr">content</span><span class="tok-op">=</span>{<span class="tok-str">"detail"</span>: <span class="tok-attr">exc</span>.<span class="tok-attr">detail</span>})</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-kw">elif</span> <span class="tok-fn">is_auth_disabled</span>():</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">        <span class="tok-fn">user</span> <span class="tok-op">=</span> <span class="tok-fn">get_auth_disabled_user</span>()</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">        <span class="tok-fn">auth_source</span> <span class="tok-op">=</span> <span class="tok-attr">AUTH_SOURCE_AUTH_DISABLED</span></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-kw">else</span>:</span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-cls">JSONResponse</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-num">401</span>, <span class="tok-attr">content</span><span class="tok-op">=</span>{<span class="tok-str">"detail"</span>: <span class="tok-cls">AuthErrorResponse</span>(<span class="tok-attr">code</span><span class="tok-op">=</span><span class="tok-cls">AuthErrorCode</span>.<span class="tok-attr">NOT_AUTHENTICATED</span>, <span class="tok-attr">message</span><span class="tok-op">=</span><span class="tok-str">"Authentication required"</span>).<span class="tok-fn">model_dump</span>()})</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">    <span class="tok-attr">request</span>.<span class="tok-attr">state</span>.<span class="tok-attr">user</span> <span class="tok-op">=</span> <span class="tok-fn">user</span></span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">    <span class="tok-attr">request</span>.<span class="tok-attr">state</span>.<span class="tok-attr">auth_source</span> <span class="tok-op">=</span> <span class="tok-fn">auth_source</span></span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src">    <span class="tok-attr">request</span>.<span class="tok-attr">state</span>.<span class="tok-attr">auth</span> <span class="tok-op">=</span> <span class="tok-cls">AuthContext</span>(<span class="tok-attr">user</span><span class="tok-op">=</span><span class="tok-fn">user</span>, <span class="tok-attr">permissions</span><span class="tok-op">=</span><span class="tok-attr">_ALL_PERMISSIONS</span>)</span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src">    <span class="tok-fn">token</span> <span class="tok-op">=</span> <span class="tok-fn">set_current_user</span>(<span class="tok-fn">user</span>)</span></div>
+                <div class="code-line"><span class="code-ln">37</span><span class="code-src">    <span class="tok-kw">try</span>:</span></div>
+                <div class="code-line"><span class="code-ln">38</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-kw">await</span> <span class="tok-fn">call_next</span>(<span class="tok-attr">request</span>)</span></div>
+                <div class="code-line"><span class="code-ln">39</span><span class="code-src">    <span class="tok-kw">finally</span>:</span></div>
+                <div class="code-line"><span class="code-ln">40</span><span class="code-src">        <span class="tok-fn">reset_current_user</span>(<span class="tok-attr">token</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第 1 到 5 行先定义 public path 判断，这是“默认拒绝，只放行少数公开入口”的核心思想。</li>
+            <li>第 11 到 20 行说明 DeerFlow 一开始就考虑了浏览器用户之外的内部调用，例如 channels worker 用 internal token 走系统内调用链。</li>
+            <li>第 21 到 31 行是最值得借鉴的部分: 不是只要有 cookie 就算登录，而是严格校验 token；没有 token 或 token 无效就立即在中间件层返回 401。</li>
+            <li>第 33 到 40 行把用户同时写进 <code>request.state</code> 和 runtime contextvar，这一步非常关键，因为后面的 repository、thread path、memory 隔离都要靠它拿到当前用户。</li>
+            <li>如果你从零做 Agent 系统却忽略了这一层，后面所有 thread、文件、memory、artifact 的“多用户隔离”都会变成补丁式修复。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：从系统入口往下看，ChannelManager 如何把外部 IM 消息拉回统一线程语义</h4>
+          <p class="source-caption">节选自 <code>backend/app/channels/manager.py</code>。如果你想从 DeerFlow 抄“多入口统一到一个运行时”的设计经验，这段源码非常值钱。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">app/channels/manager.py :: channel capabilities / thread metadata / response extraction</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">45</span><span class="code-src"><span class="tok-com"># DEFAULT_RUN_CONFIG: 频道桥接层发起 DeerFlow run 时默认带上的底层配置，目前主要是递归上限</span></span></div>
+                <div class="code-line"><span class="code-ln">46</span><span class="code-src"><span class="tok-attr">DEFAULT_RUN_CONFIG</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>] <span class="tok-op">=</span> {<span class="tok-str">"recursion_limit"</span>: <span class="tok-num">100</span>}</span></div>
+                <div class="code-line"><span class="code-ln">47</span><span class="code-src"><span class="tok-com"># DEFAULT_RUN_CONTEXT: 频道消息默认启用 thinking，但不会自动进入 plan mode 或 subagent 委派</span></span></div>
+                <div class="code-line"><span class="code-ln">48</span><span class="code-src"><span class="tok-attr">DEFAULT_RUN_CONTEXT</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>] <span class="tok-op">=</span> {<span class="tok-str">"thinking_enabled"</span>: <span class="tok-kw">True</span>, <span class="tok-str">"is_plan_mode"</span>: <span class="tok-kw">False</span>, <span class="tok-str">"subagent_enabled"</span>: <span class="tok-kw">False</span>}</span></div>
+                <div class="code-line"><span class="code-ln">53</span><span class="code-src"><span class="tok-com"># CHANNEL_CAPABILITIES: 不同 IM 平台的能力差异表，这里先关心它们支不支持流式回推</span></span></div>
+                <div class="code-line"><span class="code-ln">54</span><span class="code-src"><span class="tok-attr">CHANNEL_CAPABILITIES</span> <span class="tok-op">=</span> {<span class="tok-str">"feishu"</span>: {<span class="tok-str">"supports_streaming"</span>: <span class="tok-kw">True</span>}, <span class="tok-str">"wecom"</span>: {<span class="tok-str">"supports_streaming"</span>: <span class="tok-kw">True</span>}, <span class="tok-str">"slack"</span>: {<span class="tok-str">"supports_streaming"</span>: <span class="tok-kw">False</span>}}</span></div>
+                <div class="code-line"><span class="code-ln">69</span><span class="code-src"><span class="tok-com"># meta: 某次消息或 run 附带的大块元数据，这里要裁掉不适合继续往频道侧传递的字段</span></span></div>
+                <div class="code-line"><span class="code-ln">70</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_slim_metadata</span>(<span class="tok-attr">meta</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>]) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">71</span><span class="code-src">    <span class="tok-kw">return</span> {<span class="tok-attr">k</span>: <span class="tok-attr">v</span> <span class="tok-kw">for</span> <span class="tok-attr">k</span>, <span class="tok-attr">v</span> <span class="tok-kw">in</span> <span class="tok-attr">meta</span>.<span class="tok-fn">items</span>() <span class="tok-kw">if</span> <span class="tok-attr">k</span> <span class="tok-kw">not in</span> <span class="tok-attr">_METADATA_DROP_KEYS</span>}</span></div>
+                <div class="code-line"><span class="code-ln">173</span><span class="code-src"><span class="tok-com"># result: agent 完整返回结构，可能是字典也可能是消息列表；职责是从中提炼出最终要回给 IM 用户的文本</span></span></div>
+                <div class="code-line"><span class="code-ln">174</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_extract_response_text</span>(<span class="tok-attr">result</span>: <span class="tok-type">dict</span> <span class="tok-op">|</span> <span class="tok-type">list</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                <div class="code-line"><span class="code-ln">190</span><span class="code-src">    <span class="tok-com"># 倒着找最后一段可返回文本，但遇到本轮 human 之前的消息就停止</span></span></div>
+                <div class="code-line"><span class="code-ln">192</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-attr">msg</span> <span class="tok-kw">in</span> <span class="tok-fn">reversed</span>(<span class="tok-attr">messages</span>):</span></div>
+                <div class="code-line"><span class="code-ln">199</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">msg_type</span> <span class="tok-op">==</span> <span class="tok-str">"human"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">205</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">msg_type</span> <span class="tok-op">==</span> <span class="tok-str">"tool"</span> <span class="tok-kw">and</span> <span class="tok-attr">msg</span>.<span class="tok-fn">get</span>(<span class="tok-str">"name"</span>) <span class="tok-op">==</span> <span class="tok-str">"ask_clarification"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">211</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">msg_type</span> <span class="tok-op">==</span> <span class="tok-str">"ai"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">216</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">content</span>, <span class="tok-type">list</span>):</span></div>
+                <div class="code-line"><span class="code-ln">219</span><span class="code-src">                <span class="tok-kw">if</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">block</span>, <span class="tok-type">dict</span>) <span class="tok-kw">and</span> <span class="tok-attr">block</span>.<span class="tok-fn">get</span>(<span class="tok-str">"type"</span>) <span class="tok-op">==</span> <span class="tok-str">"text"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">270</span><span class="code-src"><span class="tok-com"># base_metadata: 已有频道消息元数据；pending_clarification: 这轮回复是否还在等用户澄清，用来给下游频道适配器打状态标记</span></span></div>
+                <div class="code-line"><span class="code-ln">271</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_response_metadata</span>(<span class="tok-attr">base_metadata</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>], <span class="tok-op">*</span>, <span class="tok-attr">pending_clarification</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">271</span><span class="code-src">    <span class="tok-attr">metadata</span> <span class="tok-op">=</span> <span class="tok-fn">_slim_metadata</span>(<span class="tok-attr">base_metadata</span>)</span></div>
+                <div class="code-line"><span class="code-ln">272</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">pending_clarification</span>:</span></div>
+                <div class="code-line"><span class="code-ln">273</span><span class="code-src">        <span class="tok-attr">metadata</span>[<span class="tok-attr">PENDING_CLARIFICATION_METADATA_KEY</span>] <span class="tok-op">=</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">277</span><span class="code-src"><span class="tok-com"># msg: 外部 IM 平台打进来的入站消息对象，这里把频道、用户、thread 这些关键信息折叠成统一线程元数据</span></span></div>
+                <div class="code-line"><span class="code-ln">278</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_thread_channel_metadata</span>(<span class="tok-attr">msg</span>: <span class="tok-cls">InboundMessage</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>]:</span></div>
+                <div class="code-line"><span class="code-ln">278</span><span class="code-src">    <span class="tok-attr">channel_source</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>] <span class="tok-op">=</span> {<span class="tok-str">"type"</span>: <span class="tok-str">"im_channel"</span>, <span class="tok-str">"provider"</span>: <span class="tok-attr">msg</span>.<span class="tok-attr">channel_name</span>, <span class="tok-str">"chat_id"</span>: <span class="tok-attr">msg</span>.<span class="tok-attr">chat_id</span>}</span></div>
+                <div class="code-line"><span class="code-ln">290</span><span class="code-src">    <span class="tok-kw">return</span> {<span class="tok-str">"channel_source"</span>: <span class="tok-attr">channel_source</span>}</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这一段一上来先定义每个渠道支持不支持 streaming、run context 默认值是什么，说明 DeerFlow 不是给每个 IM 平台单独造一套 agent，而是先压到同一套线程运行语义上。</li>
+            <li><code>_extract_response_text</code> 这段非常关键，它展示了 channel 侧不是直接拿最后一条消息就回传，而是理解 DeerFlow 的消息结构，能区分 AI 回复和 <code>ask_clarification</code> 中断。</li>
+            <li><code>_response_metadata</code> 与 <code>_thread_channel_metadata</code> 则把渠道来源、澄清状态等元数据写回线程，这样后面不管是 Gateway、memory 还是前端，都还看得见“这条消息从哪个外部平台来的”。</li>
+            <li>这就是 DeerFlow 很值得借鉴的一点：多入口系统不是把消息转发进来就结束，而是要在入口层就补齐统一线程语义所需的上下文。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：统一入口的最后一跳，是把不同渠道都收敛成同一套 `runs.wait / runs.stream` 协议</h4>
+          <p class="source-caption">节选自 <code>backend/app/channels/manager.py</code>。这段源码非常适合拿来学习“从零构建系统”时如何把多入口请求最后汇总进一个统一执行面。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">app/channels/manager.py :: _handle_chat() / _handle_streaming_chat()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1034</span><span class="code-src">    <span class="tok-attr">original_text</span> <span class="tok-op">=</span> <span class="tok-attr">msg</span>.<span class="tok-attr">text</span></span></div>
+                <div class="code-line"><span class="code-ln">1035</span><span class="code-src">    <span class="tok-attr">uploaded</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">_ingest_inbound_files</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">msg</span>)</span></div>
+                <div class="code-line"><span class="code-ln">1037</span><span class="code-src">        <span class="tok-attr">msg</span>.<span class="tok-attr">text</span> <span class="tok-op">=</span> <span class="tok-str">f"{_format_uploaded_files_block(uploaded)}\n\n{msg.text}"</span>.<span class="tok-fn">strip</span>()</span></div>
+                <div class="code-line"><span class="code-ln">1038</span><span class="code-src">    <span class="tok-attr">human_message</span> <span class="tok-op">=</span> <span class="tok-fn">_human_input_message</span>(<span class="tok-attr">msg</span>.<span class="tok-attr">text</span>, <span class="tok-attr">original_content</span><span class="tok-op">=</span><span class="tok-attr">original_text</span>)</span></div>
+                <div class="code-line"><span class="code-ln">1040</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-self">self</span>.<span class="tok-fn">_channel_supports_streaming</span>(<span class="tok-attr">msg</span>.<span class="tok-attr">channel_name</span>):</span></div>
+                <div class="code-line"><span class="code-ln">1041</span><span class="code-src">        <span class="tok-kw">await</span> <span class="tok-self">self</span>.<span class="tok-fn">_handle_streaming_chat</span>(<span class="tok-attr">client</span>, <span class="tok-attr">msg</span>, <span class="tok-attr">thread_id</span>, <span class="tok-attr">assistant_id</span>, <span class="tok-attr">run_config</span>, <span class="tok-attr">run_context</span>, <span class="tok-attr">human_message</span>)</span></div>
+                <div class="code-line"><span class="code-ln">1049</span><span class="code-src">    <span class="tok-attr">run_kwargs</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>] <span class="tok-op">=</span> {<span class="tok-str">"input"</span>: {<span class="tok-str">"messages"</span>: [<span class="tok-attr">human_message</span>]}, <span class="tok-str">"config"</span>: <span class="tok-attr">run_config</span>, <span class="tok-str">"context"</span>: <span class="tok-attr">run_context</span>, <span class="tok-str">"multitask_strategy"</span>: <span class="tok-str">"reject"</span>}</span></div>
+                <div class="code-line"><span class="code-ln">1051</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">owner_headers</span> <span class="tok-op">:=</span> <span class="tok-fn">_owner_headers</span>(<span class="tok-attr">msg</span>):</span></div>
+                <div class="code-line"><span class="code-ln">1052</span><span class="code-src">        <span class="tok-attr">run_kwargs</span>[<span class="tok-str">"headers"</span>] <span class="tok-op">=</span> <span class="tok-attr">owner_headers</span></span></div>
+                <div class="code-line"><span class="code-ln">1062</span><span class="code-src">        <span class="tok-attr">result</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-attr">client</span>.<span class="tok-attr">runs</span>.<span class="tok-fn">wait</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">assistant_id</span>, <span class="tok-op">**</span><span class="tok-attr">run_kwargs</span>)</span></div>
+                <div class="code-line"><span class="code-ln">1068</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">_is_thread_busy_error</span>(<span class="tok-attr">exc</span>):</span></div>
+                <div class="code-line"><span class="code-ln">1076</span><span class="code-src">    <span class="tok-attr">pending_clarification</span> <span class="tok-op">=</span> <span class="tok-fn">_has_current_turn_clarification</span>(<span class="tok-attr">result</span>)</span></div>
+                <div class="code-line"><span class="code-ln">1086</span><span class="code-src">    <span class="tok-attr">outbound</span> <span class="tok-op">=</span> <span class="tok-cls">OutboundMessage</span>(<span class="tok-attr">channel_name</span><span class="tok-op">=</span><span class="tok-attr">msg</span>.<span class="tok-attr">channel_name</span>, <span class="tok-attr">chat_id</span><span class="tok-op">=</span><span class="tok-attr">msg</span>.<span class="tok-attr">chat_id</span>, <span class="tok-attr">thread_id</span><span class="tok-op">=</span><span class="tok-attr">thread_id</span>, <span class="tok-attr">text</span><span class="tok-op">=</span><span class="tok-attr">response_text</span>, <span class="tok-attr">artifacts</span><span class="tok-op">=</span><span class="tok-attr">artifacts</span>, <span class="tok-attr">attachments</span><span class="tok-op">=</span><span class="tok-attr">attachments</span>, <span class="tok-attr">metadata</span><span class="tok-op">=</span><span class="tok-fn">_response_metadata</span>(<span class="tok-attr">msg</span>.<span class="tok-attr">metadata</span>, <span class="tok-attr">pending_clarification</span><span class="tok-op">=</span><span class="tok-attr">pending_clarification</span>))</span></div>
+                <div class="code-line"><span class="code-ln">1119</span><span class="code-src">    <span class="tok-attr">stream_kwargs</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>] <span class="tok-op">=</span> {<span class="tok-str">"input"</span>: {<span class="tok-str">"messages"</span>: [<span class="tok-attr">human_message</span>]}, <span class="tok-str">"config"</span>: <span class="tok-attr">run_config</span>, <span class="tok-str">"context"</span>: <span class="tok-attr">run_context</span>, <span class="tok-str">"stream_mode"</span>: [<span class="tok-str">"messages-tuple"</span>, <span class="tok-str">"values"</span>], <span class="tok-str">"multitask_strategy"</span>: <span class="tok-str">"reject"</span>}</span></div>
+                <div class="code-line"><span class="code-ln">1139</span><span class="code-src">            <span class="tok-kw">async for</span> <span class="tok-attr">chunk</span> <span class="tok-kw">in</span> <span class="tok-attr">client</span>.<span class="tok-attr">runs</span>.<span class="tok-fn">stream</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">assistant_id</span>, <span class="tok-op">**</span><span class="tok-attr">stream_kwargs</span>):</span></div>
+                <div class="code-line"><span class="code-ln">1149</span><span class="code-src">                <span class="tok-kw">if</span> <span class="tok-attr">event</span> <span class="tok-op">==</span> <span class="tok-str">"messages-tuple"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">1150</span><span class="code-src">                    <span class="tok-attr">accumulated_text</span>, <span class="tok-attr">current_message_id</span> <span class="tok-op">=</span> <span class="tok-fn">_accumulate_stream_text</span>(<span class="tok-attr">streamed_buffers</span>, <span class="tok-attr">current_message_id</span>, <span class="tok-attr">data</span>)</span></div>
+                <div class="code-line"><span class="code-ln">1160</span><span class="code-src">                <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">latest_text</span> <span class="tok-kw">or</span> <span class="tok-attr">latest_text</span> <span class="tok-op">==</span> <span class="tok-attr">last_published_text</span>:</span></div>
+                <div class="code-line"><span class="code-ln">1168</span><span class="code-src">                <span class="tok-kw">await</span> <span class="tok-self">self</span>.<span class="tok-attr">bus</span>.<span class="tok-fn">publish_outbound</span>(<span class="tok-cls">OutboundMessage</span>(<span class="tok-attr">channel_name</span><span class="tok-op">=</span><span class="tok-attr">msg</span>.<span class="tok-attr">channel_name</span>, <span class="tok-attr">chat_id</span><span class="tok-op">=</span><span class="tok-attr">msg</span>.<span class="tok-attr">chat_id</span>, <span class="tok-attr">thread_id</span><span class="tok-op">=</span><span class="tok-attr">thread_id</span>, <span class="tok-attr">text</span><span class="tok-op">=</span><span class="tok-attr">latest_text</span>, <span class="tok-attr">is_final</span><span class="tok-op">=</span><span class="tok-kw">False</span>, <span class="tok-attr">metadata</span><span class="tok-op">=</span><span class="tok-fn">_response_metadata</span>(<span class="tok-attr">msg</span>.<span class="tok-attr">metadata</span>)))</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这段代码最有代表性的地方在于，不管消息来自哪个 IM 平台，最后都被归一成 `input/messages + config + context`，然后统一走 `runs.wait` 或 `runs.stream`。</li>
+            <li>也就是说，多入口系统的关键不是为每个平台各写一套业务执行器，而是把平台差异消化在入口层，把运行时协议压缩成统一模型。</li>
+            <li>同步渠道走 `runs.wait`，支持流式的渠道走 `runs.stream`，但两边都共享线程 ID、owner headers、clarification 语义和 artifact 回传逻辑，这就是 DeerFlow 当前系统架构的骨架。</li>
+            <li>如果你要从零做类似系统，这一页里最值得抄的不是具体平台适配代码，而是这种“入口归一化 -> 统一执行协议 -> 出口再适配渠道”的结构。</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="config">
+        <h2>配置面与使用方式</h2>
+        <ul>
+          <li><code>backend/docs/ARCHITECTURE.md</code> 帮你建立默认运行时主路径心智模型：Gateway 是承载体，不是无状态代理。</li>
+          <li><code>backend/docs/API.md</code> 展示如何同时保留兼容路径与本地原生 API，而不把内部结构暴露给外部调用方。</li>
+          <li><code>backend/docs/AUTH_DESIGN.md</code> 提醒你多用户、internal calls、default user bucket 和 CSRF 不能事后再补。</li>
+        </ul>
+      </section>
+
+      <section id="tradeoffs">
+        <h2>关键实现细节与权衡</h2>
+        <ul>
+          <li>DeerFlow 选择 Gateway embedded runtime，牺牲了一些“服务拆得更漂亮”的表象，换来更统一的 thread/run/file/auth 语义。</li>
+          <li>同时保留 Gateway 流式路径和 DeerFlowClient 路径看似重复，但它忠实反映了 HTTP 消费者和嵌入式 Python 消费者的根本差异。</li>
+          <li>把认证、路径契约和用户隔离前置，会让前期设计更重，但能避免后期为多用户、文件越界和 channel 内部调用付出更高改造成本。</li>
+        </ul>
+      </section>
+
+      <section id="limits">
+        <h2>当前限制、边界与非目标</h2>
+        <ul>
+          <li>本章不是让你复制 DeerFlow 的全部代码，而是理解它当前架构里最有复用价值的边界设计。</li>
+          <li>DeerFlow 的实现仍带有当前仓库的历史与部署权衡，所以“从零构建”不等于逐字照搬每个模块。</li>
+          <li>本章不深入某个具体子系统的实现细节；对应细节请回到前面相关章节。</li>
+        </ul>
+      </section>
+
+      <section id="relations">
+        <h2>它与 DeerFlow 其他能力的关系</h2>
+        <ul>
+          <li>它是前面所有章节的抽象回收：执行引擎、Gateway、sandbox、memory、skills、channels 都会回到这里形成系统设计经验。</li>
+          <li>它和第 40 章源码导航相连，因为你一旦知道要看哪些系统边界，下一步就是知道去哪读源码。</li>
+          <li>它和第 41 章 FAQ 相连，因为很多“为什么这里会出错”的根源其实就是系统边界没有理解清楚。</li>
+        </ul>
+        <div class="highlight">
+          建议把 <code>backend/docs/ARCHITECTURE.md</code>、<code>backend/docs/API.md</code> 和 <code>backend/docs/AUTH_DESIGN.md</code> 连起来读，再回到前面各个章节对应源码入口。
+        </div>
+      </section>
+
+      <div id="page-nav"></div>
+    </div>
   </main>
 </div>
 <script src="assets/nav.js"></script>

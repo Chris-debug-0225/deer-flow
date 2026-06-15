@@ -457,15 +457,23 @@
                 
                 <div class="example-case">
                     <strong>State的例子：</strong><br>
-                    <div class="code-block"><code>
-{
-    <span class="tok-str">"messages"</span>: [...],           <span class="tok-com"># 对话历史</span>
-    <span class="tok-str">"current_step"</span>: <span class="tok-str">"thinking"</span>,  <span class="tok-com"># 当前步骤</span>
-    <span class="tok-str">"tools_used"</span>: [...],         <span class="tok-com"># 已使用的工具</span>
-    <span class="tok-str">"intermediate_results"</span>: {...},  <span class="tok-com"># 中间结果</span>
-    <span class="tok-str">"final_output"</span>: <span class="tok-kw">None</span>         <span class="tok-com"># 最终输出</span>
-}
-                    </code></div>
+                    <div class="annotated-code">
+                        <div class="code-window">
+                            <div class="code-window-header">
+                                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                                <div class="code-window-title">state_example.py :: 一个最基础的 AgentState 长什么样</div>
+                            </div>
+                            <div class="code-window-body">
+                                <div class="code-line"><span class="code-ln">1</span><span class="code-src">{</span></div>
+                                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-str">"messages"</span>: [...],              <span class="tok-com"># 对话历史，通常是整条消息序列</span></span></div>
+                                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-str">"current_step"</span>: <span class="tok-str">"thinking"</span>, <span class="tok-com"># 当前执行阶段，用来驱动路由</span></span></div>
+                                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-str">"tools_used"</span>: [...],            <span class="tok-com"># 已调用过哪些工具</span></span></div>
+                                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-str">"intermediate_results"</span>: {...}, <span class="tok-com"># 工具返回、中间草稿、路由标记等</span></span></div>
+                                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-str">"final_output"</span>: <span class="tok-kw">None</span>,       <span class="tok-com"># 最终输出通常在最后节点填充</span></span></div>
+                                <div class="code-line"><span class="code-ln">7</span><span class="code-src">}</span></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
             
@@ -477,107 +485,102 @@
                     让我们看看一个LangGraph应用的完整生命周期。
                 </p>
                 
-                <h3>步骤1：定义State</h3>
+                <h3>步骤1 到 步骤5：把 State、Node、Edge、编译、执行连成一条真正可跑的链路</h3>
                 
                 <p>
-                    首先，定义Graph将使用的State结构。
+                    下面不再拆成五个零散片段，而是直接给你一段完整可运行的 LangGraph 教学代码。
+                    这样你能一次看清楚：状态怎么定义、节点怎么改状态、条件路由怎么决定下一跳、图怎么 compile、最后怎么 invoke。
                 </p>
                 
-                <div class="code-block"><code><span class="tok-kw">from</span> typing <span class="tok-kw">import</span> <span class="tok-cls">TypedDict</span>, <span class="tok-cls">List</span>
-
-<span class="tok-kw">class</span> <span class="tok-cls">AgentState</span>(<span class="tok-cls">TypedDict</span>):
-    messages: <span class="tok-cls">List</span>[str]
-    current_step: str
-    tools_used: <span class="tok-cls">List</span>[str]
-    final_output: str
-                    </code></div>
-                
-                <h3>步骤2：定义Node</h3>
-                
-                <p>
-                    然后，定义Graph中的各个Node。
-                </p>
-                
-                <div class="code-block"><code><span class="tok-kw">def</span> call_llm(state: <span class="tok-cls">AgentState</span>) -> <span class="tok-cls">AgentState</span>:
-    <span class="tok-str">""</span><span class="tok-str">"调用LLM的Node"</span><span class="tok-str">""</span>
-    <span class="tok-com"># 处理当前消息</span>
-    response = llm.<span class="tok-attr">invoke</span>(state[<span class="tok-str">"messages"</span>])
-    
-    <span class="tok-com"># 更新State</span>
-    state[<span class="tok-str">"messages"</span>].<span class="tok-attr">append</span>(response)
-    state[<span class="tok-str">"current_step"</span>] = <span class="tok-str">"tool_calling"</span>
-    
-    <span class="tok-kw">return</span> state
-
-<span class="tok-kw">def</span> execute_tool(state: <span class="tok-cls">AgentState</span>) -> <span class="tok-cls">AgentState</span>:
-    <span class="tok-str">""</span><span class="tok-str">"执行工具的Node"</span><span class="tok-str">""</span>
-    <span class="tok-com"># 从最后一条消息中提取工具调用</span>
-    tool_call = extract_tool_call(state[<span class="tok-str">"messages"</span>][-1])
-    
-    <span class="tok-com"># 执行工具</span>
-    result = execute(tool_call)
-    
-    <span class="tok-com"># 更新State</span>
-    state[<span class="tok-str">"messages"</span>].<span class="tok-attr">append</span>(result)
-    state[<span class="tok-str">"tools_used"</span>].<span class="tok-attr">append</span>(tool_call[<span class="tok-str">"tool_name"</span>])
-    
-    <span class="tok-kw">return</span> state
-                    </code></div>
-                
-                <h3>步骤3：定义Edge</h3>
-                
-                <p>
-                    定义Node之间的连接关系。
-                </p>
-                
-                <div class="code-block"><code><span class="tok-kw">def</span> should_continue(state: <span class="tok-cls">AgentState</span>) -> str:
-    <span class="tok-str">""</span><span class="tok-str">"决定是否继续执行"</span><span class="tok-str">""</span>
-    last_message = state[<span class="tok-str">"messages"</span>][-1]
-    
-    <span class="tok-kw">if</span> <span class="tok-str">"tool_call"</span> <span class="tok-kw">in</span> last_message:
-        <span class="tok-kw">return</span> <span class="tok-str">"execute_tool"</span>
-    <span class="tok-kw">else</span>:
-        <span class="tok-kw">return</span> <span class="tok-str">"end"</span>
-
-<span class="tok-com"># 添加Edge</span>
-graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"start"</span>, <span class="tok-str">"call_llm"</span>)
-graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"call_llm"</span>, <span class="tok-str">"route"</span>)
-graph.<span class="tok-attr">add_conditional_edges</span>(
-    <span class="tok-str">"route"</span>,
-    should_continue,
-    {
-        <span class="tok-str">"execute_tool"</span>: <span class="tok-str">"execute_tool"</span>,
-        <span class="tok-str">"end"</span>: <span class="tok-str">"end"</span>
-    }
-)
-graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"execute_tool"</span>, <span class="tok-str">"call_llm"</span>)
-                    </code></div>
-                
-                <h3>步骤4：编译Graph</h3>
-                
-                <p>
-                    编译Graph以生成可执行的应用。
-                </p>
-                
-                <div class="code-block"><code>app = graph.<span class="tok-attr">compile</span>()
-                    </code></div>
-                
-                <h3>步骤5：执行Graph</h3>
-                
-                <p>
-                    执行Graph来处理输入。
-                </p>
-                
-                <div class="code-block"><code>initial_state = {
-    <span class="tok-str">"messages"</span>: [<span class="tok-str">"用户问题"</span>],
-    <span class="tok-str">"current_step"</span>: <span class="tok-str">"start"</span>,
-    <span class="tok-str">"tools_used"</span>: [],
-    <span class="tok-str">"final_output"</span>: <span class="tok-kw">None</span>
-}
-
-result = app.<span class="tok-attr">invoke</span>(initial_state)
-<span class="tok-fn">print</span>(result[<span class="tok-str">"final_output"</span>])
-                    </code></div>
+                <div class="annotated-code">
+                    <div class="code-window">
+                        <div class="code-window-header">
+                            <div class="code-window-dots"><span></span><span></span><span></span></div>
+                            <div class="code-window-title">workflow_demo.py :: define state -&gt; nodes -&gt; route -&gt; compile -&gt; invoke</div>
+                        </div>
+                        <div class="code-window-body">
+                            <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">from</span> typing <span class="tok-kw">import</span> <span class="tok-cls">TypedDict</span>, <span class="tok-cls">List</span>, <span class="tok-cls">Any</span></span></div>
+                            <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-kw">from</span> langgraph.<span class="tok-attr">graph</span> <span class="tok-kw">import</span> <span class="tok-cls">StateGraph</span>, <span class="tok-cls">START</span>, <span class="tok-cls">END</span></span></div>
+                            <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-com"># AgentState: 这段教学图里所有节点共享的统一状态对象，消息、阶段、工具记录和最终答案都挂在这里</span></span></div>
+                            <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">AgentState</span>(<span class="tok-cls">TypedDict</span>):</span></div>
+                            <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-attr">messages</span>: <span class="tok-cls">List</span>[<span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>]]</span></div>
+                            <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-attr">current_step</span>: <span class="tok-type">str</span></span></div>
+                            <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-attr">tools_used</span>: <span class="tok-cls">List</span>[<span class="tok-type">str</span>]</span></div>
+                            <div class="code-line"><span class="code-ln">8</span><span class="code-src">    <span class="tok-attr">final_output</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span></span></div>
+                            <div class="code-line"><span class="code-ln">9</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">10</span><span class="code-src"><span class="tok-com"># state: 当前整份图状态；这个节点负责模拟“模型读消息后决定直接回答还是先发起工具调用”</span></span></div>
+                            <div class="code-line"><span class="code-ln">10</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">call_llm</span>(<span class="tok-attr">state</span>: <span class="tok-cls">AgentState</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">AgentState</span>:</span></div>
+                            <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-com"># 真实系统里这里会是 model.invoke(...)，这里先用伪响应帮助理解数据流</span></span></div>
+                            <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-attr">last_user</span> <span class="tok-op">=</span> <span class="tok-attr">state</span>[<span class="tok-str">"messages"</span>][<span class="tok-op">-</span><span class="tok-num">1</span>][<span class="tok-str">"content"</span>]</span></div>
+                            <div class="code-line"><span class="code-ln">13</span><span class="code-src">    <span class="tok-attr">needs_tool</span> <span class="tok-op">=</span> <span class="tok-str">"天气"</span> <span class="tok-kw">in</span> <span class="tok-attr">last_user</span> <span class="tok-kw">and</span> <span class="tok-str">"tool_result"</span> <span class="tok-kw">not</span> <span class="tok-kw">in</span> <span class="tok-attr">last_user</span></span></div>
+                            <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-attr">assistant_message</span> <span class="tok-op">=</span> {</span></div>
+                            <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-str">"role"</span>: <span class="tok-str">"assistant"</span>,</span></div>
+                            <div class="code-line"><span class="code-ln">16</span><span class="code-src">        <span class="tok-str">"content"</span>: <span class="tok-str">"我需要调用 weather_search 工具"</span> <span class="tok-kw">if</span> <span class="tok-attr">needs_tool</span> <span class="tok-kw">else</span> <span class="tok-str">"我已经可以直接回答了"</span>,</span></div>
+                            <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-str">"tool_call"</span>: {<span class="tok-str">"tool_name"</span>: <span class="tok-str">"weather_search"</span>, <span class="tok-str">"query"</span>: <span class="tok-attr">last_user</span>} <span class="tok-kw">if</span> <span class="tok-attr">needs_tool</span> <span class="tok-kw">else</span> <span class="tok-kw">None</span>,</span></div>
+                            <div class="code-line"><span class="code-ln">18</span><span class="code-src">    }</span></div>
+                            <div class="code-line"><span class="code-ln">19</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"messages"</span>].<span class="tok-fn">append</span>(<span class="tok-attr">assistant_message</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">20</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"current_step"</span>] <span class="tok-op">=</span> <span class="tok-str">"tool_calling"</span></span></div>
+                            <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">state</span></span></div>
+                            <div class="code-line"><span class="code-ln">22</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">23</span><span class="code-src"><span class="tok-com"># state: 上一节点已经把 tool_call 描述写进消息里，这个节点只负责消费它并把 tool_result 写回状态</span></span></div>
+                            <div class="code-line"><span class="code-ln">23</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">execute_tool</span>(<span class="tok-attr">state</span>: <span class="tok-cls">AgentState</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">AgentState</span>:</span></div>
+                            <div class="code-line"><span class="code-ln">24</span><span class="code-src">    <span class="tok-attr">tool_call</span> <span class="tok-op">=</span> <span class="tok-attr">state</span>[<span class="tok-str">"messages"</span>][<span class="tok-op">-</span><span class="tok-num">1</span>][<span class="tok-str">"tool_call"</span>]</span></div>
+                            <div class="code-line"><span class="code-ln">25</span><span class="code-src">    <span class="tok-attr">result</span> <span class="tok-op">=</span> {</span></div>
+                            <div class="code-line"><span class="code-ln">26</span><span class="code-src">        <span class="tok-str">"role"</span>: <span class="tok-str">"tool"</span>,</span></div>
+                            <div class="code-line"><span class="code-ln">27</span><span class="code-src">        <span class="tok-str">"content"</span>: <span class="tok-str">"tool_result: 晴天 28 度"</span>,</span></div>
+                            <div class="code-line"><span class="code-ln">28</span><span class="code-src">        <span class="tok-str">"tool_name"</span>: <span class="tok-attr">tool_call</span>[<span class="tok-str">"tool_name"</span>],</span></div>
+                            <div class="code-line"><span class="code-ln">29</span><span class="code-src">    }</span></div>
+                            <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"messages"</span>].<span class="tok-fn">append</span>(<span class="tok-attr">result</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">31</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"tools_used"</span>].<span class="tok-fn">append</span>(<span class="tok-attr">tool_call</span>[<span class="tok-str">"tool_name"</span>])</span></div>
+                            <div class="code-line"><span class="code-ln">32</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"messages"</span>].<span class="tok-fn">append</span>({<span class="tok-str">"role"</span>: <span class="tok-str">"system"</span>, <span class="tok-str">"content"</span>: <span class="tok-str">"请基于 tool_result 继续回答用户"</span>})</span></div>
+                            <div class="code-line"><span class="code-ln">33</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"current_step"</span>] <span class="tok-op">=</span> <span class="tok-str">"tool_finished"</span></span></div>
+                            <div class="code-line"><span class="code-ln">34</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">state</span></span></div>
+                            <div class="code-line"><span class="code-ln">35</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">36</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">finalize</span>(<span class="tok-attr">state</span>: <span class="tok-cls">AgentState</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">AgentState</span>:</span></div>
+                            <div class="code-line"><span class="code-ln">37</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"final_output"</span>] <span class="tok-op">=</span> <span class="tok-attr">state</span>[<span class="tok-str">"messages"</span>][<span class="tok-op">-</span><span class="tok-num">2</span>][<span class="tok-str">"content"</span>]</span></div>
+                            <div class="code-line"><span class="code-ln">38</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"current_step"</span>] <span class="tok-op">=</span> <span class="tok-str">"done"</span></span></div>
+                            <div class="code-line"><span class="code-ln">39</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">state</span></span></div>
+                            <div class="code-line"><span class="code-ln">40</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">41</span><span class="code-src"><span class="tok-com"># state: 读当前状态决定下一跳路由名，这就是 LangGraph 条件边真正消费的判断函数</span></span></div>
+                            <div class="code-line"><span class="code-ln">41</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">should_continue</span>(<span class="tok-attr">state</span>: <span class="tok-cls">AgentState</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                            <div class="code-line"><span class="code-ln">47</span><span class="code-src"><span class="tok-com"># 下面开始把“状态 + 节点 + 路由规则”装回一张真正可编译执行的图</span></span></div>
+                            <div class="code-line"><span class="code-ln">42</span><span class="code-src">    <span class="tok-attr">last_message</span> <span class="tok-op">=</span> <span class="tok-attr">state</span>[<span class="tok-str">"messages"</span>][<span class="tok-op">-</span><span class="tok-num">1</span>]</span></div>
+                            <div class="code-line"><span class="code-ln">43</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">last_message</span>.<span class="tok-fn">get</span>(<span class="tok-str">"tool_call"</span>):</span></div>
+                            <div class="code-line"><span class="code-ln">44</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-str">"execute_tool"</span></span></div>
+                            <div class="code-line"><span class="code-ln">45</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-str">"finalize"</span></span></div>
+                            <div class="code-line"><span class="code-ln">46</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">47</span><span class="code-src"><span class="tok-attr">graph</span> <span class="tok-op">=</span> <span class="tok-cls">StateGraph</span>(<span class="tok-cls">AgentState</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">48</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_node</span>(<span class="tok-str">"call_llm"</span>, <span class="tok-fn">call_llm</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">49</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_node</span>(<span class="tok-str">"execute_tool"</span>, <span class="tok-fn">execute_tool</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">50</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_node</span>(<span class="tok-str">"finalize"</span>, <span class="tok-fn">finalize</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">51</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_edge</span>(<span class="tok-cls">START</span>, <span class="tok-str">"call_llm"</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">52</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_conditional_edges</span>(<span class="tok-str">"call_llm"</span>, <span class="tok-fn">should_continue</span>, {</span></div>
+                            <div class="code-line"><span class="code-ln">53</span><span class="code-src">    <span class="tok-str">"execute_tool"</span>: <span class="tok-str">"execute_tool"</span>,</span></div>
+                            <div class="code-line"><span class="code-ln">54</span><span class="code-src">    <span class="tok-str">"finalize"</span>: <span class="tok-str">"finalize"</span>,</span></div>
+                            <div class="code-line"><span class="code-ln">55</span><span class="code-src">})</span></div>
+                            <div class="code-line"><span class="code-ln">56</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_edge</span>(<span class="tok-str">"execute_tool"</span>, <span class="tok-str">"call_llm"</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">57</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_edge</span>(<span class="tok-str">"finalize"</span>, <span class="tok-cls">END</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">58</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">59</span><span class="code-src"><span class="tok-attr">app</span> <span class="tok-op">=</span> <span class="tok-attr">graph</span>.<span class="tok-fn">compile</span>()</span></div>
+                            <div class="code-line"><span class="code-ln">60</span><span class="code-src"><span class="tok-attr">initial_state</span> <span class="tok-op">=</span> {</span></div>
+                            <div class="code-line"><span class="code-ln">61</span><span class="code-src">    <span class="tok-str">"messages"</span>: [{<span class="tok-str">"role"</span>: <span class="tok-str">"user"</span>, <span class="tok-str">"content"</span>: <span class="tok-str">"帮我看下今天北京天气"</span>}],</span></div>
+                            <div class="code-line"><span class="code-ln">62</span><span class="code-src">    <span class="tok-str">"current_step"</span>: <span class="tok-str">"start"</span>,</span></div>
+                            <div class="code-line"><span class="code-ln">63</span><span class="code-src">    <span class="tok-str">"tools_used"</span>: [],</span></div>
+                            <div class="code-line"><span class="code-ln">64</span><span class="code-src">    <span class="tok-str">"final_output"</span>: <span class="tok-kw">None</span>,</span></div>
+                            <div class="code-line"><span class="code-ln">65</span><span class="code-src">}</span></div>
+                            <div class="code-line"><span class="code-ln">66</span><span class="code-src"><span class="tok-attr">result</span> <span class="tok-op">=</span> <span class="tok-attr">app</span>.<span class="tok-fn">invoke</span>(<span class="tok-attr">initial_state</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">67</span><span class="code-src"><span class="tok-fn">print</span>(<span class="tok-attr">result</span>[<span class="tok-str">"final_output"</span>])</span></div>
+                        </div>
+                    </div>
+                </div>
+                <ul class="annotation-list">
+                    <li>第 4 到 8 行先定义统一状态容器。后面所有节点都只接收和返回同一个 <code>AgentState</code>，这就是 LangGraph 的数据总线。</li>
+                    <li>第 10 到 21 行的 <code>call_llm</code> 不只是“调用模型”，它同时负责把模型响应写回 <code>messages</code>，并把流程推进到下一阶段，所以 Node 的职责往往是“执行 + 改状态”。</li>
+                    <li>第 23 到 34 行展示了工具节点的核心模式：读取上一节点留下的工具调用描述，执行工具，再把结果重新塞回状态，让图可以继续跑下一轮。</li>
+                    <li>第 41 到 57 行就是控制流本体。尤其是 <code>add_conditional_edges</code>，它把“根据状态决定下一跳”从普通 if/else 提升成图级路由规则。</li>
+                    <li>第 59 到 67 行说明 <code>compile()</code> 和 <code>invoke()</code> 的分工。前者把声明式图结构变成 runnable，后者才是真正拿初始状态开始执行。</li>
+                </ul>
                 
                 <h3>执行流程图</h3>
                 
@@ -674,66 +677,55 @@ result = app.<span class="tok-attr">invoke</span>(initial_state)
                     让我们看一个最简单的LangGraph应用。
                 </p>
                 
-                <div class="code-block"><code><span class="tok-kw">from</span> langgraph.<span class="tok-attr">graph</span> <span class="tok-kw">import</span> <span class="tok-cls">StateGraph</span>, <span class="tok-cls">START</span>, <span class="tok-cls">END</span>
-<span class="tok-kw">from</span> typing <span class="tok-kw">import</span> <span class="tok-cls">TypedDict</span>
-
-<span class="tok-com"># 定义State</span>
-<span class="tok-kw">class</span> <span class="tok-cls">SimpleState</span>(<span class="tok-cls">TypedDict</span>):
-    message: str
-
-<span class="tok-com"># 定义Node</span>
-<span class="tok-kw">def</span> node_a(state: <span class="tok-cls">SimpleState</span>) -> <span class="tok-cls">SimpleState</span>:
-    <span class="tok-fn">print</span>(f<span class="tok-str">"<span class="tok-cls">Node</span> <span class="tok-cls">A</span>: {state['message']}"</span>)
-    state[<span class="tok-str">'message'</span>] += <span class="tok-str">" -> <span class="tok-cls">A</span>"</span>
-    <span class="tok-kw">return</span> state
-
-<span class="tok-kw">def</span> node_b(state: <span class="tok-cls">SimpleState</span>) -> <span class="tok-cls">SimpleState</span>:
-    <span class="tok-fn">print</span>(f<span class="tok-str">"<span class="tok-cls">Node</span> <span class="tok-cls">B</span>: {state['message']}"</span>)
-    state[<span class="tok-str">'message'</span>] += <span class="tok-str">" -> <span class="tok-cls">B</span>"</span>
-    <span class="tok-kw">return</span> state
-
-<span class="tok-com"># 构建Graph</span>
-graph = <span class="tok-cls">StateGraph</span>(<span class="tok-cls">SimpleState</span>)
-graph.<span class="tok-attr">add_node</span>(<span class="tok-str">"node_a"</span>, node_a)
-graph.<span class="tok-attr">add_node</span>(<span class="tok-str">"node_b"</span>, node_b)
-
-<span class="tok-com"># 添加Edge</span>
-graph.<span class="tok-attr">add_edge</span>(<span class="tok-cls">START</span>, <span class="tok-str">"node_a"</span>)
-graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"node_a"</span>, <span class="tok-str">"node_b"</span>)
-graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"node_b"</span>, <span class="tok-cls">END</span>)
-
-<span class="tok-com"># 编译</span>
-app = graph.<span class="tok-attr">compile</span>()
-
-<span class="tok-com"># 执行</span>
-result = app.<span class="tok-attr">invoke</span>({<span class="tok-str">"message"</span>: <span class="tok-str">"<span class="tok-cls">Hello</span>"</span>})
-<span class="tok-fn">print</span>(result[<span class="tok-str">'message'</span>])  <span class="tok-com"># 输出: <span class="tok-cls">Hello</span> -> <span class="tok-cls">A</span> -> <span class="tok-cls">B</span></span>
-                    </code></div>
+                <div class="annotated-code">
+                    <div class="code-window">
+                        <div class="code-window-header">
+                            <div class="code-window-dots"><span></span><span></span><span></span></div>
+                            <div class="code-window-title">hello_graph.py :: 最小 LangGraph 链路</div>
+                        </div>
+                        <div class="code-window-body">
+                            <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">from</span> typing <span class="tok-kw">import</span> <span class="tok-cls">TypedDict</span></span></div>
+                            <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-kw">from</span> langgraph.<span class="tok-attr">graph</span> <span class="tok-kw">import</span> <span class="tok-cls">StateGraph</span>, <span class="tok-cls">START</span>, <span class="tok-cls">END</span></span></div>
+                            <div class="code-line"><span class="code-ln">3</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">SimpleState</span>(<span class="tok-cls">TypedDict</span>):</span></div>
+                            <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-attr">message</span>: <span class="tok-type">str</span></span></div>
+                            <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-attr">trace</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>]</span></div>
+                            <div class="code-line"><span class="code-ln">7</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">node_a</span>(<span class="tok-attr">state</span>: <span class="tok-cls">SimpleState</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">SimpleState</span>:</span></div>
+                            <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"trace"</span>].<span class="tok-fn">append</span>(<span class="tok-str">"enter:node_a"</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"message"</span>] <span class="tok-op">+=</span> <span class="tok-str">" -&gt; A"</span></span></div>
+                            <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"trace"</span>].<span class="tok-fn">append</span>(<span class="tok-str">"leave:node_a"</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">state</span></span></div>
+                            <div class="code-line"><span class="code-ln">13</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">14</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">node_b</span>(<span class="tok-attr">state</span>: <span class="tok-cls">SimpleState</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">SimpleState</span>:</span></div>
+                            <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"trace"</span>].<span class="tok-fn">append</span>(<span class="tok-str">"enter:node_b"</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"message"</span>] <span class="tok-op">+=</span> <span class="tok-str">" -&gt; B"</span></span></div>
+                            <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"trace"</span>].<span class="tok-fn">append</span>(<span class="tok-str">"leave:node_b"</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">state</span></span></div>
+                            <div class="code-line"><span class="code-ln">19</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">20</span><span class="code-src"><span class="tok-attr">graph</span> <span class="tok-op">=</span> <span class="tok-cls">StateGraph</span>(<span class="tok-cls">SimpleState</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">21</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_node</span>(<span class="tok-str">"node_a"</span>, <span class="tok-fn">node_a</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">22</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_node</span>(<span class="tok-str">"node_b"</span>, <span class="tok-fn">node_b</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">23</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_edge</span>(<span class="tok-cls">START</span>, <span class="tok-str">"node_a"</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">24</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_edge</span>(<span class="tok-str">"node_a"</span>, <span class="tok-str">"node_b"</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">25</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_edge</span>(<span class="tok-str">"node_b"</span>, <span class="tok-cls">END</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">26</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">27</span><span class="code-src"><span class="tok-attr">app</span> <span class="tok-op">=</span> <span class="tok-attr">graph</span>.<span class="tok-fn">compile</span>()</span></div>
+                            <div class="code-line"><span class="code-ln">28</span><span class="code-src"><span class="tok-attr">result</span> <span class="tok-op">=</span> <span class="tok-attr">app</span>.<span class="tok-fn">invoke</span>({<span class="tok-str">"message"</span>: <span class="tok-str">"Hello"</span>, <span class="tok-str">"trace"</span>: []})</span></div>
+                            <div class="code-line"><span class="code-ln">29</span><span class="code-src"><span class="tok-fn">print</span>(<span class="tok-attr">result</span>[<span class="tok-str">"message"</span>])  <span class="tok-com"># Hello -&gt; A -&gt; B</span></span></div>
+                            <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-fn">print</span>(<span class="tok-attr">result</span>[<span class="tok-str">"trace"</span>])    <span class="tok-com"># ['enter:node_a', 'leave:node_a', 'enter:node_b', 'leave:node_b']</span></span></div>
+                        </div>
+                    </div>
+                </div>
                 
                 <h3>代码解析</h3>
                 
-                <p><strong>1. 定义State：</strong></p>
-                <p>
-                    SimpleState是一个TypedDict，包含一个message字段。
-                    这就是Graph中所有Node共享的数据。
-                </p>
-                
-                <p><strong>2. 定义Node：</strong></p>
-                <p>
-                    node_a和node_b都是简单的函数，
-                    接收State作为输入，返回更新后的State。
-                </p>
-                
-                <p><strong>3. 构建Graph：</strong></p>
-                <p>
-                    使用StateGraph创建一个Graph，
-                    然后添加Node和Edge。
-                </p>
-                
-                <p><strong>4. 执行：</strong></p>
-                <p>
-                    调用app.invoke()来执行Graph。
-                </p>
+                <ul class="annotation-list">
+                    <li>这个示例虽然简单，但已经包含 LangGraph 最重要的执行事实：State 不是“参数传进去一次”，而是在节点之间持续被修改、传递、带到最后。</li>
+                    <li>我这里特意加了 <code>trace</code> 字段，是为了让你看到 Node 不只是改业务结果，也常常顺手写入调试轨迹、执行元数据、日志线索。</li>
+                    <li>第 20 到 25 行的图结构完全是声明式的。先把节点注册进去，再把边连起来，最后统一 compile，这是 LangGraph 和“手写 if/else 流程函数”的关键差别。</li>
+                    <li>如果你已经能看懂这一段，后面 DeerFlow 那些更复杂的源码，其实只是把 <code>message</code> 扩展成了更丰富的 <code>ThreadState</code>，把 <code>node_a/node_b</code> 换成模型、中间件、工具、记忆、子代理节点。</li>
+                </ul>
             </section>
             
             <!-- Section 7 -->
@@ -745,98 +737,121 @@ result = app.<span class="tok-attr">invoke</span>({<span class="tok-str">"messag
                     展示一个简单的Agent如何使用LangGraph实现。
                 </p>
                 
-                <div class="code-block"><code><span class="tok-kw">from</span> langgraph.<span class="tok-attr">graph</span> <span class="tok-kw">import</span> <span class="tok-cls">StateGraph</span>, <span class="tok-cls">START</span>, <span class="tok-cls">END</span>
-<span class="tok-kw">from</span> typing <span class="tok-kw">import</span> <span class="tok-cls">TypedDict</span>, <span class="tok-cls">List</span>
-<span class="tok-kw">from</span> langchain_openai <span class="tok-kw">import</span> <span class="tok-cls">ChatOpenAI</span>
-
-<span class="tok-kw">class</span> <span class="tok-cls">AgentState</span>(<span class="tok-cls">TypedDict</span>):
-    messages: <span class="tok-cls">List</span>[dict]
-    current_step: str
-    final_answer: str
-
-<span class="tok-kw">def</span> call_llm(state: <span class="tok-cls">AgentState</span>) -> <span class="tok-cls">AgentState</span>:
-    <span class="tok-str">""</span><span class="tok-str">"调用LLM"</span><span class="tok-str">""</span>
-    llm = <span class="tok-cls">ChatOpenAI</span>(model=<span class="tok-str">"gpt-4"</span>)
-    response = llm.<span class="tok-attr">invoke</span>(state[<span class="tok-str">"messages"</span>])
-    
-    state[<span class="tok-str">"messages"</span>].<span class="tok-attr">append</span>({
-        <span class="tok-str">"role"</span>: <span class="tok-str">"assistant"</span>,
-        <span class="tok-str">"content"</span>: response.<span class="tok-attr">content</span>
-    })
-    state[<span class="tok-str">"current_step"</span>] = <span class="tok-str">"check_response"</span>
-    
-    <span class="tok-kw">return</span> state
-
-<span class="tok-kw">def</span> check_response(state: <span class="tok-cls">AgentState</span>) -> <span class="tok-cls">AgentState</span>:
-    <span class="tok-str">""</span><span class="tok-str">"检查LLM的响应"</span><span class="tok-str">""</span>
-    last_message = state[<span class="tok-str">"messages"</span>][-1][<span class="tok-str">"content"</span>]
-    
-    <span class="tok-kw">if</span> <span class="tok-str">"<span class="tok-cls">I</span> need to search"</span> <span class="tok-kw">in</span> last_message:
-        state[<span class="tok-str">"current_step"</span>] = <span class="tok-str">"search"</span>
-    <span class="tok-kw">else</span>:
-        state[<span class="tok-str">"current_step"</span>] = <span class="tok-str">"end"</span>
-    
-    <span class="tok-kw">return</span> state
-
-<span class="tok-kw">def</span> search(state: <span class="tok-cls">AgentState</span>) -> <span class="tok-cls">AgentState</span>:
-    <span class="tok-str">""</span><span class="tok-str">"执行搜索"</span><span class="tok-str">""</span>
-    <span class="tok-com"># 这里应该调用搜索工具</span>
-    state[<span class="tok-str">"messages"</span>].<span class="tok-attr">append</span>({
-        <span class="tok-str">"role"</span>: <span class="tok-str">"system"</span>,
-        <span class="tok-str">"content"</span>: <span class="tok-str">"搜索结果..."</span>
-    })
-    state[<span class="tok-str">"current_step"</span>] = <span class="tok-str">"call_llm"</span>
-    
-    <span class="tok-kw">return</span> state
-
-<span class="tok-kw">def</span> finalize(state: <span class="tok-cls">AgentState</span>) -> <span class="tok-cls">AgentState</span>:
-    <span class="tok-str">""</span><span class="tok-str">"最终化结果"</span><span class="tok-str">""</span>
-    state[<span class="tok-str">"final_answer"</span>] = state[<span class="tok-str">"messages"</span>][-1][<span class="tok-str">"content"</span>]
-    <span class="tok-kw">return</span> state
-
-<span class="tok-com"># 构建Graph</span>
-graph = <span class="tok-cls">StateGraph</span>(<span class="tok-cls">AgentState</span>)
-graph.<span class="tok-attr">add_node</span>(<span class="tok-str">"call_llm"</span>, call_llm)
-graph.<span class="tok-attr">add_node</span>(<span class="tok-str">"check_response"</span>, check_response)
-graph.<span class="tok-attr">add_node</span>(<span class="tok-str">"search"</span>, search)
-graph.<span class="tok-attr">add_node</span>(<span class="tok-str">"finalize"</span>, finalize)
-
-<span class="tok-com"># 添加Edge</span>
-graph.<span class="tok-attr">add_edge</span>(<span class="tok-cls">START</span>, <span class="tok-str">"call_llm"</span>)
-graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"call_llm"</span>, <span class="tok-str">"check_response"</span>)
-
-<span class="tok-com"># 条件Edge</span>
-<span class="tok-kw">def</span> route(state: <span class="tok-cls">AgentState</span>) -> str:
-    <span class="tok-kw">if</span> state[<span class="tok-str">"current_step"</span>] == <span class="tok-str">"search"</span>:
-        <span class="tok-kw">return</span> <span class="tok-str">"search"</span>
-    <span class="tok-kw">else</span>:
-        <span class="tok-kw">return</span> <span class="tok-str">"finalize"</span>
-
-graph.<span class="tok-attr">add_conditional_edges</span>(<span class="tok-str">"check_response"</span>, route)
-graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"search"</span>, <span class="tok-str">"call_llm"</span>)
-graph.<span class="tok-attr">add_edge</span>(<span class="tok-str">"finalize"</span>, <span class="tok-cls">END</span>)
-
-<span class="tok-com"># 编译和执行</span>
-app = graph.<span class="tok-attr">compile</span>()
-
-initial_state = {
-    <span class="tok-str">"messages"</span>: [{<span class="tok-str">"role"</span>: <span class="tok-str">"user"</span>, <span class="tok-str">"content"</span>: <span class="tok-str">"什么是Agent？"</span>}],
-    <span class="tok-str">"current_step"</span>: <span class="tok-str">"start"</span>,
-    <span class="tok-str">"final_answer"</span>: <span class="tok-str">""</span>
-}
-
-result = app.<span class="tok-attr">invoke</span>(initial_state)
-<span class="tok-fn">print</span>(result[<span class="tok-str">"final_answer"</span>])
-                    </code></div>
+                <div class="annotated-code">
+                    <div class="code-window">
+                        <div class="code-window-header">
+                            <div class="code-window-dots"><span></span><span></span><span></span></div>
+                            <div class="code-window-title">agent_graph.py :: LLM -&gt; route -&gt; tool -&gt; LLM -&gt; finalize</div>
+                        </div>
+                        <div class="code-window-body">
+                            <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">from</span> typing <span class="tok-kw">import</span> <span class="tok-cls">TypedDict</span>, <span class="tok-cls">List</span>, <span class="tok-cls">Any</span></span></div>
+                            <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-kw">from</span> langgraph.<span class="tok-attr">graph</span> <span class="tok-kw">import</span> <span class="tok-cls">StateGraph</span>, <span class="tok-cls">START</span>, <span class="tok-cls">END</span></span></div>
+                            <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-kw">from</span> langchain_openai <span class="tok-kw">import</span> <span class="tok-cls">ChatOpenAI</span></span></div>
+                            <div class="code-line"><span class="code-ln">4</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">AgentState</span>(<span class="tok-cls">TypedDict</span>):</span></div>
+                            <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-attr">messages</span>: <span class="tok-cls">List</span>[<span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">Any</span>]]</span></div>
+                            <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-attr">current_step</span>: <span class="tok-type">str</span></span></div>
+                            <div class="code-line"><span class="code-ln">8</span><span class="code-src">    <span class="tok-attr">search_rounds</span>: <span class="tok-type">int</span></span></div>
+                            <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-attr">final_answer</span>: <span class="tok-type">str</span></span></div>
+                            <div class="code-line"><span class="code-ln">10</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">11</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">call_llm</span>(<span class="tok-attr">state</span>: <span class="tok-cls">AgentState</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">AgentState</span>:</span></div>
+                            <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-attr">llm</span> <span class="tok-op">=</span> <span class="tok-cls">ChatOpenAI</span>(<span class="tok-attr">model</span><span class="tok-op">=</span><span class="tok-str">"gpt-4o-mini"</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">13</span><span class="code-src">    <span class="tok-attr">response</span> <span class="tok-op">=</span> <span class="tok-attr">llm</span>.<span class="tok-fn">invoke</span>(<span class="tok-attr">state</span>[<span class="tok-str">"messages"</span>])</span></div>
+                            <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-attr">content</span> <span class="tok-op">=</span> <span class="tok-attr">response</span>.<span class="tok-attr">content</span></span></div>
+                            <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"messages"</span>].<span class="tok-fn">append</span>({<span class="tok-str">"role"</span>: <span class="tok-str">"assistant"</span>, <span class="tok-str">"content"</span>: <span class="tok-attr">content</span>})</span></div>
+                            <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"current_step"</span>] <span class="tok-op">=</span> <span class="tok-str">"check_response"</span></span></div>
+                            <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">state</span></span></div>
+                            <div class="code-line"><span class="code-ln">18</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">19</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">check_response</span>(<span class="tok-attr">state</span>: <span class="tok-cls">AgentState</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">AgentState</span>:</span></div>
+                            <div class="code-line"><span class="code-ln">20</span><span class="code-src">    <span class="tok-attr">last_message</span> <span class="tok-op">=</span> <span class="tok-attr">state</span>[<span class="tok-str">"messages"</span>][<span class="tok-op">-</span><span class="tok-num">1</span>][<span class="tok-str">"content"</span>]</span></div>
+                            <div class="code-line"><span class="code-ln">21</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-str">"需要搜索"</span> <span class="tok-kw">in</span> <span class="tok-attr">last_message</span> <span class="tok-kw">and</span> <span class="tok-attr">state</span>[<span class="tok-str">"search_rounds"</span>] <span class="tok-op">&lt;</span> <span class="tok-num">2</span>:</span></div>
+                            <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-attr">state</span>[<span class="tok-str">"current_step"</span>] <span class="tok-op">=</span> <span class="tok-str">"search"</span></span></div>
+                            <div class="code-line"><span class="code-ln">23</span><span class="code-src">    <span class="tok-kw">else</span>:</span></div>
+                            <div class="code-line"><span class="code-ln">24</span><span class="code-src">        <span class="tok-attr">state</span>[<span class="tok-str">"current_step"</span>] <span class="tok-op">=</span> <span class="tok-str">"finalize"</span></span></div>
+                            <div class="code-line"><span class="code-ln">25</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">state</span></span></div>
+                            <div class="code-line"><span class="code-ln">26</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">27</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">search</span>(<span class="tok-attr">state</span>: <span class="tok-cls">AgentState</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">AgentState</span>:</span></div>
+                            <div class="code-line"><span class="code-ln">28</span><span class="code-src">    <span class="tok-attr">query</span> <span class="tok-op">=</span> <span class="tok-attr">state</span>[<span class="tok-str">"messages"</span>][<span class="tok-num">0</span>][<span class="tok-str">"content"</span>]</span></div>
+                            <div class="code-line"><span class="code-ln">29</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"messages"</span>].<span class="tok-fn">append</span>({</span></div>
+                            <div class="code-line"><span class="code-ln">30</span><span class="code-src">        <span class="tok-str">"role"</span>: <span class="tok-str">"tool"</span>,</span></div>
+                            <div class="code-line"><span class="code-ln">31</span><span class="code-src">        <span class="tok-str">"content"</span>: <span class="tok-str">f"搜索结果: 关于 {query} 的资料已经找到"</span>,</span></div>
+                            <div class="code-line"><span class="code-ln">32</span><span class="code-src">    })</span></div>
+                            <div class="code-line"><span class="code-ln">33</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"search_rounds"</span>] <span class="tok-op">+=</span> <span class="tok-num">1</span></span></div>
+                            <div class="code-line"><span class="code-ln">34</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"current_step"</span>] <span class="tok-op">=</span> <span class="tok-str">"call_llm"</span></span></div>
+                            <div class="code-line"><span class="code-ln">35</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">state</span></span></div>
+                            <div class="code-line"><span class="code-ln">36</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">37</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">finalize</span>(<span class="tok-attr">state</span>: <span class="tok-cls">AgentState</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">AgentState</span>:</span></div>
+                            <div class="code-line"><span class="code-ln">38</span><span class="code-src">    <span class="tok-attr">state</span>[<span class="tok-str">"final_answer"</span>] <span class="tok-op">=</span> <span class="tok-attr">state</span>[<span class="tok-str">"messages"</span>][<span class="tok-op">-</span><span class="tok-num">1</span>][<span class="tok-str">"content"</span>]</span></div>
+                            <div class="code-line"><span class="code-ln">39</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-attr">state</span></span></div>
+                            <div class="code-line"><span class="code-ln">40</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">41</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">route</span>(<span class="tok-attr">state</span>: <span class="tok-cls">AgentState</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                            <div class="code-line"><span class="code-ln">42</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">state</span>[<span class="tok-str">"current_step"</span>] <span class="tok-op">==</span> <span class="tok-str">"search"</span>:</span></div>
+                            <div class="code-line"><span class="code-ln">43</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-str">"search"</span></span></div>
+                            <div class="code-line"><span class="code-ln">44</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-str">"finalize"</span></span></div>
+                            <div class="code-line"><span class="code-ln">45</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">46</span><span class="code-src"><span class="tok-attr">graph</span> <span class="tok-op">=</span> <span class="tok-cls">StateGraph</span>(<span class="tok-cls">AgentState</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">47</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_node</span>(<span class="tok-str">"call_llm"</span>, <span class="tok-fn">call_llm</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">48</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_node</span>(<span class="tok-str">"check_response"</span>, <span class="tok-fn">check_response</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">49</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_node</span>(<span class="tok-str">"search"</span>, <span class="tok-fn">search</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">50</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_node</span>(<span class="tok-str">"finalize"</span>, <span class="tok-fn">finalize</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">51</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_edge</span>(<span class="tok-cls">START</span>, <span class="tok-str">"call_llm"</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">52</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_edge</span>(<span class="tok-str">"call_llm"</span>, <span class="tok-str">"check_response"</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">53</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_conditional_edges</span>(<span class="tok-str">"check_response"</span>, <span class="tok-fn">route</span>, {<span class="tok-str">"search"</span>: <span class="tok-str">"search"</span>, <span class="tok-str">"finalize"</span>: <span class="tok-str">"finalize"</span>})</span></div>
+                            <div class="code-line"><span class="code-ln">54</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_edge</span>(<span class="tok-str">"search"</span>, <span class="tok-str">"call_llm"</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">55</span><span class="code-src"><span class="tok-attr">graph</span>.<span class="tok-fn">add_edge</span>(<span class="tok-str">"finalize"</span>, <span class="tok-cls">END</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">56</span><span class="code-src"></span></div>
+                            <div class="code-line"><span class="code-ln">57</span><span class="code-src"><span class="tok-attr">app</span> <span class="tok-op">=</span> <span class="tok-attr">graph</span>.<span class="tok-fn">compile</span>()</span></div>
+                            <div class="code-line"><span class="code-ln">58</span><span class="code-src"><span class="tok-attr">initial_state</span> <span class="tok-op">=</span> {</span></div>
+                            <div class="code-line"><span class="code-ln">59</span><span class="code-src">    <span class="tok-str">"messages"</span>: [{<span class="tok-str">"role"</span>: <span class="tok-str">"user"</span>, <span class="tok-str">"content"</span>: <span class="tok-str">"什么是 Agent？如果有必要请先搜索"</span>}],</span></div>
+                            <div class="code-line"><span class="code-ln">60</span><span class="code-src">    <span class="tok-str">"current_step"</span>: <span class="tok-str">"start"</span>,</span></div>
+                            <div class="code-line"><span class="code-ln">61</span><span class="code-src">    <span class="tok-str">"search_rounds"</span>: <span class="tok-num">0</span>,</span></div>
+                            <div class="code-line"><span class="code-ln">62</span><span class="code-src">    <span class="tok-str">"final_answer"</span>: <span class="tok-str">""</span>,</span></div>
+                            <div class="code-line"><span class="code-ln">63</span><span class="code-src">}</span></div>
+                            <div class="code-line"><span class="code-ln">64</span><span class="code-src"><span class="tok-attr">result</span> <span class="tok-op">=</span> <span class="tok-attr">app</span>.<span class="tok-fn">invoke</span>(<span class="tok-attr">initial_state</span>)</span></div>
+                            <div class="code-line"><span class="code-ln">65</span><span class="code-src"><span class="tok-fn">print</span>(<span class="tok-attr">result</span>[<span class="tok-str">"final_answer"</span>])</span></div>
+                        </div>
+                    </div>
+                </div>
                 
                 <h3>这个例子展示了什么</h3>
                 
-                <ul>
-                    <li><strong>多个Node：</strong> call_llm、check_response、search、finalize</li>
-                    <li><strong>条件分支：</strong> 根据LLM的响应决定是否执行搜索</li>
-                    <li><strong>循环：</strong> 搜索后可以回到call_llm</li>
-                    <li><strong>状态管理：</strong> State在各个Node之间传递和更新</li>
+                <ul class="annotation-list">
+                    <li>这段代码比 Hello World 更接近真正的 Agent：先调用模型，再检查响应，再决定要不要进工具节点，工具跑完还能回到模型节点继续推理。</li>
+                    <li>第 19 到 25 行把“判断是否调用工具”单独拆成 <code>check_response</code> 节点，这是生产系统里很常见的做法。因为路由逻辑一旦复杂，就值得单独成为一个节点，而不是塞进模型节点内部。</li>
+                    <li>第 27 到 35 行的 <code>search</code> 节点展示了循环图的本质：工具结果会被重新写回 <code>messages</code>，然后图沿着 <code>search -&gt; call_llm</code> 这条边回到推理节点继续下一轮。</li>
+                    <li>第 41 到 55 行把线性流程升级成“带条件和回环的状态机”。这也是 DeerFlow 选择 LangGraph 的核心原因之一，因为很多真实 Agent 根本不是一条直线跑到底。</li>
                 </ul>
+                <div class="source-walkthrough">
+                    <h4>把上面的教学示例翻译成 DeerFlow：真正的状态字段不是 `message`，而是 ThreadState 这种可合并状态</h4>
+                    <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/agents/thread_state.py</code>。这一段比教学示例更接近真实生产图，因为它不仅定义字段，还定义字段怎么合并。</p>
+                    <div class="annotated-code">
+                        <div class="code-window">
+                            <div class="code-window-header">
+                                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                                <div class="code-window-title">agents/thread_state.py :: ThreadState reducers</div>
+                            </div>
+                            <div class="code-window-body">
+                                <div class="code-line"><span class="code-ln">21</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_artifacts</span>(<span class="tok-attr">existing</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">new</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-type">str</span>]:</span></div>
+                                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-type">list</span>(<span class="tok-fn">dict</span>.<span class="tok-fn">fromkeys</span>(<span class="tok-attr">existing</span> <span class="tok-op">+</span> <span class="tok-attr">new</span>))</span></div>
+                                <div class="code-line"><span class="code-ln">31</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_viewed_images</span>(<span class="tok-attr">existing</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">ViewedImageData</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">new</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">ViewedImageData</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-cls">ViewedImageData</span>]:</span></div>
+                                <div class="code-line"><span class="code-ln">42</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">len</span>(<span class="tok-attr">new</span>) <span class="tok-op">==</span> <span class="tok-num">0</span>:</span></div>
+                                <div class="code-line"><span class="code-ln">43</span><span class="code-src">        <span class="tok-kw">return</span> {}</span></div>
+                                <div class="code-line"><span class="code-ln">66</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">merge_promoted</span>(<span class="tok-attr">existing</span>: <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-attr">new</span>: <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>:</span></div>
+                                <div class="code-line"><span class="code-ln">70</span><span class="code-src">    <span class="tok-com"># catalog_hash 变了就整组替换，避免旧 promoted 状态串到新 catalog</span></span></div>
+                                <div class="code-line"><span class="code-ln">76</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">existing</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span> <span class="tok-kw">or</span> <span class="tok-attr">existing</span>.<span class="tok-fn">get</span>(<span class="tok-str">"catalog_hash"</span>) <span class="tok-op">!=</span> <span class="tok-attr">new</span>[<span class="tok-str">"catalog_hash"</span>]:</span></div>
+                                <div class="code-line"><span class="code-ln">87</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">ThreadState</span>(<span class="tok-cls">AgentState</span>):</span></div>
+                                <div class="code-line"><span class="code-ln">88</span><span class="code-src">    <span class="tok-attr">sandbox</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-cls">SandboxState</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                                <div class="code-line"><span class="code-ln">89</span><span class="code-src">    <span class="tok-attr">thread_data</span>: <span class="tok-cls">NotRequired</span>[<span class="tok-cls">ThreadDataState</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>]</span></div>
+                                <div class="code-line"><span class="code-ln">91</span><span class="code-src">    <span class="tok-attr">artifacts</span>: <span class="tok-cls">Annotated</span>[<span class="tok-type">list</span>[<span class="tok-type">str</span>], <span class="tok-fn">merge_artifacts</span>]</span></div>
+                                <div class="code-line"><span class="code-ln">95</span><span class="code-src">    <span class="tok-attr">promoted</span>: <span class="tok-cls">Annotated</span>[<span class="tok-cls">PromotedTools</span> <span class="tok-op">|</span> <span class="tok-kw">None</span>, <span class="tok-fn">merge_promoted</span>]</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="annotation-list">
+                        <li>教学示例里，State 只是一个简单字典；而在 DeerFlow 里，State 已经进化成带 reducer 的正式 schema，这才适合多节点、多中间件、流式执行的生产场景。</li>
+                        <li>这也解释了为什么 LangGraph 在 DeerFlow 中这么重要：没有显式状态和合并规则，artifact、图片上下文、deferred tools 等运行时数据根本没法稳定在多轮图执行里传递。</li>
+                    </ul>
+                </div>
             </section>
             
             <!-- Summary -->
@@ -883,6 +898,87 @@ result = app.<span class="tok-attr">invoke</span>(initial_state)
                     3. 02-llm-and-tools.html：LLM调用与工具系统<br>
                     4. 03-deerflow-overview.html：DeerFlow整体架构<br>
                     5. 10-agent-execution-engine.html：Agent执行引擎深度学习
+                </div>
+            </section>
+            <section>
+                <h2>8. LangGraph 在 DeerFlow 里不是示意图，而是真正的运行骨架</h2>
+                <p>
+                    前面这些 Graph / Node / Edge / State 的概念，在 DeerFlow 里并没有停留在“框架选型说明”。它们真正落到了
+                    <code>ThreadState</code>、<code>create_agent(...)</code>、<code>build_middlewares(...)</code> 和
+                    <code>run_agent(...)</code> 这些执行入口上。
+                </p>
+                <div class="annotated-code">
+                    <div class="code-window">
+                        <div class="code-window-header">
+                            <div class="code-window-dots"><span></span><span></span><span></span></div>
+                            <div class="code-window-title">LangGraph concepts :: 对应到 DeerFlow 真实源码入口</div>
+                        </div>
+                        <div class="code-window-body">
+                            <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># LangGraph 概念在 DeerFlow 里的真实落点</span></span></div>
+                            <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-str">"State schema"</span>        <span class="tok-op">-&gt;</span> <span class="tok-str">"deerflow/agents/thread_state.py"</span></span></div>
+                            <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-str">"Graph construction"</span>  <span class="tok-op">-&gt;</span> <span class="tok-str">"deerflow/agents/lead_agent/agent.py"</span></span></div>
+                            <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-str">"Compiled execution"</span>  <span class="tok-op">-&gt;</span> <span class="tok-str">"deerflow/runtime/runs/worker.py"</span></span></div>
+                            <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-str">"Stream to client"</span>    <span class="tok-op">-&gt;</span> <span class="tok-str">"gateway/channels/client + channels/manager.py"</span></span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="source-walkthrough">
+                    <h4>核心源码：DeerFlow 没有手写一张玩具 Graph，而是把 LangGraph create_agent 路径当成运行骨架</h4>
+                    <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/agents/lead_agent/agent.py</code>。这段源码能把本章的基础概念和 DeerFlow 真正的执行骨架连起来。</p>
+                    <div class="annotated-code">
+                        <div class="code-window">
+                            <div class="code-window-header">
+                                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                                <div class="code-window-title">lead_agent/agent.py :: create_agent(..., state_schema=ThreadState)</div>
+                            </div>
+                            <div class="code-window-body">
+                                <div class="code-line"><span class="code-ln">517</span><span class="code-src"><span class="tok-attr">raw_tools</span> <span class="tok-op">=</span> <span class="tok-fn">get_available_tools</span>(<span class="tok-attr">model_name</span><span class="tok-op">=</span><span class="tok-attr">model_name</span>, <span class="tok-attr">groups</span><span class="tok-op">=</span><span class="tok-attr">agent_config</span>.<span class="tok-attr">tool_groups</span> <span class="tok-kw">if</span> <span class="tok-attr">agent_config</span> <span class="tok-kw">else</span> <span class="tok-kw">None</span>, <span class="tok-attr">subagent_enabled</span><span class="tok-op">=</span><span class="tok-attr">subagent_enabled</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>)</span></div>
+                                <div class="code-line"><span class="code-ln">518</span><span class="code-src"><span class="tok-attr">filtered</span> <span class="tok-op">=</span> <span class="tok-fn">filter_tools_by_skill_allowed_tools</span>(<span class="tok-attr">raw_tools</span> <span class="tok-op">+</span> <span class="tok-attr">extra_tools</span>, <span class="tok-attr">skills_for_tool_policy</span>)</span></div>
+                                <div class="code-line"><span class="code-ln">519</span><span class="code-src"><span class="tok-attr">final_tools</span>, <span class="tok-attr">setup</span> <span class="tok-op">=</span> <span class="tok-fn">assemble_deferred_tools</span>(<span class="tok-attr">filtered</span>, <span class="tok-attr">enabled</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>.<span class="tok-attr">tool_search</span>.<span class="tok-attr">enabled</span>)</span></div>
+                                <div class="code-line"><span class="code-ln">520</span><span class="code-src"><span class="tok-kw">return</span> <span class="tok-fn">create_agent</span>(</span></div>
+                                <div class="code-line"><span class="code-ln">521</span><span class="code-src">    <span class="tok-attr">model</span><span class="tok-op">=</span><span class="tok-fn">create_chat_model</span>(<span class="tok-attr">name</span><span class="tok-op">=</span><span class="tok-attr">model_name</span>, <span class="tok-attr">thinking_enabled</span><span class="tok-op">=</span><span class="tok-attr">thinking_enabled</span>, <span class="tok-attr">reasoning_effort</span><span class="tok-op">=</span><span class="tok-attr">reasoning_effort</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>, <span class="tok-attr">attach_tracing</span><span class="tok-op">=</span><span class="tok-kw">False</span>),</span></div>
+                                <div class="code-line"><span class="code-ln">522</span><span class="code-src">    <span class="tok-attr">tools</span><span class="tok-op">=</span><span class="tok-attr">final_tools</span>,</span></div>
+                                <div class="code-line"><span class="code-ln">523</span><span class="code-src">    <span class="tok-attr">middleware</span><span class="tok-op">=</span><span class="tok-fn">build_middlewares</span>(<span class="tok-attr">config</span>, <span class="tok-attr">model_name</span><span class="tok-op">=</span><span class="tok-attr">model_name</span>, <span class="tok-attr">agent_name</span><span class="tok-op">=</span><span class="tok-attr">agent_name</span>, <span class="tok-attr">available_skills</span><span class="tok-op">=</span><span class="tok-attr">available_skills</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>, <span class="tok-attr">deferred_setup</span><span class="tok-op">=</span><span class="tok-attr">setup</span>),</span></div>
+                                <div class="code-line"><span class="code-ln">531</span><span class="code-src">    <span class="tok-attr">system_prompt</span><span class="tok-op">=</span><span class="tok-fn">apply_prompt_template</span>(<span class="tok-attr">subagent_enabled</span><span class="tok-op">=</span><span class="tok-attr">subagent_enabled</span>, <span class="tok-attr">max_concurrent_subagents</span><span class="tok-op">=</span><span class="tok-attr">max_concurrent_subagents</span>, <span class="tok-attr">agent_name</span><span class="tok-op">=</span><span class="tok-attr">agent_name</span>, <span class="tok-attr">available_skills</span><span class="tok-op">=</span><span class="tok-attr">available_skills</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">resolved_app_config</span>, <span class="tok-attr">deferred_names</span><span class="tok-op">=</span><span class="tok-attr">setup</span>.<span class="tok-attr">deferred_names</span>),</span></div>
+                                <div class="code-line"><span class="code-ln">539</span><span class="code-src">    <span class="tok-attr">state_schema</span><span class="tok-op">=</span><span class="tok-cls">ThreadState</span>,</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="annotation-list">
+                        <li>这一段最值得注意的是最后一行的 <code>state_schema=ThreadState</code>。它把本章里最抽象的 State 概念，直接变成了 DeerFlow 所有节点共享的数据契约。</li>
+                        <li>同时它不是手动写很多 `graph.add_node(...)` 的教学示例，而是把模型、工具、中间件和 prompt 一次性交给 <code>create_agent(...)</code>，让 LangGraph 帮它生成可执行图。</li>
+                        <li>所以对 DeerFlow 来说，LangGraph 不是“可选框架”，而是 Agent 执行骨架本身。后面讲的 memory、sandbox、subagent，本质上都只是往这个骨架里继续挂节点行为和状态更新规则。</li>
+                    </ul>
+                </div>
+                <div class="source-walkthrough">
+                    <h4>核心源码：Graph 建好以后，Gateway worker 又如何真正执行这张图</h4>
+                    <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/runtime/runs/worker.py</code>。这一段补上了 LangGraph 基础课最关键的最后一环：图不是 compile 完就结束，它还要被运行时包装、注入上下文、流式执行。</p>
+                    <div class="annotated-code">
+                        <div class="code-window">
+                            <div class="code-window-header">
+                                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                                <div class="code-window-title">runtime/runs/worker.py :: run_agent(...)</div>
+                            </div>
+                            <div class="code-window-body">
+                                <div class="code-line"><span class="code-ln">124</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">run_agent</span>(<span class="tok-attr">bridge</span>: <span class="tok-cls">StreamBridge</span>, <span class="tok-attr">run_manager</span>: <span class="tok-cls">RunManager</span>, <span class="tok-attr">record</span>: <span class="tok-cls">RunRecord</span>, <span class="tok-op">*</span>, <span class="tok-attr">ctx</span>: <span class="tok-cls">RunContext</span>, <span class="tok-attr">agent_factory</span>: <span class="tok-type">Any</span>, <span class="tok-attr">graph_input</span>: <span class="tok-type">dict</span>, <span class="tok-attr">config</span>: <span class="tok-type">dict</span>, <span class="tok-attr">stream_modes</span>: <span class="tok-type">list</span>[<span class="tok-type">str</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-op">...</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                                <div class="code-line"><span class="code-ln">183</span><span class="code-src">    <span class="tok-kw">await</span> <span class="tok-attr">run_manager</span>.<span class="tok-fn">set_status</span>(<span class="tok-attr">run_id</span>, <span class="tok-attr">RunStatus</span>.<span class="tok-attr">running</span>)</span></div>
+                                <div class="code-line"><span class="code-ln">203</span><span class="code-src">    <span class="tok-kw">await</span> <span class="tok-attr">bridge</span>.<span class="tok-fn">publish</span>(<span class="tok-attr">run_id</span>, <span class="tok-str">"metadata"</span>, {<span class="tok-str">"run_id"</span>: <span class="tok-attr">run_id</span>, <span class="tok-str">"thread_id"</span>: <span class="tok-attr">thread_id</span>})</span></div>
+                                <div class="code-line"><span class="code-ln">221</span><span class="code-src">    <span class="tok-attr">runtime_ctx</span> <span class="tok-op">=</span> <span class="tok-fn">_build_runtime_context</span>(<span class="tok-attr">thread_id</span>, <span class="tok-attr">run_id</span>, <span class="tok-attr">config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"context"</span>), <span class="tok-attr">ctx</span>.<span class="tok-attr">app_config</span>)</span></div>
+                                <div class="code-line"><span class="code-ln">228</span><span class="code-src">    <span class="tok-fn">_install_runtime_context</span>(<span class="tok-attr">config</span>, <span class="tok-attr">runtime_ctx</span>)</span></div>
+                                <div class="code-line"><span class="code-ln">229</span><span class="code-src">    <span class="tok-attr">runtime</span> <span class="tok-op">=</span> <span class="tok-cls">Runtime</span>(<span class="tok-attr">context</span><span class="tok-op">=</span><span class="tok-fn">cast</span>(<span class="tok-type">Any</span>, <span class="tok-attr">runtime_ctx</span>), <span class="tok-attr">store</span><span class="tok-op">=</span><span class="tok-attr">store</span>)</span></div>
+                                <div class="code-line"><span class="code-ln">230</span><span class="code-src">    <span class="tok-attr">config</span>.<span class="tok-fn">setdefault</span>(<span class="tok-str">"configurable"</span>, {})[<span class="tok-str">"__pregel_runtime"</span>] <span class="tok-op">=</span> <span class="tok-attr">runtime</span></span></div>
+                                <div class="code-line"><span class="code-ln">235</span><span class="code-src">        <span class="tok-attr">config</span>.<span class="tok-fn">setdefault</span>(<span class="tok-str">"callbacks"</span>, []).<span class="tok-fn">append</span>(<span class="tok-attr">journal</span>)</span></div>
+                                <div class="code-line"><span class="code-ln">241</span><span class="code-src">    <span class="tok-fn">inject_langfuse_metadata</span>(<span class="tok-attr">config</span>, <span class="tok-attr">thread_id</span><span class="tok-op">=</span><span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-fn">get_effective_user_id</span>(), <span class="tok-attr">assistant_id</span><span class="tok-op">=</span><span class="tok-attr">record</span>.<span class="tok-attr">assistant_id</span>, <span class="tok-attr">model_name</span><span class="tok-op">=</span><span class="tok-attr">record</span>.<span class="tok-attr">model_name</span>, <span class="tok-attr">environment</span><span class="tok-op">=</span><span class="tok-attr">os</span>.<span class="tok-attr">environ</span>.<span class="tok-fn">get</span>(<span class="tok-str">"DEER_FLOW_ENV"</span>) <span class="tok-kw">or</span> <span class="tok-attr">os</span>.<span class="tok-attr">environ</span>.<span class="tok-fn">get</span>(<span class="tok-str">"ENVIRONMENT"</span>))</span></div>
+                                <div class="code-line"><span class="code-ln">253</span><span class="code-src">    <span class="tok-attr">runnable_config</span> <span class="tok-op">=</span> <span class="tok-cls">RunnableConfig</span>(<span class="tok-op">**</span><span class="tok-attr">config</span>)</span></div>
+                                <div class="code-line"><span class="code-ln">255</span><span class="code-src">        <span class="tok-attr">agent</span> <span class="tok-op">=</span> <span class="tok-attr">agent_factory</span>(<span class="tok-attr">config</span><span class="tok-op">=</span><span class="tok-attr">runnable_config</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">ctx</span>.<span class="tok-attr">app_config</span>)</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="annotation-list">
+                        <li>这一段把 LangGraph 基础真正往前推进了一步：图对象不是 compile 完就自己运行，而是被 Gateway worker 包起来，补上 run 状态、事件桥、runtime 上下文、callbacks 和 tracing 再执行。</li>
+                        <li>第 221 到 230 行尤其关键。它把 thread_id、run_id、app_config 等运行时信息塞进 `Runtime` 和 configurable 区域，所以后面的 tools 和 middlewares 才能在图内部读到这些上下文。</li>
+                        <li>也就是说，DeerFlow 真正的生产图执行，不只是“节点和边”，还包括运行时容器、可观测性和状态恢复。这也是教学示例和实际系统的最大差别。</li>
+                    </ul>
                 </div>
             </section>
       <div id="page-nav"></div>

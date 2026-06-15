@@ -1,31 +1,36 @@
-# 🦌 DeerFlow 学习系列
+# DeerFlow 学习系列
 
-为Agent开发初学者设计的系统化学习教程，帮助你从零开始掌握生产级Agent系统的设计与实现。
+这套学习资料的目标，不是讲一套泛化的 Agent 理论，而是帮助读者通过 `.learning/html/` 里的章节，理解 DeerFlow 当前仓库中的真实设计、真实运行边界和真实实现路径。
 
-## 📚 概述
+## 概述
 
-这套教程包含19个HTML文件，分为5个部分，总计约80,000-100,000行内容。每个文件都包含：
+当前课程包含 19 个 HTML 页面，其中 17 个核心章节已经按 DeerFlow-first 方式完成重构。重构后的核心章节都遵循同一骨架：
 
-- **概念讲解**（20-30%）：清晰的定义和背景说明
-- **源码分析**（40-50%）：从DeerFlow项目中提取的具体代码
-- **代码示例**（15-20%）：可运行的示例代码
-- **实践指导**（10-15%）：如何应用到实际项目
-- **交互演示**（关键部分）：流程可视化和效果展示
+1. 这项能力在 DeerFlow 中解决什么问题
+2. 这项能力在代码库中的位置
+3. 真实运行链路或数据链路
+4. 配置面与使用方式
+5. 关键实现细节与权衡
+6. 当前限制、边界与非目标
+7. 它与 DeerFlow 其他能力的关系
 
-## 🎯 学习目标
+这意味着读者看完之后，应该能直接回答两类问题：
+
+- DeerFlow 里这项能力到底是在哪实现的？
+- DeerFlow 里这项能力到底是怎么运行的？
+
+## 学习目标
 
 完成这套教程后，你将能够：
 
-✅ 理解Agent系统的设计原理和架构  
-✅ 阅读和理解DeerFlow的源码  
-✅ 能够配置和使用DeerFlow  
-✅ 能够编写自定义Skills和Tools  
-✅ 能够构建自定义Agent  
-✅ 能够从零设计和实现类似的Agent系统  
-✅ 能够在生产环境中部署和维护Agent系统  
-✅ 能够独立承担Agent开发工程师的工作职责  
+✅ 理解 DeerFlow 的默认系统主路径，而不是只记概念  
+✅ 阅读和追踪 DeerFlow 的核心源码入口  
+✅ 配置和使用 DeerFlow 当前已有能力  
+✅ 编写自定义 Skills，并理解它们如何进入运行时  
+✅ 基于当前边界扩展自定义 Agent  
+✅ 从 DeerFlow 当前实现中抽取可复用的系统设计经验  
 
-## 📖 课程结构
+## 课程结构
 
 ### 第一部分：基础概念与背景（4个文件）
 
@@ -36,9 +41,9 @@
 | 3 | `02-llm-and-tools.html` | LLM调用与工具系统 | 50-70分钟 |
 | 4 | `03-deerflow-overview.html` | DeerFlow整体架构概览 | 60-80分钟 |
 
-**学习时间：** 约4-5小时  
-**难度：** ⭐⭐ 简单  
-**前置知识：** 基本的编程概念
+学习时间：约 4-5 小时  
+难度：简单  
+前置知识：基本编程概念
 
 ### 第二部分：核心模块深度学习（6个文件）
 
@@ -51,9 +56,9 @@
 | 9 | `14-sub-agents.html` | Sub-Agents：多Agent协作 | 50-70分钟 |
 | 10 | `15-gateway-api.html` | Gateway API：与外界的接口 | 60-80分钟 |
 
-**学习时间：** 约8-10小时  
-**难度：** ⭐⭐⭐ 中等  
-**前置知识：** 完成第一部分
+学习时间：约 8-10 小时  
+难度：中等  
+前置知识：完成第一部分
 
 ### 第三部分：高级特性与扩展（4个文件）
 
@@ -64,9 +69,9 @@
 | 13 | `22-channels-integration.html` | 多渠道集成：从IM到API | 50-70分钟 |
 | 14 | `23-advanced-patterns.html` | 高级模式和最佳实践 | 50-70分钟 |
 
-**学习时间：** 约6-8小时  
-**难度：** ⭐⭐⭐⭐ 较难  
-**前置知识：** 完成第二部分
+学习时间：约 6-8 小时  
+难度：较难  
+前置知识：完成第二部分
 
 ### 第四部分：实战与扩展（3个文件）
 
@@ -76,9 +81,9 @@
 | 16 | `31-building-custom-agents.html` | 构建自定义Agent | 70-90分钟 |
 | 17 | `32-from-scratch-guide.html` | 从零构建Agent系统 | 80-100分钟 |
 
-**学习时间：** 约8-10小时  
-**难度：** ⭐⭐⭐⭐⭐ 困难  
-**前置知识：** 完成第三部分
+学习时间：约 8-10 小时  
+难度：困难  
+前置知识：完成第三部分
 
 ### 第五部分：参考与工具（2个文件）
 
@@ -87,11 +92,35 @@
 | 18 | `40-source-code-guide.html` | 源码导航与阅读指南 | 40-60分钟 |
 | 19 | `41-troubleshooting-faq.html` | 常见问题与故障排除 | 30-50分钟 |
 
-**学习时间：** 约2-3小时  
-**难度：** ⭐⭐ 简单  
-**前置知识：** 可随时查阅
+学习时间：约 2-3 小时  
+难度：简单  
+前置知识：可随时查阅
 
-## 🚀 快速开始
+## 核心章节与源码入口总索引
+
+下面这张表适合在阅读 HTML 时配合源码一起使用。它不是完整清单，而是每章最值得先看的第一批入口。
+
+| 章节 | 主题 | 建议先看 |
+|------|------|----------|
+| `02-llm-and-tools.html` | LLM调用与工具系统 | `backend/packages/harness/deerflow/tools/tools.py` `backend/packages/harness/deerflow/agents/factory.py` |
+| `03-deerflow-overview.html` | DeerFlow整体架构概览 | `backend/docs/ARCHITECTURE.md` `backend/app/gateway/app.py` |
+| `10-agent-execution-engine.html` | Agent执行引擎的设计与实现 | `backend/packages/harness/deerflow/agents/lead_agent/agent.py` `backend/packages/harness/deerflow/runtime/runs/worker.py` |
+| `11-skills-system.html` | Skills系统：Agent的能力扩展 | `backend/packages/harness/deerflow/skills/installer.py` `backend/app/gateway/routers/skills.py` |
+| `12-sandbox-execution.html` | Sandbox与安全执行环境 | `backend/packages/harness/deerflow/sandbox/tools.py` `backend/packages/harness/deerflow/sandbox/local/local_sandbox_provider.py` |
+| `13-memory-system.html` | 长期记忆系统 | `backend/packages/harness/deerflow/agents/memory/storage.py` `backend/packages/harness/deerflow/agents/memory/updater.py` |
+| `14-sub-agents.html` | Sub-Agents：多Agent协作 | `backend/packages/harness/deerflow/tools/builtins/task_tool.py` `backend/packages/harness/deerflow/subagents/executor.py` |
+| `15-gateway-api.html` | Gateway API：与外界的接口 | `backend/app/gateway/app.py` `backend/app/gateway/routers/thread_runs.py` |
+| `20-context-engineering.html` | 上下文工程：提升Agent智能 | `backend/packages/harness/deerflow/agents/lead_agent/prompt.py` `backend/packages/harness/deerflow/agents/middlewares/` |
+| `21-model-integration.html` | 模型集成：支持多种LLM | `backend/packages/harness/deerflow/config/app_config.py` `backend/app/gateway/routers/models.py` |
+| `22-channels-integration.html` | 多渠道集成：从IM到API | `backend/app/channels/manager.py` `backend/app/gateway/routers/channel_connections.py` |
+| `23-advanced-patterns.html` | 高级模式和最佳实践 | `backend/packages/harness/deerflow/tools/builtins/tool_search.py` `backend/docs/STREAMING.md` |
+| `30-custom-skills-guide.html` | 自定义Skills完全指南 | `backend/packages/harness/deerflow/skills/` `backend/app/gateway/routers/skills.py` |
+| `31-building-custom-agents.html` | 构建自定义Agent | `backend/packages/harness/deerflow/client.py` `backend/docs/rfc-create-deerflow-agent.md` |
+| `32-from-scratch-guide.html` | 从零构建Agent系统 | `backend/docs/ARCHITECTURE.md` `backend/docs/AUTH_DESIGN.md` |
+| `40-source-code-guide.html` | 源码导航与阅读指南 | `backend/app/gateway/` `backend/packages/harness/deerflow/agents/` |
+| `41-troubleshooting-faq.html` | 常见问题与故障排除 | `backend/docs/CONFIGURATION.md` `backend/docs/STREAMING.md` |
+
+## 快速开始
 
 ### 1. 打开学习资料
 
@@ -144,26 +173,25 @@
 - 运行代码示例
 - 做一个小项目练习
 
-## 💡 学习建议
+## 学习建议
 
 ### 时间规划
 
-- **快速学习**（2-3周）：只学第一部分和第二部分的核心模块
-- **标准学习**（4-6周）：学完第一、二、三部分
-- **深度学习**（8-12周）：学完所有部分，并做实战项目
+- 快速学习：2-3 周，只学第一部分和第二部分核心模块
+- 标准学习：4-6 周，学完第一、二、三部分
+- 深度学习：8-12 周，学完所有部分并做实战项目
 
 ### 学习方法
 
-1. **理论优先**：先理解概念和原理，再看代码
-2. **代码驱动**：通过阅读源码加深理解
-3. **动手实践**：每个模块都要写代码练习
-4. **记录笔记**：记录重要概念和实现细节
-5. **反复复习**：复杂概念需要多次复习
+1. 先看章节里的 DeerFlow 运行职责和代码入口，再深入源码。
+2. 每读完一章，至少把文中点名的 2-3 个核心文件打开一遍。
+3. 对 boundary 特别敏感：哪些是当前已实现，哪些只是兼容层、RFC 或未来方向。
+4. 遇到疑问时，优先回到对应文档和源码，而不是靠概念类比。
 
 ### 常见问题
 
 **Q: 我没有编程基础，能学吗？**  
-A: 可以，但建议先学习基本的Python编程。这套教程假设你有基本的编程概念。
+A: 可以，但更适合已经具备基本 Python 和 Web/API 概念的读者。
 
 **Q: 学习顺序可以改变吗？**  
 A: 不建议。每个部分都建立在前一部分的基础上。
@@ -172,9 +200,9 @@ A: 不建议。每个部分都建立在前一部分的基础上。
 A: 取决于你的背景和学习速度。通常需要2-3个月。
 
 **Q: 学完后能做什么？**  
-A: 你可以构建自己的Agent应用，或者为DeerFlow贡献代码。
+A: 你可以更稳地配置、扩展、排查 DeerFlow，或者基于 DeerFlow 的真实设计去做自定义能力开发。
 
-## 📁 文件结构
+## 文件结构
 
 ```
 .learning/
@@ -202,7 +230,7 @@ A: 你可以构建自己的Agent应用，或者为DeerFlow贡献代码。
 └── README.md                      # 本文件
 ```
 
-## 🔗 相关资源
+## 相关资源
 
 ### 官方资源
 
@@ -222,7 +250,26 @@ A: 你可以构建自己的Agent应用，或者为DeerFlow贡献代码。
 - **Discord社区**：（如果有的话）
 - **中文社区**：（如果有的话）
 
-## 📊 学习进度追踪
+## 课程一致性校验
+
+在批量修改 `.learning/html` 章节后，运行下面的命令确认核心章节仍然满足 DeerFlow-first 约束：
+
+```bash
+python3 scripts/validate_learning_html.py
+```
+
+校验重点包括：
+
+- 章节标题是否仍然匹配目标章节
+- 是否包含统一的 DeerFlow-first 结构标题
+- 是否包含该章必须出现的核心代码锚点
+
+说明：
+
+- 当前 validator 校验的是 17 个核心章节，不包含 `00-agent-fundamentals.html` 和 `01-langgraph-basics.html`
+- 在整套重构尚未完成的中途阶段，校验失败是预期现象；全部完成后应看到 `Validated 17 learning chapters successfully.`
+
+## 学习进度追踪
 
 使用以下表格追踪你的学习进度：
 
@@ -240,7 +287,7 @@ A: 你可以构建自己的Agent应用，或者为DeerFlow贡献代码。
 | | Gateway API | ☐ | | |
 | ... | ... | ... | ... | ... |
 
-## 🎓 学习成果评估
+## 学习成果评估
 
 完成学习后，你应该能够：
 

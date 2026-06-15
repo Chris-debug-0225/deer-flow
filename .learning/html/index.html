@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeerFlow 学习系列 · 源码级中文学习站</title>
+    <title>DeerFlow 学习系列 · DeerFlow-first 源码课程</title>
     <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -14,72 +14,72 @@
     <div class="content">
 
       <div class="hero">
-        <span class="tag">deerflow · Python · Agent Framework</span>
+        <span class="tag">deerflow-first · Python · Agent Runtime Course</span>
         <h1>DeerFlow 学习系列</h1>
-        <p>从零到精通：用源码级中文讲解，带你彻底搞懂一个生产级 Agent 框架是怎么设计的、代码是怎么写的。看完这套文档，你能把 Agent 开发写进简历，也能看懂 OpenAI Agents、OpenManus 这类项目的源码。</p>
+        <p>这不是一套泛化的 Agent 概论，而是一套围绕 DeerFlow 当前仓库实现重写的源码级中文学习站。目标很直接：用户看完这些 HTML 后，能够理解 DeerFlow 的默认运行时主路径、关键子系统边界、真实代码入口和真实运行链路。</p>
         <div class="stats">
           <div class="stat"><div class="n">19</div><div class="l">学习章节</div></div>
-          <div class="stat"><div class="n">6</div><div class="l">核心子系统</div></div>
-          <div class="stat"><div class="n">100%</div><div class="l">对照源码 file:line</div></div>
+          <div class="stat"><div class="n">17</div><div class="l">核心重构章节</div></div>
+          <div class="stat"><div class="n">1</div><div class="l">统一 DeerFlow-first 骨架</div></div>
         </div>
       </div>
 
       <div class="callout info">
         <div class="callout-title">👋 这套文档是写给谁的</div>
-        <p>如果你是 <strong>Agent 开发小白</strong>，但有一定 Python 基础，想通过精读一个真实的、被广泛使用的开源框架来掌握 Agent 开发的设计思想与工程实现——那这里就是为你准备的。每一章都做到三件事：<strong>讲清概念</strong>、<strong>对照源码</strong>、<strong>给出可运行示例</strong>。</p>
+        <p>如果你已经有基本 Python 基础，想通过一个真实仓库掌握 Agent 系统的工程化设计，这里就是为你准备的。它尤其适合两类读者：一类是想快速建立 DeerFlow 真实心智模型的人，另一类是准备扩展、排查、二次开发 DeerFlow 的工程师。</p>
       </div>
 
-      <h2>🗺️ 这个框架到底在解决什么问题</h2>
-      <p>大语言模型（LLM）本身只会"输入文本 → 输出文本"。但我们想要的"智能体（Agent）"需要能<strong>调用工具</strong>、<strong>多步骤思考</strong>、<strong>与其他 Agent 协作</strong>、<strong>记住对话历史</strong>、<strong>在危险操作前暂停等待人类批准</strong>。DeerFlow 就是把这些能力用一套优雅的抽象封装起来，让你几行代码就能跑起一个能用的智能体。</p>
+      <h2>🗺️ 这套新版课程到底在解决什么问题</h2>
+      <p>旧式学习资料最容易出现的问题，是把 DeerFlow 讲成“通用 Agent 教程 + 少量本项目示例”。这次重构后的课程反过来做：<strong>以 DeerFlow 当前仓库为真相来源</strong>，围绕 Gateway-embedded runtime、thread/run 语义、sandbox 路径契约、skills、memory、subagents、channels 和 streaming 双路径来讲真实设计，而不是讲教科书里的理想系统。</p>
 
       <div class="diagram">
-        <div class="dbox">用户输入 <small>"帮我查天气并预订餐厅"</small></div>
+        <div class="dbox">读者问题 <small>"DeerFlow 里这项能力到底在哪？"</small></div>
         <div class="darrow">▼</div>
-        <div class="dbox alt">Agent 循环 <small>LLM 决策 → 调工具 → 看结果 → 再决策</small></div>
+        <div class="dbox alt">章节骨架 <small>职责 → 代码入口 → 运行链路 → 配置 → 边界</small></div>
         <div class="darrow">▼</div>
-        <div class="dbox green">最终输出 <small>结构化结果 / 自然语言回复</small></div>
+        <div class="dbox green">最终收获 <small>能回到源码、配置和文档解释真实实现</small></div>
       </div>
 
       <h2>📚 推荐学习路径</h2>
-      <p>文档按"<strong>由表及里、由核心到周边</strong>"组织。建议第一遍按顺序通读，第二遍带着源码精读核心引擎部分（03–06）。</p>
+      <p>建议按“<strong>先整体主路径，再核心子系统，再扩展与排障</strong>”的顺序阅读。第一遍先建立 DeerFlow 默认架构心智模型，第二遍再配合源码把每章点名的入口文件逐个打开。</p>
 
       <div class="grid cols-3">
         <a class="feature" href="00-agent-fundamentals.html">
           <div class="ic">🔭</div>
-          <h4>1. 建立全局视野</h4>
-          <p>第 00–03 章：Agent 概念、LangGraph 框架、LLM 调用、DeerFlow 架构。</p>
+          <h4>1. 先认清主路径</h4>
+          <p>第 00–03 章先建立基础概念，再把 DeerFlow 默认架构主路径和整体系统关系讲清楚。</p>
         </a>
         <a class="feature" href="10-agent-execution-engine.html">
           <div class="ic">⚙️</div>
-          <h4>2. 吃透执行引擎</h4>
-          <p>第 10–15 章：Agent 执行、Skills 系统、Sandbox、记忆、Sub-Agents、Gateway——框架的心脏。</p>
+          <h4>2. 再吃透运行时</h4>
+          <p>第 10–15 章围绕执行引擎、skills、sandbox、memory、subagents、Gateway 讲真实运行时边界。</p>
         </a>
         <a class="feature" href="20-context-engineering.html">
           <div class="ic">🧩</div>
-          <h4>3. 掌握高级特性</h4>
-          <p>第 20–23 章：上下文工程、模型集成、多渠道、高级模式与最佳实践。</p>
+          <h4>3. 最后看扩展与排障</h4>
+          <p>第 20–41 章继续覆盖上下文工程、模型、channels、自定义扩展、源码导航和 FAQ。</p>
         </a>
       </div>
 
-      <h2>🧠 五个你必须先记住的名词</h2>
+      <h2>🧠 五个你必须先记住的 DeerFlow 关键词</h2>
       <div class="table-wrap">
       <table>
         <thead><tr><th>名词</th><th>一句话理解</th><th>类比</th></tr></thead>
         <tbody>
-          <tr><td><span class="badge blue">Agent</span></td><td>带指令、工具、护栏的一个"智能员工"</td><td>一名有岗位说明书的员工</td></tr>
-          <tr><td><span class="badge green">Skill</span></td><td>Agent 能调用的能力（查天气、查数据库…）</td><td>员工手里的工具箱</td></tr>
-          <tr><td><span class="badge purple">Sub-Agent</span></td><td>把任务转交给另一个更专业的 Agent</td><td>把工单转给别的部门</td></tr>
-          <tr><td><span class="badge orange">Sandbox</span></td><td>隔离执行环境，不合规就拦截</td><td>门口的安检</td></tr>
-          <tr><td><span class="badge blue">Memory</span></td><td>跨多轮对话保存历史记忆</td><td>员工的工作记录本</td></tr>
+          <tr><td><span class="badge blue">Gateway</span></td><td>DeerFlow 默认运行时承载体，不只是外层 API</td><td>系统总入口和总控台</td></tr>
+          <tr><td><span class="badge green">Thread / Run</span></td><td>对话状态和一次执行的统一语义单元</td><td>工单和工单的一次处理过程</td></tr>
+          <tr><td><span class="badge purple">Skill</span></td><td>能力包与工作说明，不等于 tool 本身</td><td>团队内部 SOP 和手册</td></tr>
+          <tr><td><span class="badge orange">Sandbox</span></td><td>围绕虚拟路径契约组织的受控文件/命令边界</td><td>受控工作区，不是随意碰主机</td></tr>
+          <tr><td><span class="badge blue">Sub-Agent</span></td><td>通过 task 工具触发的结构化委派单元</td><td>明确派给另一个小组的子任务</td></tr>
         </tbody>
       </table>
       </div>
 
       <div class="callout tip">
         <div class="callout-title">💡 怎么用这套文档效果最好</div>
-        <p>1. 旁边开一个 IDE，打开 DeerFlow 源码目录，文档里给出的 <span class="filemeta"><b>run.py</b>:450</span> 这种标注，直接跳过去对照看。</p>
-        <p>2. 每章末尾的示例代码尽量亲手敲一遍跑起来（需要一个 OpenAI API Key）。</p>
-        <p>3. 看完核心引擎后，回头再读一遍首页这张图，你会有完全不同的理解。</p>
+        <p>1. 每读完一章，至少打开该章点名的 2-3 个核心文件，不要只停留在 HTML 页面。</p>
+        <p>2. 对所有“边界”保持敏感：哪些是当前已实现，哪些只是兼容层，哪些是 RFC 设计方向。</p>
+        <p>3. 如果你是来做二次开发或排障，优先读第 03、10、15、20、40、41 章，再按需回看单项能力章节。</p>
       </div>
 
       <div id="page-nav"></div>

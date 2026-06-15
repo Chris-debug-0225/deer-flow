@@ -6,215 +6,7 @@
     <title>模型集成：支持多种LLM · DeerFlow 学习系列</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
-        /* 页面特定样式 - 与深色主题兼容 */
-        
-        .toc {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--accent);
-            padding: 20px;
-            margin-bottom: 40px;
-            border-radius: 8px;
-        }
-        
-        .toc h2 {
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .toc li:before {
-            content: "▸";
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: bold;
-        }
-        
-        .toc a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .toc a:hover {
-            color: var(--accent-2);
-            text-decoration: underline;
-        }
-        
-        section {
-            margin-bottom: 50px;
-        }
-        
-        /* 代码块样式 */
-        .code-block {
-            background: var(--bg-code);
-            color: var(--text-soft);
-            padding: 18px 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 18px 0;
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 13.5px;
-            line-height: 1.65;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-        }
-        
-        .code-block code {
-            background: none;
-            border: none;
-            padding: 0;
-            color: var(--text-soft);
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            white-space: pre;
-            display: block;
-        }
-        
-        .code-block::-webkit-scrollbar {
-            height: 9px;
-        }
-        
-        .code-block::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-        
-        /* 提示框样式 */
-        .highlight {
-            background: var(--bg-soft);
-            padding: 15px 18px;
-            border-left: 4px solid var(--orange);
-            margin: 18px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .key-point {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--green);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--green);
-        }
-        
-        .key-point strong {
-            color: var(--green-soft);
-            font-weight: 650;
-        }
-        
-        .example-case {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--orange);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .example-case strong {
-            color: var(--orange);
-            font-weight: 650;
-        }
-        
-        .warning {
-            background: var(--bg-soft);
-            border-left: 4px solid #ff6b6b;
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid #ff6b6b;
-        }
-        
-        .warning strong {
-            color: #ff6b6b;
-            font-weight: 650;
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 18px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-        }
-        
-        .comparison-table th {
-            background: var(--bg-soft);
-            color: var(--text);
-            padding: 11px 15px;
-            text-align: left;
-            font-weight: 650;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .comparison-table td {
-            padding: 11px 15px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-soft);
-        }
-        
-        .comparison-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .comparison-table tr:hover td {
-            background: rgba(88,166,255,0.04);
-        }
-        
-        .flow-diagram {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        
-        .flow-step {
-            background: var(--bg-card);
-            border: 1.5px solid var(--accent);
-            color: var(--text);
-            padding: 12px 22px;
-            border-radius: 10px;
-            min-width: 120px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .flow-arrow {
-            font-size: 20px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            padding: 2px 0;
-        }
+        section { margin-bottom: 50px; }
     </style>
 </head>
 <body>
@@ -223,372 +15,387 @@
   <nav class="sidebar" id="sidebar"></nav>
   <main class="main">
     <div class="content">
-            <h1>模型集成：支持多种LLM</h1>
-            <p class="page-subtitle">DeerFlow 学习系列 - 第 21 章</p>
-            
-            <div class="toc">
-                <h2>📖 目录</h2>
-                <ul>
-                    <li><a href="#introduction">简介</a></li>
-                    <li><a href="#model-landscape">模型生态</a></li>
-                    <li><a href="#model-abstraction">模型抽象层</a></li>
-                    <li><a href="#model-switching">模型切换</a></li>
-                    <li><a href="#fallback-strategy">故障转移策略</a></li>
-                    <li><a href="#cost-optimization">成本优化</a></li>
-                    <li><a href="#best-practices">最佳实践</a></li>
-                    <li><a href="#summary">总结</a></li>
-                </ul>
+      <h1>模型集成：支持多种LLM</h1>
+      <p class="page-subtitle">DeerFlow 学习系列 - 第 21 章</p>
+
+      <div class="deerflow-map">
+        <h3>本章讲的是 DeerFlow 怎样解析模型，不是模型科普</h3>
+        <p>在 DeerFlow 当前仓库里，模型集成的核心问题不是“OpenAI、Anthropic、DeepSeek 有什么区别”，而是：配置文件怎样声明模型、Gateway 怎样把这些配置暴露给前端、运行时怎样解析主 agent 与 subagent 的模型选择、嵌入式 client 怎样复用这套逻辑，以及文档怎样约束这些行为。</p>
+      </div>
+
+      <div class="toc">
+        <h3>目录</h3>
+        <ul>
+          <li><a href="#problem">这项能力在 DeerFlow 中解决什么问题</a></li>
+          <li><a href="#codebase">这项能力在代码库中的位置</a></li>
+          <li><a href="#flow">真实运行链路或数据链路</a></li>
+          <li><a href="#config">配置面与使用方式</a></li>
+          <li><a href="#tradeoffs">关键实现细节与权衡</a></li>
+          <li><a href="#limits">当前限制、边界与非目标</a></li>
+          <li><a href="#relations">它与 DeerFlow 其他能力的关系</a></li>
+        </ul>
+      </div>
+
+      <section id="problem">
+        <h2>这项能力在 DeerFlow 中解决什么问题</h2>
+        <p>DeerFlow 需要让浏览器、Gateway runtime、embedded Python client 和 subagent 执行器都能用同一套模型配置工作，同时又支持 thinking、reasoning effort、provider-specific patch、CLI-backed provider 和 per-subagent override。这不是“列几个模型名字”能解决的问题，而是配置到运行时的完整解析链问题。</p>
+        <p>因此，本章的重点是 DeerFlow 如何把 <code>config.yaml</code> 里的模型声明，变成 Gateway 可查询的模型列表、主运行时可实例化的 chat model，以及 subagent 可继承或覆盖的模型选择。</p>
+      </section>
+
+      <section id="codebase">
+        <h2>这项能力在代码库中的位置</h2>
+        <table class="comparison-table">
+          <tr>
+            <th>路径</th>
+            <th>职责</th>
+            <th>为什么要看</th>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/config/app_config.py</code></td>
+            <td>加载 <code>config.yaml</code>、持有 <code>models</code> 列表、应用单例配置</td>
+            <td>所有模型集成都从这里开始</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/subagents/config.py</code></td>
+            <td><code>SubagentConfig</code> 与 <code>resolve_subagent_model_name</code></td>
+            <td>解释 subagent 怎样继承父模型或回退默认模型</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/config/subagents_config.py</code></td>
+            <td>subagent 全局默认、per-agent override、custom agent 模型覆盖</td>
+            <td>说明模型选择不只存在于主 agent</td>
+          </tr>
+          <tr>
+            <td><code>backend/app/gateway/routers/models.py</code></td>
+            <td>把配置中的模型安全暴露给前端与 API 客户端</td>
+            <td>这里定义了浏览器能看到的模型 surface</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/client.py</code></td>
+            <td>embedded client 的模型解析、agent 重建与 config 继承</td>
+            <td>说明 DeerFlow 不只有 Gateway 一条运行路径</td>
+          </tr>
+          <tr>
+            <td><code>backend/docs/CONFIGURATION.md</code></td>
+            <td>模型配置格式、provider 示例、thinking patch、CLI provider 说明</td>
+            <td>这是理解源码前后的关键配套文档</td>
+          </tr>
+        </table>
+        <p>这里真正值得精读的核心文件其实是模型工厂：<code>backend/packages/harness/deerflow/models/factory.py</code>。虽然当前表格主要从配置视角列了文件，但真正把“一个配置项”变成“一个能工作的 LangChain chat model”的，是 <code>create_chat_model(...)</code>。它会读取模型配置、清理不该透传的字段、处理 thinking on/off 的差异、补齐 OpenAI-compatible provider 的 stream usage 和 timeout 默认值，还会对 Codex、MindIE 这类特定 provider 做额外 patch。</p>
+        <p>所以 DeerFlow 的模型集成不是“配置文件 + 前端下拉框”这么简单，中间还隔着一层非常实在的运行时归一化逻辑。</p>
+      </section>
+
+      <section id="flow">
+        <h2>真实运行链路或数据链路</h2>
+        <p>主运行时和 embedded client 的模型解析链大致如下：</p>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>模型实例生成流程图</strong>
+            <span>同一个模型名不是直接查表，而是会经过一轮运行时加工</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>先从配置文件声明模型列表</strong>
+                <p>系统先知道有哪些模型可选、每个模型带什么 provider 设置。</p>
+                <div class="flow-step-path"><code>config.yaml</code> + <code>config/app_config.py</code></div>
+              </div>
             </div>
-            
-            <section id="introduction">
-                <h2>简介</h2>
-                <p>
-                    不同的 LLM 模型各有优缺点。支持多种模型能让 Agent 根据需求灵活选择最合适的模型。本章讲解如何集成多个 LLM、设计模型抽象层、实现模型切换和成本优化等内容。
-                </p>
-                <div class="key-point">
-                    <strong>学习目标：</strong>
-                    <ul>
-                        <li>理解不同 LLM 的特点和差异</li>
-                        <li>掌握模型抽象层的设计</li>
-                        <li>学会实现模型切换机制</li>
-                        <li>了解成本优化策略</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <section id="model-landscape">
-                <h2>模型生态</h2>
-                <p>
-                    当前 LLM 市场有多个主要参与者，各自提供不同的模型和服务。
-                </p>
-                
-                <h3>主流模型对比</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>模型</th>
-                            <th>提供商</th>
-                            <th>优势</th>
-                            <th>劣势</th>
-                            <th>成本</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>GPT-4</strong></td>
-                            <td>OpenAI</td>
-                            <td>最强能力</td>
-                            <td>成本高</td>
-                            <td>$$$$</td>
-                        </tr>
-                        <tr>
-                            <td><strong>GPT-3.5</strong></td>
-                            <td>OpenAI</td>
-                            <td>性价比高</td>
-                            <td>能力有限</td>
-                            <td>$</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Claude 3</strong></td>
-                            <td>Anthropic</td>
-                            <td>推理能力强</td>
-                            <td>成本较高</td>
-                            <td>$$$</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Gemini</strong></td>
-                            <td>Google</td>
-                            <td>多模态</td>
-                            <td>集成复杂</td>
-                            <td>$$</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Llama 2</strong></td>
-                            <td>Meta</td>
-                            <td>开源免费</td>
-                            <td>能力较弱</td>
-                            <td>免费</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-            
-            <section id="model-abstraction">
-                <h2>模型抽象层</h2>
-                <p>
-                    设计一个抽象层可以隐藏不同模型的差异，提供统一的接口。
-                </p>
-                
-                <h3>抽象层设计</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">from</span> abc <span class="tok-kw">import</span> <span class="tok-cls">ABC</span>, abstractmethod
-
-<span class="tok-kw">class</span> <span class="tok-cls">LLMProvider</span>(<span class="tok-cls">ABC</span>):
-    <span class="tok-str">"""LLM 提供商抽象基类"""</span>
-    
-    @abstractmethod
-    <span class="tok-kw">def</span> <span class="tok-fn">invoke</span>(<span class="tok-kw">self</span>, prompt: <span class="tok-str">str</span>, **kwargs) -> <span class="tok-str">str</span>:
-        <span class="tok-str">"""调用模型"""</span>
-        <span class="tok-kw">pass</span>
-    
-    @abstractmethod
-    <span class="tok-kw">def</span> <span class="tok-fn">get_cost</span>(<span class="tok-kw">self</span>, tokens: <span class="tok-num">1000</span>) -> <span class="tok-num">0.0</span>:
-        <span class="tok-str">"""计算成本"""</span>
-        <span class="tok-kw">pass</span>
-
-<span class="tok-com"># 具体实现</span>
-<span class="tok-kw">class</span> <span class="tok-cls">OpenAIProvider</span>(<span class="tok-cls">LLMProvider</span>):
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, api_key: <span class="tok-str">str</span>, model: <span class="tok-str">str</span> = <span class="tok-str">"gpt-3.5-turbo"</span>):
-        <span class="tok-kw">self</span>.api_key = api_key
-        <span class="tok-kw">self</span>.model = model
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">invoke</span>(<span class="tok-kw">self</span>, prompt: <span class="tok-str">str</span>, **kwargs) -> <span class="tok-str">str</span>:
-        <span class="tok-com"># 调用 OpenAI API</span>
-        <span class="tok-kw">pass</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">get_cost</span>(<span class="tok-kw">self</span>, tokens: <span class="tok-num">1000</span>) -> <span class="tok-num">0.0</span>:
-        <span class="tok-com"># 计算 OpenAI 成本</span>
-        <span class="tok-kw">pass</span>
-
-<span class="tok-kw">class</span> <span class="tok-cls">AnthropicProvider</span>(<span class="tok-cls">LLMProvider</span>):
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, api_key: <span class="tok-str">str</span>, model: <span class="tok-str">str</span> = <span class="tok-str">"claude-3-opus"</span>):
-        <span class="tok-kw">self</span>.api_key = api_key
-        <span class="tok-kw">self</span>.model = model
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">invoke</span>(<span class="tok-kw">self</span>, prompt: <span class="tok-str">str</span>, **kwargs) -> <span class="tok-str">str</span>:
-        <span class="tok-com"># 调用 Anthropic API</span>
-        <span class="tok-kw">pass</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">get_cost</span>(<span class="tok-kw">self</span>, tokens: <span class="tok-num">1000</span>) -> <span class="tok-num">0.0</span>:
-        <span class="tok-com"># 计算 Anthropic 成本</span>
-        <span class="tok-kw">pass</span>
-</code></div>
-            </section>
-            
-            <section id="model-switching">
-                <h2>模型切换</h2>
-                <p>
-                    根据不同的场景和需求，动态切换到最合适的模型。
-                </p>
-                
-                <h3>模型选择策略</h3>
-                <div class="flow-diagram">
-                    <div class="flow-step">分析任务</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">评估复杂度</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">选择模型</div>
-                </div>
-                <div style="text-align: center; margin: 10px 0;">↓</div>
-                <div class="flow-diagram">
-                    <div class="flow-step">执行任务</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">评估结果</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">调整策略</div>
-                </div>
-                
-                <h3>模型选择器实现</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">ModelSelector</span>:
-    <span class="tok-str">"""模型选择器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.providers = {
-            <span class="tok-str">"gpt-4"</span>: <span class="tok-cls">OpenAIProvider</span>(<span class="tok-str">"key"</span>, <span class="tok-str">"gpt-4"</span>),
-            <span class="tok-str">"gpt-3.5"</span>: <span class="tok-cls">OpenAIProvider</span>(<span class="tok-str">"key"</span>, <span class="tok-str">"gpt-3.5-turbo"</span>),
-            <span class="tok-str">"claude"</span>: <span class="tok-cls">AnthropicProvider</span>(<span class="tok-str">"key"</span>)
-        }
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">select_model</span>(<span class="tok-kw">self</span>, task_complexity: <span class="tok-num">5</span>, budget: <span class="tok-num">10</span>) -> <span class="tok-cls">LLMProvider</span>:
-        <span class="tok-str">"""根据任务复杂度和预算选择模型"""</span>
-        <span class="tok-kw">if</span> task_complexity > <span class="tok-num">8</span>:
-            <span class="tok-kw">return</span> <span class="tok-kw">self</span>.providers[<span class="tok-str">"gpt-4"</span>]
-        <span class="tok-kw">elif</span> budget < <span class="tok-num">5</span>:
-            <span class="tok-kw">return</span> <span class="tok-kw">self</span>.providers[<span class="tok-str">"gpt-3.5"</span>]
-        <span class="tok-kw">else</span>:
-            <span class="tok-kw">return</span> <span class="tok-kw">self</span>.providers[<span class="tok-str">"claude"</span>]
-</code></div>
-                
-                <div class="example-case">
-                    <strong>示例：</strong> 模型切换的实际应用<br>
-                    <div class="code-block"><code>
-selector = <span class="tok-cls">ModelSelector</span>()
-
-<span class="tok-com"># 简单任务：使用便宜的模型</span>
-simple_task = <span class="tok-str">"翻译这句话"</span>
-model = selector.<span class="tok-fn">select_model</span>(task_complexity=<span class="tok-num">2</span>, budget=<span class="tok-num">1</span>)
-result = model.<span class="tok-fn">invoke</span>(simple_task)
-
-<span class="tok-com"># 复杂任务：使用强大的模型</span>
-complex_task = <span class="tok-str">"分析这个复杂的代码并提出优化建议"</span>
-model = selector.<span class="tok-fn">select_model</span>(task_complexity=<span class="tok-num">9</span>, budget=<span class="tok-num">50</span>)
-result = model.<span class="tok-fn">invoke</span>(complex_task)
-</code></div>
-                </div>
-            </section>
-            
-            <section id="fallback-strategy">
-                <h2>故障转移策略</h2>
-                <p>
-                    当某个模型失败或超时时，需要有备用方案来保证系统的可靠性。
-                </p>
-                
-                <h3>故障转移实现</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">FallbackModelManager</span>:
-    <span class="tok-str">"""故障转移模型管理器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.primary_model = <span class="tok-cls">OpenAIProvider</span>(<span class="tok-str">"key"</span>, <span class="tok-str">"gpt-4"</span>)
-        <span class="tok-kw">self</span>.fallback_models = [
-            <span class="tok-cls">AnthropicProvider</span>(<span class="tok-str">"key"</span>),
-            <span class="tok-cls">OpenAIProvider</span>(<span class="tok-str">"key"</span>, <span class="tok-str">"gpt-3.5-turbo"</span>)
-        ]
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">invoke_with_fallback</span>(<span class="tok-kw">self</span>, prompt: <span class="tok-str">str</span>, timeout: <span class="tok-num">30</span>) -> <span class="tok-str">str</span>:
-        <span class="tok-str">"""尝试使用主模型，失败时使用备用模型"""</span>
-        models = [<span class="tok-kw">self</span>.primary_model] + <span class="tok-kw">self</span>.fallback_models
-        
-        <span class="tok-kw">for</span> model <span class="tok-kw">in</span> models:
-            <span class="tok-kw">try</span>:
-                result = model.<span class="tok-fn">invoke</span>(prompt, timeout=timeout)
-                <span class="tok-kw">return</span> result
-            <span class="tok-kw">except</span> <span class="tok-cls">Exception</span> <span class="tok-kw">as</span> e:
-                <span class="tok-com"># 记录错误，尝试下一个模型</span>
-                <span class="tok-fn">print</span>(<span class="tok-str">f"Model failed: {e}, trying fallback"</span>)
-                <span class="tok-kw">continue</span>
-        
-        <span class="tok-kw">raise</span> <span class="tok-cls">Exception</span>(<span class="tok-str">"All models failed"</span>)
-</code></div>
-                
-                <h3>故障检测和恢复</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>故障类型</th>
-                            <th>检测方式</th>
-                            <th>恢复策略</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>超时</strong></td>
-                            <td>响应时间超过阈值</td>
-                            <td>切换到更快的模型</td>
-                        </tr>
-                        <tr>
-                            <td><strong>API 错误</strong></td>
-                            <td>HTTP 错误码</td>
-                            <td>重试或使用备用模型</td>
-                        </tr>
-                        <tr>
-                            <td><strong>配额限制</strong></td>
-                            <td>429 Too Many Requests</td>
-                            <td>等待或使用其他模型</td>
-                        </tr>
-                        <tr>
-                            <td><strong>质量问题</strong></td>
-                            <td>输出评分低于阈值</td>
-                            <td>重新调用或升级模型</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-            
-            <section id="cost-optimization">
-                <h2>成本优化</h2>
-                <p>
-                    使用多个模型可以优化成本。关键是在成本和质量之间找到平衡。
-                </p>
-                
-                <h3>成本优化策略</h3>
-                <ul>
-                    <li><strong>分级处理</strong>：简单任务用便宜模型，复杂任务用强大模型</li>
-                    <li><strong>缓存结果</strong>：缓存常见问题的答案，避免重复调用</li>
-                    <li><strong>批量处理</strong>：合并多个请求，减少 API 调用次数</li>
-                    <li><strong>降级策略</strong>：当高级模型超时或失败时，降级到低级模型</li>
-                    <li><strong>成本监控</strong>：实时监控成本，设置预算告警</li>
-                </ul>
-                
-                <h3>成本计算器</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">CostCalculator</span>:
-    <span class="tok-str">"""成本计算器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.rates = {
-            <span class="tok-str">"gpt-4"</span>: {<span class="tok-str">"input"</span>: <span class="tok-num">0.03</span>, <span class="tok-str">"output"</span>: <span class="tok-num">0.06</span>},
-            <span class="tok-str">"gpt-3.5"</span>: {<span class="tok-str">"input"</span>: <span class="tok-num">0.0005</span>, <span class="tok-str">"output"</span>: <span class="tok-num">0.0015</span>},
-            <span class="tok-str">"claude"</span>: {<span class="tok-str">"input"</span>: <span class="tok-num">0.008</span>, <span class="tok-str">"output"</span>: <span class="tok-num">0.024</span>}
-        }
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">calculate_cost</span>(<span class="tok-kw">self</span>, model: <span class="tok-str">str</span>, input_tokens: <span class="tok-num">1000</span>, output_tokens: <span class="tok-num">500</span>) -> <span class="tok-num">0.0</span>:
-        <span class="tok-str">"""计算调用成本"""</span>
-        rate = <span class="tok-kw">self</span>.rates[model]
-        input_cost = input_tokens * rate[<span class="tok-str">"input"</span>] / <span class="tok-num">1000</span>
-        output_cost = output_tokens * rate[<span class="tok-str">"output"</span>] / <span class="tok-num">1000</span>
-        <span class="tok-kw">return</span> input_cost + output_cost
-</code></div>
-                
-                <div class="key-point">
-                    <strong>关键点：</strong> 成本优化不是简单地选择最便宜的模型，而是在成本、质量和速度之间找到最优平衡。
-                </div>
-            </section>
-            
-            <section id="best-practices">
-                <h2>最佳实践</h2>
-                
-                <h3>1. 统一接口</h3>
-                <p>
-                    为所有模型提供统一的接口，使得切换模型不需要改变上层代码。
-                </p>
-                
-                <h3>2. 错误处理</h3>
-                <p>
-                    实现降级策略，当一个模型失败时自动切换到备用模型。
-                </p>
-                
-                <h3>3. 性能监控</h3>
-                <p>
-                    监控每个模型的性能指标，包括延迟、成本和准确性。
-                </p>
-                
-                <h3>4. 配置管理</h3>
-                <p>
-                    使用配置文件管理模型选择策略，便于调整而不需要修改代码。
-                </p>
-                
-                <h3>5. 成本控制</h3>
-                <p>
-                    设置成本预算和告警，防止意外的高成本。
-                </p>
-            </section>
-            
-            <section id="summary">
-                <h2>总结</h2>
-                <p>
-                    支持多种 LLM 模型能让 Agent 更灵活地适应不同场景。通过设计良好的抽象层、实现智能的模型选择、故障转移和成本优化，可以构建高效、经济、可靠的 Agent 系统。本章深入讲解了模型集成的各个方面。
-                </p>
-                <div class="highlight">
-                    <strong>核心要点总结：</strong>
-                    <ul>
-                        <li><strong>模型生态：</strong> 了解不同模型的优缺点和成本</li>
-                        <li><strong>抽象层设计：</strong> 为所有模型提供统一接口</li>
-                        <li><strong>模型切换：</strong> 根据任务复杂度和预算动态选择模型</li>
-                        <li><strong>故障转移：</strong> 当模型失败时自动切换到备用模型</li>
-                        <li><strong>成本优化：</strong> 分级处理、缓存、批量处理、降级策略</li>
-                        <li><strong>最佳实践：</strong> 统一接口、错误处理、性能监控、配置管理、成本控制</li>
-                    </ul>
-                </div>
-                
-                <div class="key-point">
-                    <strong>模型集成建议：</strong> 多模型集成是构建鲁棒 Agent 系统的关键。需要在性能、成本和可靠性之间找到平衡。同时要定期评估模型性能，根据实际情况调整策略。
-                </div>
-            </section>
-            
-            <div id="page-nav"></div>
+            <div class="flow-step">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>配置对象根据名字取出模型声明</strong>
+                <p>这一层先拿到原始配置，还没有变成真正可调用的模型对象。</p>
+                <div class="flow-step-path"><code>AppConfig.models</code> + <code>get_model_config(...)</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>管理面可以列模型，运行面才会真正创建模型</strong>
+                <p>Gateway 的 models 路由主要负责展示和查询；真正把配置变成实例的是运行时创建逻辑。</p>
+                <div class="flow-step-path"><code>gateway/routers/models.py</code> + <code>create_chat_model(...)</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>模型工厂根据 provider 规则做运行时修补</strong>
+                <p>thinking、disable payload、stream usage、timeout 和特定 provider patch 都在这里被处理。</p>
+                <div class="flow-step-path"><code>models/factory.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>主 Agent 或嵌入式客户端拿到可用模型实例</strong>
+                <p>到了这里，client 和 Gateway 才会把模型对象接进后续 agent 构建链路。</p>
+                <div class="flow-step-path"><code>client.py</code> / <code>Gateway lead agent build</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">06</div>
+              <div class="flow-step-copy">
+                <strong>如果是子代理，还会先走一层模型覆盖规则</strong>
+                <p>子代理可以继承父模型，也可以走 per-agent override，所以最终生效模型不一定等于主代理模型。</p>
+                <div class="flow-step-path"><code>subagents/config.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">07</div>
+              <div class="flow-step-copy">
+                <strong>最后真正参与执行的是加工后的有效模型实例</strong>
+                <p>所以读模型问题时，不能只看配置名，还要看运行时有没有额外改写。</p>
+                <div class="flow-step-path"><code>effective model instance</code></div>
+              </div>
+            </div>
+          </div>
         </div>
+        <p>把这条链落到函数级别，就是：<code>AppConfig.get_model_config(...)</code> 先取到声明；<code>create_chat_model(...)</code> 再决定 thinking_enabled 时要不要合并 <code>when_thinking_enabled</code>，thinking 关闭时要不要注入 disable payload，provider 是否需要默认开启 <code>stream_usage</code> 或加长 <code>stream_chunk_timeout</code>；最后才实例化真正的 model class。也就是说，“同一个模型名字”在 DeerFlow 里不只是查配置那么简单，而是会经过一轮 provider-aware 的运行时加工。</p>
+        <p>如果当前执行的是 subagent，那么 <code>backend/packages/harness/deerflow/config/subagents_config.py</code> 会先读取全局和 per-agent override，再由 <code>backend/packages/harness/deerflow/subagents/config.py</code> 的 <code>resolve_subagent_model_name</code> 决定究竟是继承父模型、使用显式覆盖，还是回退到 <code>backend/packages/harness/deerflow/config/app_config.py</code> 中的默认首个模型。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码：create_chat_model 怎样把配置变成真正可调用的模型对象</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/models/factory.py</code>。这段代码就是 DeerFlow 模型集成的核心实现。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">models/factory.py :: create_chat_model(...)</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-fn">config</span> <span class="tok-op">=</span> <span class="tok-attr">app_config</span> <span class="tok-kw">or</span> <span class="tok-fn">get_app_config</span>()</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">name</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-attr">name</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-attr">models</span>[<span class="tok-num">0</span>].<span class="tok-attr">name</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"><span class="tok-fn">model_config</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">get_model_config</span>(<span class="tok-attr">name</span>)</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-fn">model_config</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Model {name} not found in config"</span>) <span class="tok-kw">from</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src"><span class="tok-fn">model_class</span> <span class="tok-op">=</span> <span class="tok-fn">resolve_class</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">use</span>, <span class="tok-cls">BaseChatModel</span>)</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"><span class="tok-fn">model_settings_from_config</span> <span class="tok-op">=</span> <span class="tok-attr">model_config</span>.<span class="tok-fn">model_dump</span>(</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">    <span class="tok-attr">exclude_none</span><span class="tok-op">=</span><span class="tok-kw">True</span>,</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-attr">exclude</span><span class="tok-op">=</span>{<span class="tok-str">"use"</span>, <span class="tok-str">"name"</span>, <span class="tok-str">"display_name"</span>, <span class="tok-str">"description"</span>, <span class="tok-str">"supports_thinking"</span>, <span class="tok-str">"supports_reasoning_effort"</span>, <span class="tok-str">"when_thinking_enabled"</span>, <span class="tok-str">"when_thinking_disabled"</span>, <span class="tok-str">"thinking"</span>, <span class="tok-str">"supports_vision"</span>},</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">)</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"><span class="tok-fn">has_thinking_settings</span> <span class="tok-op">=</span> (<span class="tok-attr">model_config</span>.<span class="tok-attr">when_thinking_enabled</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>) <span class="tok-kw">or</span> (<span class="tok-attr">model_config</span>.<span class="tok-attr">thinking</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src"><span class="tok-fn">effective_wte</span>: <span class="tok-type">dict</span> <span class="tok-op">=</span> <span class="tok-fn">dict</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">when_thinking_enabled</span>) <span class="tok-kw">if</span> <span class="tok-attr">model_config</span>.<span class="tok-attr">when_thinking_enabled</span> <span class="tok-kw">else</span> {}</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">model_config</span>.<span class="tok-attr">thinking</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-fn">merged_thinking</span> <span class="tok-op">=</span> {<span class="tok-op">**</span>(<span class="tok-attr">effective_wte</span>.<span class="tok-fn">get</span>(<span class="tok-str">"thinking"</span>) <span class="tok-kw">or</span> {}), <span class="tok-op">**</span><span class="tok-attr">model_config</span>.<span class="tok-attr">thinking</span>}</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">    <span class="tok-attr">effective_wte</span> <span class="tok-op">=</span> {<span class="tok-op">**</span><span class="tok-attr">effective_wte</span>, <span class="tok-str">"thinking"</span>: <span class="tok-fn">merged_thinking</span>}</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-attr">thinking_enabled</span> <span class="tok-kw">and</span> <span class="tok-fn">has_thinking_settings</span>:</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">model_config</span>.<span class="tok-attr">supports_thinking</span>:</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Model {name} does not support thinking. Set `supports_thinking` to true in the `config.yaml` to enable thinking."</span>) <span class="tok-kw">from</span> <span class="tok-kw">None</span></span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-fn">effective_wte</span>:</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">update</span>(<span class="tok-fn">effective_wte</span>)</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">thinking_enabled</span>:</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">model_config</span>.<span class="tok-attr">when_thinking_disabled</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">update</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">when_thinking_disabled</span>)</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">    <span class="tok-kw">elif</span> <span class="tok-fn">has_thinking_settings</span> <span class="tok-kw">and</span> <span class="tok-attr">effective_wte</span>.<span class="tok-fn">get</span>(<span class="tok-str">"extra_body"</span>, {}).<span class="tok-fn">get</span>(<span class="tok-str">"thinking"</span>, {}).<span class="tok-fn">get</span>(<span class="tok-str">"type"</span>):</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"extra_body"</span>] <span class="tok-op">=</span> <span class="tok-fn">_deep_merge_dicts</span>(<span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"extra_body"</span>), {<span class="tok-str">"thinking"</span>: {<span class="tok-str">"type"</span>: <span class="tok-str">"disabled"</span>}})</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"reasoning_effort"</span>] <span class="tok-op">=</span> <span class="tok-str">"minimal"</span></span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src"><span class="tok-fn">_enable_stream_usage_by_default</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">use</span>, <span class="tok-attr">model_settings_from_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src"><span class="tok-fn">_apply_stream_chunk_timeout_default</span>(<span class="tok-attr">model_config</span>.<span class="tok-attr">use</span>, <span class="tok-attr">model_settings_from_config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src"><span class="tok-fn">model_instance</span> <span class="tok-op">=</span> <span class="tok-fn">model_class</span>(<span class="tok-op">**</span><span class="tok-attr">kwargs</span>, <span class="tok-op">**</span><span class="tok-attr">model_settings_from_config</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这段代码的第一个阶段是“取配置并校验存在性”。如果模型名在配置里根本找不到，DeerFlow 不会兜底乱猜，而是直接抛错终止。</li>
+            <li><code>resolve_class(...)</code> 说明配置中的 <code>use</code> 字段不是简单 provider 名，而是最终要被解析成真正的模型类。</li>
+            <li><code>model_dump(..., exclude=...)</code> 非常关键，它把展示字段、能力描述字段和 thinking 配置字段先剥掉，只保留准备喂给构造器的核心参数。</li>
+            <li>接下来 DeerFlow 会额外计算 <code>effective_wte</code>，把 <code>when_thinking_enabled</code> 和 <code>thinking</code> 这两套来源合并成一份真正运行时配置。</li>
+            <li>当 <code>thinking_enabled=True</code> 时，如果模型配置没声明支持 thinking，会直接报错；这保证了“前端开了 thinking”不会静默变成假开关。</li>
+            <li>当 <code>thinking_enabled=False</code> 时，又会按 provider 差异走不同分支，有的改 <code>when_thinking_disabled</code>，有的改 <code>extra_body</code>，有的顺手把 <code>reasoning_effort</code> 降成 minimal。这正是 DeerFlow 模型工厂最实在的 provider patch 层。</li>
+            <li>最后才是统一补流式 usage、chunk timeout，再实例化 <code>model_class</code>。也就是说，一个“模型名字”要经过配置清洗、thinking 补丁、provider 默认值注入三轮加工，才会变成真正可调用的对象。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 2：Gateway 为什么只把“安全的模型信息”暴露给前端</h4>
+          <p class="source-caption">节选自 <code>backend/app/gateway/routers/models.py</code>。这段代码能把“配置里有很多字段，为什么前端只看见一小部分”讲清楚。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">gateway/routers/models.py :: list_models() / get_model()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">ModelResponse</span>(<span class="tok-cls">BaseModel</span>):</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-attr">name</span>: <span class="tok-type">str</span> <span class="tok-op">=</span> <span class="tok-cls">Field</span>(..., <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-str">"Unique identifier for the model"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-attr">model</span>: <span class="tok-type">str</span> <span class="tok-op">=</span> <span class="tok-cls">Field</span>(..., <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-str">"Actual provider model identifier"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-attr">display_name</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-cls">Field</span>(<span class="tok-kw">None</span>, <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-str">"Human-readable name"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">    <span class="tok-attr">description</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-cls">Field</span>(<span class="tok-kw">None</span>, <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-str">"Model description"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-attr">supports_thinking</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-cls">Field</span>(<span class="tok-attr">default</span><span class="tok-op">=</span><span class="tok-kw">False</span>, <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-str">"Whether model supports thinking mode"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-attr">supports_reasoning_effort</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-cls">Field</span>(<span class="tok-attr">default</span><span class="tok-op">=</span><span class="tok-kw">False</span>, <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-str">"Whether model supports reasoning effort"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-dec">@router.get</span>(<span class="tok-str">"/models"</span>, <span class="tok-attr">response_model</span><span class="tok-op">=</span><span class="tok-cls">ModelsListResponse</span>)</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"><span class="tok-com"># config: 当前服务生效的完整模型配置，但这个接口只会从里头挑安全、适合前端展示的字段</span></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">list_models</span>(<span class="tok-attr">config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">=</span> <span class="tok-cls">Depends</span>(<span class="tok-fn">get_config</span>)) <span class="tok-op">-&gt;</span> <span class="tok-cls">ModelsListResponse</span>:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-com"># 逐个遍历完整模型配置，把它们投影成前端可安全消费的精简响应对象</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-fn">models</span> <span class="tok-op">=</span> [</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-cls">ModelResponse</span>(</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">            <span class="tok-attr">name</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">name</span>,</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">            <span class="tok-attr">model</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">model</span>,</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">            <span class="tok-attr">display_name</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">display_name</span>,</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">            <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">description</span>,</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">            <span class="tok-attr">supports_thinking</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">supports_thinking</span>,</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">            <span class="tok-attr">supports_reasoning_effort</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">supports_reasoning_effort</span>,</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">        )</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">        <span class="tok-kw">for</span> <span class="tok-attr">model</span> <span class="tok-kw">in</span> <span class="tok-attr">config</span>.<span class="tok-attr">models</span></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">    ]</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">    <span class="tok-com"># token usage 开关也会一起返回给 UI，这样前端知道是否展示对应统计能力</span></span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-cls">ModelsListResponse</span>(<span class="tok-attr">models</span><span class="tok-op">=</span><span class="tok-attr">models</span>, <span class="tok-attr">token_usage</span><span class="tok-op">=</span><span class="tok-cls">TokenUsageResponse</span>(<span class="tok-attr">enabled</span><span class="tok-op">=</span><span class="tok-attr">config</span>.<span class="tok-attr">token_usage</span>.<span class="tok-attr">enabled</span>))</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src"><span class="tok-dec">@router.get</span>(<span class="tok-str">"/models/{model_name}"</span>, <span class="tok-attr">response_model</span><span class="tok-op">=</span><span class="tok-cls">ModelResponse</span>)</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src"><span class="tok-com"># model_name: 前端点名要看的模型；config: 服务端完整配置，用来查单个模型并在不存在时返回 404</span></span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">get_model</span>(<span class="tok-attr">model_name</span>: <span class="tok-type">str</span>, <span class="tok-attr">config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">=</span> <span class="tok-cls">Depends</span>(<span class="tok-fn">get_config</span>)) <span class="tok-op">-&gt;</span> <span class="tok-cls">ModelResponse</span>:</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">    <span class="tok-com"># 先按名字查服务端配置；如果压根不存在，这一层就明确告诉前端是 404</span></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-fn">model</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">get_model_config</span>(<span class="tok-attr">model_name</span>)</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">model</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">HTTPException</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-num">404</span>, <span class="tok-attr">detail</span><span class="tok-op">=</span><span class="tok-str">f"Model '{model_name}' not found"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-com"># 命中后仍然只回传白名单字段，不把 provider class、base_url、api_key 一类内部配置透出去</span></span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-cls">ModelResponse</span>(<span class="tok-attr">name</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">name</span>, <span class="tok-attr">model</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">model</span>, <span class="tok-attr">display_name</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">display_name</span>, <span class="tok-attr">description</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">description</span>, <span class="tok-attr">supports_thinking</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">supports_thinking</span>, <span class="tok-attr">supports_reasoning_effort</span><span class="tok-op">=</span><span class="tok-attr">model</span>.<span class="tok-attr">supports_reasoning_effort</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这里的关键点不是“又写了一个列表接口”，而是它显式定义了一个安全裁剪过的 `ModelResponse`，前端只能看到名字、展示名、描述和能力开关。</li>
+            <li>你在 `config.yaml` 里配置的很多内部字段，比如 `api_key`、`base_url`、thinking patch 细节、provider class，都不会在这里透出给浏览器。</li>
+            <li><code>list_models()</code> 做的事情其实很直接：遍历 `config.models`，把每个完整模型配置投影成一个更安全、更适合 UI 的响应对象。</li>
+            <li><code>get_model()</code> 走的则是按名字查单个配置的路径，没找到就明确返回 404。这说明 Gateway 的模型暴露层既是“展示层”，也是“配置存在性校验层”。</li>
+            <li>因此模型集成这一章不能只看工厂函数，还要看这一层，因为它解释了“前端切模型”究竟是基于哪一套公开模型元信息工作的。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码 3：provider patch 不是抽象理论，而是工厂里的真实兼容逻辑</h4>
+          <p class="source-caption">继续节选自 <code>backend/packages/harness/deerflow/models/factory.py</code>。这一段更适合回答“为什么同样叫 thinking，不同模型后端却要不同处理”的问题。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">models/factory.py :: stream usage / timeout / Codex / MindIE patches</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># model_use_path: 当前 provider 类路径；model_settings_from_config: 即将实例化模型时使用的参数字典，这里按 provider 打流式 usage 默认补丁</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_enable_stream_usage_by_default</span>(<span class="tok-attr">model_use_path</span>: <span class="tok-type">str</span>, <span class="tok-attr">model_settings_from_config</span>: <span class="tok-type">dict</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-com"># 只有 OpenAI-compatible ChatOpenAI 这一支会用到这个默认补丁，别的 provider 直接跳过</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">model_use_path</span> <span class="tok-op">!=</span> <span class="tok-str">"langchain_openai:ChatOpenAI"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">        <span class="tok-kw">return</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-str">"stream_usage"</span> <span class="tok-kw">in</span> <span class="tok-attr">model_settings_from_config</span>:</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">        <span class="tok-kw">return</span></span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">    <span class="tok-com"># 只要走自定义 OpenAI endpoint，就主动打开 stream_usage，避免流式统计默认缺席</span></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-str">"base_url"</span> <span class="tok-kw">in</span> <span class="tok-attr">model_settings_from_config</span> <span class="tok-kw">or</span> <span class="tok-str">"openai_api_base"</span> <span class="tok-kw">in</span> <span class="tok-attr">model_settings_from_config</span>:</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"stream_usage"</span>] <span class="tok-op">=</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src"><span class="tok-com"># 参数与上一函数一致，但职责换成给流式 chunk 读取超时补 provider 级默认值</span></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_apply_stream_chunk_timeout_default</span>(<span class="tok-attr">model_use_path</span>: <span class="tok-type">str</span>, <span class="tok-attr">model_settings_from_config</span>: <span class="tok-type">dict</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">    <span class="tok-com"># 同样只对 ChatOpenAI 分支生效；别的 provider 留着这个参数反而可能构造失败</span></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">model_use_path</span> <span class="tok-op">!=</span> <span class="tok-str">"langchain_openai:ChatOpenAI"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">pop</span>(<span class="tok-str">"stream_chunk_timeout"</span>, <span class="tok-kw">None</span>)</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-kw">return</span></span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-com"># 用户或配置已经显式给了超时，就尊重它；否则才补 DeerFlow 的默认首 chunk 等待时长</span></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-str">"stream_chunk_timeout"</span> <span class="tok-kw">in</span> <span class="tok-attr">model_settings_from_config</span>:</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">        <span class="tok-kw">return</span></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"stream_chunk_timeout"</span>] <span class="tok-op">=</span> <span class="tok-attr">_DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS</span></span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src"><span class="tok-com"># 下面开始进入 provider patch 区：不同后端虽然都叫 chat model，但入参兼容层并不一样</span></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"><span class="tok-kw">from</span> <span class="tok-attr">deerflow</span>.<span class="tok-attr">models</span>.<span class="tok-attr">openai_codex_provider</span> <span class="tok-kw">import</span> <span class="tok-cls">CodexChatModel</span></span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-fn">issubclass</span>(<span class="tok-attr">model_class</span>, <span class="tok-cls">CodexChatModel</span>):</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">    <span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">pop</span>(<span class="tok-str">"max_tokens"</span>, <span class="tok-kw">None</span>)</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">    <span class="tok-fn">explicit_effort</span> <span class="tok-op">=</span> <span class="tok-attr">kwargs</span>.<span class="tok-fn">pop</span>(<span class="tok-str">"reasoning_effort"</span>, <span class="tok-kw">None</span>)</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-com"># Codex 走 reasoning_effort 语义，所以要把 thinking 开关翻译成它能理解的档位参数</span></span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">thinking_enabled</span>:</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"reasoning_effort"</span>] <span class="tok-op">=</span> <span class="tok-str">"none"</span></span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">    <span class="tok-kw">elif</span> <span class="tok-attr">explicit_effort</span> <span class="tok-kw">and</span> <span class="tok-attr">explicit_effort</span> <span class="tok-kw">in</span> (<span class="tok-str">"low"</span>, <span class="tok-str">"medium"</span>, <span class="tok-str">"high"</span>, <span class="tok-str">"xhigh"</span>):</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"reasoning_effort"</span>] <span class="tok-op">=</span> <span class="tok-attr">explicit_effort</span></span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">    <span class="tok-kw">elif</span> <span class="tok-str">"reasoning_effort"</span> <span class="tok-kw">not in</span> <span class="tok-attr">model_settings_from_config</span>:</span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"reasoning_effort"</span>] <span class="tok-op">=</span> <span class="tok-str">"medium"</span></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">    <span class="tok-com"># MindIE 分支则是稳定性补丁，默认把重试次数兜成 1，避免某些配置下完全不重试</span></span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-fn">getattr</span>(<span class="tok-attr">model_class</span>, <span class="tok-str">"__name__"</span>, <span class="tok-str">""</span>) <span class="tok-op">==</span> <span class="tok-str">"MindIEChatModel"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">    <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"max_retries"</span>] <span class="tok-op">=</span> <span class="tok-attr">model_settings_from_config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"max_retries"</span>, <span class="tok-num">1</span>)</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">    <span class="tok-com"># 最后再做一层通用兜底：如果模型类本身声明支持 stream_usage，就顺手打开它</span></span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src"><span class="tok-kw">if</span> <span class="tok-str">"stream_usage"</span> <span class="tok-kw">not in</span> <span class="tok-attr">model_settings_from_config</span> <span class="tok-kw">and</span> <span class="tok-str">"stream_usage"</span> <span class="tok-kw">not in</span> <span class="tok-attr">kwargs</span>:</span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-str">"stream_usage"</span> <span class="tok-kw">in</span> <span class="tok-fn">getattr</span>(<span class="tok-attr">model_class</span>, <span class="tok-str">"model_fields"</span>, {}):</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">        <span class="tok-attr">model_settings_from_config</span>[<span class="tok-str">"stream_usage"</span>] <span class="tok-op">=</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src">    <span class="tok-com"># 所有 provider 兼容补丁都跑完以后，才真正实例化最终可调用的模型对象</span></span></div>
+                <div class="code-line"><span class="code-ln">37</span><span class="code-src"><span class="tok-fn">model_instance</span> <span class="tok-op">=</span> <span class="tok-attr">model_class</span>(<span class="tok-op">**</span><span class="tok-attr">kwargs</span>, <span class="tok-op">**</span><span class="tok-attr">model_settings_from_config</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第 1 到 15 行说明 DeerFlow 并不相信所有 OpenAI-compatible 后端都会自动给出合理的流式统计和 timeout，所以工厂会主动补默认值。</li>
+            <li>这里最有代表性的是 `stream_chunk_timeout`。对 reasoning 模型来说，首个 chunk 很可能很慢，如果沿用默认超时，系统会误判模型挂住。</li>
+            <li>第 17 到 26 行则展示了 Codex 的特殊处理: 去掉不兼容参数、把 thinking 模式翻译成 `reasoning_effort`，并给出默认档位。</li>
+            <li>第 28 到 29 行的 MindIE patch 更直接，说明 DeerFlow 模型工厂不是只做“统一构造”，还会兜一些真实 provider 的稳定性参数。</li>
+            <li>所以模型工厂的价值不只是创建对象，更重要的是把“同一个 DeerFlow 运行语义”翻译成各个模型后端真能接受的参数组合。</li>
+          </ul>
+        </div>
+        <div class="highlight">
+          <strong>重点不是“模型很多”：</strong>
+          重点是 DeerFlow 有一条统一解析链，让 Gateway、client 和 subagent 最终都落到同一套配置来源上。
+        </div>
+      </section>
+
+      <section id="config">
+        <h2>配置面与使用方式</h2>
+        <p>根据 <code>backend/docs/CONFIGURATION.md</code>，DeerFlow 的模型配置面至少包括：</p>
+        <ul>
+          <li><code>backend/packages/harness/deerflow/config/app_config.py</code> 读取 <code>models:</code> 列表，每项包含 <code>name</code>、<code>use</code>、<code>model</code>、<code>api_key</code>、thinking / vision / reasoning 能力等字段。</li>
+          <li><code>backend/app/gateway/routers/models.py</code> 只暴露前端需要的安全字段，例如 <code>display_name</code>、<code>supports_thinking</code>、<code>supports_reasoning_effort</code>，不会直接透出敏感配置。</li>
+          <li><code>backend/packages/harness/deerflow/client.py</code> 允许调用方在构造 client 或每次 runnable config 中指定 <code>model_name</code> 与 <code>thinking_enabled</code>。</li>
+          <li><code>backend/packages/harness/deerflow/config/subagents_config.py</code> 允许为某个 subagent 指定独立 <code>model</code> 覆盖；而 <code>backend/packages/harness/deerflow/subagents/config.py</code> 负责把这层覆盖解析成有效模型名。</li>
+          <li><code>backend/docs/CONFIGURATION.md</code> 还明确区分了 vision 能力、thinking patch 和 provider-specific patched classes，这说明“支持多种 LLM”在 DeerFlow 里包括能力差异建模，而不只是换模型名。</li>
+        </ul>
+        <p>这意味着 DeerFlow 的“切模型”不是单个 UI 下拉框逻辑，而是配置加载、API 暴露和 runtime 解析共同完成的。</p>
+      </section>
+
+      <section id="tradeoffs">
+        <h2>关键实现细节与权衡</h2>
+        <ul>
+          <li><code>backend/packages/harness/deerflow/config/app_config.py</code> 把多种配置单例集中应用，换来统一入口；代价是部分运行组件仍有全局配置依赖。</li>
+          <li><code>backend/app/gateway/routers/models.py</code> 只返回展示层需要的模型元信息，这样更安全，但前端如果想理解更深 provider 细节，仍需回到配置或文档。</li>
+          <li><code>backend/packages/harness/deerflow/client.py</code> 会按模型名、thinking、plan mode、subagent 开关等重建内部 agent，说明模型切换会连带影响整个 agent 组装，而不只是替换一个字符串。</li>
+          <li><code>backend/packages/harness/deerflow/subagents/config.py</code> 采用“显式 override -> 继承父模型 -> 回退默认模型”的解析顺序，保证 subagent 有清晰的 fallback 语义。</li>
+          <li>DeerFlow 还区分“主对话模型”和部分派生任务的模型语义。例如 memory 更新链路会通过专门的 memory update prompt 与 token counting 策略工作，这提醒我们：模型集成不只影响主聊天，还影响记忆提炼等旁路 LLM 调用。</li>
+          <li><code>backend/docs/CONFIGURATION.md</code> 明确支持 provider-specific patched model 类，这说明 DeerFlow 的模型层并不假装所有 OpenAI-compatible provider 都能完全共享同一实现。</li>
+        </ul>
+        <p>模型工厂的源码还透露出 DeerFlow 的一个现实主义取向：它不试图掩盖 provider 差异，而是把差异显式编码进工厂逻辑里。例如 reasoning_effort、thinking disable payload、stream chunk timeout 都是针对不同后端单独调整的。这让抽象层看起来没那么“纯”，但换来了真正可运行的多模型支持。</p>
+        <div class="key-point">
+          <strong>核心取舍：</strong>
+          DeerFlow 选择把模型集成做成“配置驱动 + 运行时解析 + provider patch”，而不是写死几家供应商分支。这提高了可扩展性，但也要求读者同时理解配置文档和解析链。
+        </div>
+      </section>
+
+      <section id="limits">
+        <h2>当前限制、边界与非目标</h2>
+        <ul>
+          <li>本章不做模型能力排行榜，也不讨论哪家模型“最强”；那不是 DeerFlow 当前仓库的核心设计问题。</li>
+          <li>虽然 <code>backend/app/gateway/routers/models.py</code> 会列出可选模型，但真正可用性仍取决于配置是否正确、环境变量是否存在以及 provider patch 是否匹配。</li>
+          <li>DeerFlow 的 agent factory 仍有部分运行组件会在调用期读取全局配置，这也是 <code>backend/packages/harness/deerflow/client.py</code> 文档里提到的 config-free runtime 尚未完全完成之处。</li>
+          <li>subagent 模型覆盖只解决“选哪个模型”，不自动解决提示词、工具、timeout 与 skills 的所有协同问题。</li>
+        </ul>
+      </section>
+
+      <section id="relations">
+        <h2>它与 DeerFlow 其他能力的关系</h2>
+        <p>模型集成和 DeerFlow 的其他运行时层强相关：</p>
+        <ul>
+          <li>它和第 20 章上下文工程相连，因为 thinking、reasoning 和 provider patch 会直接影响上下文预算与消息格式要求。</li>
+          <li>它和第 14、23 章 subagent / 高级模式相连，因为 subagent 可以继承或覆盖主模型，从而形成更细粒度的成本与能力分配。</li>
+          <li>它和 Gateway API 相连，因为浏览器的模型选择面通过 <code>backend/app/gateway/routers/models.py</code> 暴露，但实际执行仍回到同一 runtime 解析链。</li>
+          <li>它和 embedded client 相连，因为 <code>backend/packages/harness/deerflow/client.py</code> 复用了同一配置来源，避免出现“Gateway 和 Python 调用用不同模型规则”的分叉。</li>
+        </ul>
+        <div class="highlight">
+          建议把 <code>backend/packages/harness/deerflow/config/app_config.py</code>、<code>backend/packages/harness/deerflow/subagents/config.py</code>、<code>backend/packages/harness/deerflow/config/subagents_config.py</code>、<code>backend/app/gateway/routers/models.py</code>、<code>backend/packages/harness/deerflow/client.py</code> 和 <code>backend/docs/CONFIGURATION.md</code> 放在一起读。这样最容易看清 DeerFlow 的模型配置与运行时解析闭环。
+        </div>
+      </section>
+
+      <div id="page-nav"></div>
+    </div>
   </main>
 </div>
 <script src="assets/nav.js"></script>

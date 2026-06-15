@@ -6,215 +6,7 @@
     <title>构建自定义Agent · DeerFlow 学习系列</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
-        /* 页面特定样式 - 与深色主题兼容 */
-        
-        .toc {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--accent);
-            padding: 20px;
-            margin-bottom: 40px;
-            border-radius: 8px;
-        }
-        
-        .toc h2 {
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .toc li:before {
-            content: "▸";
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: bold;
-        }
-        
-        .toc a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .toc a:hover {
-            color: var(--accent-2);
-            text-decoration: underline;
-        }
-        
-        section {
-            margin-bottom: 50px;
-        }
-        
-        /* 代码块样式 */
-        .code-block {
-            background: var(--bg-code);
-            color: var(--text-soft);
-            padding: 18px 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 18px 0;
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 13.5px;
-            line-height: 1.65;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-        }
-        
-        .code-block code {
-            background: none;
-            border: none;
-            padding: 0;
-            color: var(--text-soft);
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            white-space: pre;
-            display: block;
-        }
-        
-        .code-block::-webkit-scrollbar {
-            height: 9px;
-        }
-        
-        .code-block::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-        
-        /* 提示框样式 */
-        .highlight {
-            background: var(--bg-soft);
-            padding: 15px 18px;
-            border-left: 4px solid var(--orange);
-            margin: 18px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .key-point {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--green);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--green);
-        }
-        
-        .key-point strong {
-            color: var(--green-soft);
-            font-weight: 650;
-        }
-        
-        .example-case {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--orange);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .example-case strong {
-            color: var(--orange);
-            font-weight: 650;
-        }
-        
-        .warning {
-            background: var(--bg-soft);
-            border-left: 4px solid #ff6b6b;
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid #ff6b6b;
-        }
-        
-        .warning strong {
-            color: #ff6b6b;
-            font-weight: 650;
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 18px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-        }
-        
-        .comparison-table th {
-            background: var(--bg-soft);
-            color: var(--text);
-            padding: 11px 15px;
-            text-align: left;
-            font-weight: 650;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .comparison-table td {
-            padding: 11px 15px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-soft);
-        }
-        
-        .comparison-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .comparison-table tr:hover td {
-            background: rgba(88,166,255,0.04);
-        }
-        
-        .flow-diagram {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        
-        .flow-step {
-            background: var(--bg-card);
-            border: 1.5px solid var(--accent);
-            color: var(--text);
-            padding: 12px 22px;
-            border-radius: 10px;
-            min-width: 120px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .flow-arrow {
-            font-size: 20px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            padding: 2px 0;
-        }
+        section { margin-bottom: 50px; }
     </style>
 </head>
 <body>
@@ -223,317 +15,306 @@
   <nav class="sidebar" id="sidebar"></nav>
   <main class="main">
     <div class="content">
-            <h1>构建自定义Agent</h1>
-            <p class="page-subtitle">DeerFlow 学习系列 - 第 31 章</p>
-            
-            <div class="toc">
-                <h2>📖 目录</h2>
-                <ul>
-                    <li><a href="#introduction">简介</a></li>
-                    <li><a href="#agent-architecture">Agent 架构</a></li>
-                    <li><a href="#agent-implementation">Agent 实现</a></li>
-                    <li><a href="#configuration">配置管理</a></li>
-                    <li><a href="#optimization">优化和调试</a></li>
-                    <li><a href="#best-practices">最佳实践</a></li>
-                    <li><a href="#summary">总结</a></li>
-                </ul>
+      <h1>构建自定义Agent</h1>
+      <p class="page-subtitle">DeerFlow 学习系列 - 第 31 章</p>
+
+      <div class="deerflow-map">
+        <h3>本章讲的是怎样沿着 DeerFlow 现有边界做自定义 agent，而不是重新造一个平行框架</h3>
+        <p>在 DeerFlow 里做自定义 agent，最稳的路径通常不是绕开所有现有能力，而是复用已有的 client、factory、skills、middleware 和配置结构。理解这个边界，比“怎么写一个新 prompt”更重要。</p>
+      </div>
+
+      <div class="toc">
+        <h3>目录</h3>
+        <ul>
+          <li><a href="#problem">这项能力在 DeerFlow 中解决什么问题</a></li>
+          <li><a href="#codebase">这项能力在代码库中的位置</a></li>
+          <li><a href="#flow">真实运行链路或数据链路</a></li>
+          <li><a href="#config">配置面与使用方式</a></li>
+          <li><a href="#tradeoffs">关键实现细节与权衡</a></li>
+          <li><a href="#limits">当前限制、边界与非目标</a></li>
+          <li><a href="#relations">它与 DeerFlow 其他能力的关系</a></li>
+        </ul>
+      </div>
+
+      <section id="problem">
+        <h2>这项能力在 DeerFlow 中解决什么问题</h2>
+        <p>有些场景下，你并不想只是在默认 lead agent 上加一个 skill，而是希望定制 agent 的系统提示、能力组合、运行模式，甚至把 DeerFlow 当成 Python 库嵌入自己的应用。第 31 章回答的就是这个问题：如何在不背离 DeerFlow 当前实现的前提下，构建自定义 agent。</p>
+      </section>
+
+      <section id="codebase">
+        <h2>这项能力在代码库中的位置</h2>
+        <table class="comparison-table">
+          <tr>
+            <th>路径</th>
+            <th>职责</th>
+            <th>为什么要看</th>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/client.py</code></td>
+            <td>embedded client、参数覆盖、agent lazy rebuild</td>
+            <td>这是当前最现实的自定义 agent 入口之一</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/agents/factory.py</code></td>
+            <td>agent 构建、tools、middlewares、feature 组合</td>
+            <td>解释 DeerFlow 如何真正把自定义需求装进 agent</td>
+          </tr>
+          <tr>
+            <td><code>backend/docs/rfc-create-deerflow-agent.md</code></td>
+            <td>SDK 工厂 API 设计思路与边界</td>
+            <td>帮助理解官方推荐的抽象层级，而不是误用内部工厂</td>
+          </tr>
+        </table>
+      </section>
+
+      <section id="flow">
+        <h2>真实运行链路或数据链路</h2>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>自定义 Agent 构建流程图</strong>
+            <span>重点不是“改哪段 prompt”，而是“从哪一层接管装配权”</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>外部应用先决定是否复用 DeerFlow 客户端入口</strong>
+                <p>通常不是直接碰执行引擎源码，而是先从现成 client 的能力边界开始接入。</p>
+                <div class="flow-step-path"><code>custom application</code> + <code>client.py</code></div>
+              </div>
             </div>
-            
-            <section id="introduction">
-                <h2>简介</h2>
-                <p>
-                    构建自定义 Agent 意味着创建一个专门针对特定任务或领域的 Agent。不同的应用场景需要不同的 Agent 设计。本章讲解如何设计、实现和优化自定义 Agent。
-                </p>
-                <div class="key-point">
-                    <strong>学习目标：</strong>
-                    <ul>
-                        <li>理解 Agent 的架构和设计原则</li>
-                        <li>掌握自定义 Agent 的实现方法</li>
-                        <li>学会配置和优化 Agent</li>
-                        <li>了解 Agent 的调试和监控</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <section id="agent-architecture">
-                <h2>Agent 架构</h2>
-                <p>
-                    一个完整的 Agent 由多个组件组成。理解这些组件和它们的交互很重要。
-                </p>
-                
-                <h3>Agent 的核心组件</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>组件</th>
-                            <th>职责</th>
-                            <th>示例</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>LLM</strong></td>
-                            <td>决策和推理</td>
-                            <td>GPT-4, Claude</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Memory</strong></td>
-                            <td>存储和检索信息</td>
-                            <td>向量数据库、缓存</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Skills</strong></td>
-                            <td>执行具体操作</td>
-                            <td>数据分析、API 调用</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Executor</strong></td>
-                            <td>协调执行流程</td>
-                            <td>任务调度、错误处理</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Gateway</strong></td>
-                            <td>与外部通信</td>
-                            <td>HTTP API、消息队列</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <h3>Agent 架构图</h3>
-                <div class="flow-diagram">
-                    <div class="flow-step">输入</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">LLM</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">决策</div>
-                </div>
-                <div style="text-align: center; margin: 10px 0;">↓</div>
-                <div class="flow-diagram">
-                    <div class="flow-step">Skills</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">Executor</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">输出</div>
-                </div>
-            </section>
-            
-            <section id="agent-implementation">
-                <h2>Agent 实现</h2>
-                <p>
-                    实现一个自定义 Agent 的完整步骤。
-                </p>
-                
-                <h3>基础 Agent 实现</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">CustomAgent</span>:
-    <span class="tok-str">"""自定义 Agent"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, name: <span class="tok-str">str</span>, llm, skills: <span class="tok-cls">dict</span>):
-        <span class="tok-kw">self</span>.name = name
-        <span class="tok-kw">self</span>.llm = llm
-        <span class="tok-kw">self</span>.skills = skills
-        <span class="tok-kw">self</span>.memory = {}
-        <span class="tok-kw">self</span>.state = <span class="tok-str">"idle"</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, task: <span class="tok-str">str</span>):
-        <span class="tok-str">"""执行任务"""</span>
-        <span class="tok-kw">self</span>.state = <span class="tok-str">"running"</span>
-        
-        <span class="tok-com"># 1. 分析任务</span>
-        analysis = <span class="tok-kw">self</span>.<span class="tok-fn">analyze_task</span>(task)
-        
-        <span class="tok-com"># 2. 制定计划</span>
-        plan = <span class="tok-kw">self</span>.<span class="tok-fn">make_plan</span>(analysis)
-        
-        <span class="tok-com"># 3. 执行计划</span>
-        result = <span class="tok-kw">self</span>.<span class="tok-fn">execute_plan</span>(plan)
-        
-        <span class="tok-kw">self</span>.state = <span class="tok-str">"idle"</span>
-        <span class="tok-kw">return</span> result
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">analyze_task</span>(<span class="tok-kw">self</span>, task: <span class="tok-str">str</span>):
-        <span class="tok-str">"""分析任务"""</span>
-        prompt = <span class="tok-str">f"分析这个任务：{task}"</span>
-        <span class="tok-kw">return</span> <span class="tok-kw">self</span>.llm.<span class="tok-fn">invoke</span>(prompt)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">make_plan</span>(<span class="tok-kw">self</span>, analysis):
-        <span class="tok-str">"""制定计划"""</span>
-        prompt = <span class="tok-str">f"基于分析制定计划：{analysis}"</span>
-        <span class="tok-kw">return</span> <span class="tok-kw">self</span>.llm.<span class="tok-fn">invoke</span>(prompt)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">execute_plan</span>(<span class="tok-kw">self</span>, plan):
-        <span class="tok-str">"""执行计划"""</span>
-        <span class="tok-com"># 解析计划并执行相应的 Skill</span>
-        <span class="tok-kw">for</span> step <span class="tok-kw">in</span> plan:
-            <span class="tok-kw">if</span> step <span class="tok-kw">in</span> <span class="tok-kw">self</span>.skills:
-                <span class="tok-kw">self</span>.skills[step].<span class="tok-fn">execute</span>()
-        <span class="tok-kw">return</span> <span class="tok-str">"Plan executed"</span>
-</code></div>
-                
-                <div class="example-case">
-                    <strong>示例：</strong> 数据分析 Agent<br>
-                    <div class="code-block"><code>
-<span class="tok-com"># 创建 Agent</span>
-agent = <span class="tok-cls">CustomAgent</span>(
-    name=<span class="tok-str">"DataAnalystAgent"</span>,
-    llm=llm,
-    skills={
-        <span class="tok-str">"analyze"</span>: <span class="tok-cls">AnalysisSkill</span>(),
-        <span class="tok-str">"visualize"</span>: <span class="tok-cls">VisualizationSkill</span>(),
-        <span class="tok-str">"report"</span>: <span class="tok-cls">ReportSkill</span>()
-    }
-)
-
-<span class="tok-com"># 执行任务</span>
-result = agent.<span class="tok-fn">execute</span>(<span class="tok-str">"分析销售数据并生成报告"</span>)
-</code></div>
-                </div>
-            </section>
-            
-            <section id="configuration">
-                <h2>配置管理</h2>
-                <p>
-                    使用配置文件管理 Agent 的参数，便于调整而不需要修改代码。
-                </p>
-                
-                <h3>Agent 配置示例</h3>
-                <div class="code-block"><code>
-<span class="tok-str">"""agent_config.yaml"""</span>
-agent:
-  name: <span class="tok-str">"DataAnalystAgent"</span>
-  description: <span class="tok-str">"数据分析 Agent"</span>
-  version: <span class="tok-str">"1.0.0"</span>
-
-llm:
-  provider: <span class="tok-str">"openai"</span>
-  model: <span class="tok-str">"gpt-4"</span>
-  temperature: <span class="tok-num">0.7</span>
-  max_tokens: <span class="tok-num">2000</span>
-
-skills:
-  - name: <span class="tok-str">"analyze"</span>
-    module: <span class="tok-str">"skills.analysis"</span>
-  - name: <span class="tok-str">"visualize"</span>
-    module: <span class="tok-str">"skills.visualization"</span>
-
-memory:
-  type: <span class="tok-str">"vector"</span>
-  size: <span class="tok-num">1000</span>
-
-timeout: <span class="tok-num">30</span>
-max_retries: <span class="tok-num">3</span>
-</code></div>
-                
-                <h3>加载配置</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">import</span> yaml
-
-<span class="tok-kw">def</span> <span class="tok-fn">load_agent_config</span>(config_file: <span class="tok-str">str</span>):
-    <span class="tok-str">"""加载 Agent 配置"""</span>
-    <span class="tok-kw">with</span> <span class="tok-fn">open</span>(config_file, <span class="tok-str">"r"</span>) <span class="tok-kw">as</span> f:
-        config = yaml.<span class="tok-fn">safe_load</span>(f)
-    <span class="tok-kw">return</span> config
-
-<span class="tok-com"># 使用配置创建 Agent</span>
-config = <span class="tok-fn">load_agent_config</span>(<span class="tok-str">"agent_config.yaml"</span>)
-agent = <span class="tok-cls">CustomAgent</span>(**config[<span class="tok-str">"agent"</span>])
-</code></div>
-            </section>
-            
-            <section id="optimization">
-                <h2>优化和调试</h2>
-                <p>
-                    优化 Agent 的性能和调试问题是持续的过程。
-                </p>
-                
-                <h3>优化策略</h3>
-                <ul>
-                    <li><strong>缓存：</strong> 缓存常见问题的答案</li>
-                    <li><strong>并行化：</strong> 并行执行独立的 Skill</li>
-                    <li><strong>模型选择：</strong> 为不同任务选择合适的模型</li>
-                    <li><strong>Prompt 优化：</strong> 优化 Prompt 以提高准确性</li>
-                    <li><strong>错误处理：</strong> 实现降级和重试机制</li>
-                </ul>
-                
-                <h3>调试工具</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">AgentDebugger</span>:
-    <span class="tok-str">"""Agent 调试器"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, agent):
-        <span class="tok-kw">self</span>.agent = agent
-        <span class="tok-kw">self</span>.logs = []
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">log</span>(<span class="tok-kw">self</span>, message: <span class="tok-str">str</span>):
-        <span class="tok-str">"""记录日志"""</span>
-        <span class="tok-kw">self</span>.logs.<span class="tok-fn">append</span>(message)
-        <span class="tok-fn">print</span>(<span class="tok-str">f"[DEBUG] {message}"</span>)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">trace_execution</span>(<span class="tok-kw">self</span>, task: <span class="tok-str">str</span>):
-        <span class="tok-str">"""追踪执行"""</span>
-        <span class="tok-kw">self</span>.<span class="tok-fn">log</span>(<span class="tok-str">f"Starting task: {task}"</span>)
-        result = <span class="tok-kw">self</span>.agent.<span class="tok-fn">execute</span>(task)
-        <span class="tok-kw">self</span>.<span class="tok-fn">log</span>(<span class="tok-str">f"Task completed: {result}"</span>)
-        <span class="tok-kw">return</span> result
-</code></div>
-            </section>
-            
-            <section id="best-practices">
-                <h2>最佳实践</h2>
-                
-                <h3>1. 模块化设计</h3>
-                <p>
-                    将 Agent 分解为独立的模块。每个模块应该有明确的职责。
-                </p>
-                
-                <h3>2. 配置驱动</h3>
-                <p>
-                    使用配置文件管理 Agent 的参数。这样可以轻松调整而不需要修改代码。
-                </p>
-                
-                <h3>3. 充分的日志</h3>
-                <p>
-                    记录 Agent 的执行过程。这对调试和优化很有帮助。
-                </p>
-                
-                <h3>4. 错误处理</h3>
-                <p>
-                    实现完善的错误处理和降级策略。Agent 应该能够优雅地处理失败。
-                </p>
-                
-                <h3>5. 性能监控</h3>
-                <p>
-                    监控 Agent 的性能指标。包括执行时间、成本、准确性等。
-                </p>
-                
-                <div class="key-point">
-                    <strong>关键点：</strong> 好的 Agent 设计应该是灵活、可扩展、易维护的。
-                </div>
-            </section>
-            
-            <section id="summary">
-                <h2>总结</h2>
-                <p>
-                    构建自定义 Agent 需要理解 Agent 的架构、实现方法和优化技巧。通过模块化设计、配置驱动和充分的监控，可以创建高效、可靠的 Agent 系统。本章深入讲解了自定义 Agent 的构建方法。
-                </p>
-                <div class="highlight">
-                    <strong>核心要点总结：</strong>
-                    <ul>
-                        <li><strong>Agent 架构：</strong> LLM、Memory、Skills、Executor、Gateway 等核心组件</li>
-                        <li><strong>Agent 实现：</strong> 任务分析、计划制定、计划执行的完整流程</li>
-                        <li><strong>配置管理：</strong> 使用 YAML 配置文件管理 Agent 参数</li>
-                        <li><strong>优化和调试：</strong> 缓存、并行化、模型选择、Prompt 优化、错误处理</li>
-                        <li><strong>最佳实践：</strong> 模块化设计、配置驱动、日志记录、错误处理、性能监控</li>
-                    </ul>
-                </div>
-                
-                <div class="key-point">
-                    <strong>自定义Agent建议：</strong> 构建自定义 Agent 是一个迭代的过程。从简单的 Agent 开始，逐步添加功能和优化。定期评估 Agent 的性能和成本，根据反馈进行改进。
-                </div>
-            </section>
-            
-            <div id="page-nav"></div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>把模型名、配置覆盖和技能集合交给客户端</strong>
+                <p>自定义往往发生在这些可控参数上，比如模型选择、skills、middleware 或运行特性，而不是整套系统重写。</p>
+                <div class="flow-step-path"><code>config overrides</code> / <code>model_name</code> / <code>available_skills</code> / <code>middlewares</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>工厂接手，把这些覆盖项变成真实装配方案</strong>
+                <p>到了工厂层，DeerFlow 才会判断该挂哪些工具、延迟工具目录和 middleware 链。</p>
+                <div class="flow-step-path"><code>agents/factory.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>工具链和中间件链被拼成可执行图</strong>
+                <p>这一层完成后，你拿到的就不再是零散配置，而是一个已经编译好的 DeerFlow agent。</p>
+                <div class="flow-step-path"><code>build tools</code> + <code>deferred setup</code> + <code>middleware chain</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>最后通过 chat、stream 或自定义配置去调用它</strong>
+                <p>也就是说，自定义 Agent 的使用姿势仍然是“调用一个已装配完成的能力体”，而不是手搓运行循环。</p>
+                <div class="flow-step-path"><code>chat()</code> / <code>stream()</code> / <code>custom runnable config</code></div>
+              </div>
+            </div>
+          </div>
         </div>
+        <p><code>backend/docs/rfc-create-deerflow-agent.md</code> 更适合被看作 DeerFlow 的设计方向说明，而不是“全部已经落地的公开 API 现实”。当前实际可用入口依然是 <code>DeerFlowClient</code> 现有公开参数与能力组合；也就是说，“构建自定义 agent”在 DeerFlow 里更接近“沿现有 client 和 factory 受控地覆盖参数与能力组合”，而不是“从零拷贝执行引擎源码”。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码：自定义 Agent 的真正入口不是“写 prompt”，而是工厂如何接管参数</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/agents/factory.py</code>。如果你想知道“自定义 agent 到底在哪里生效”，最重要的就是这段工厂函数。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">agents/factory.py :: create_deerflow_agent(...)</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># model / tools / system_prompt: 自定义 agent 的模型、工具和系统提示；middleware / features / extra_middleware: 决定能力链是手工接管还是让 DeerFlow 自动装配</span></span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src"><span class="tok-com"># plan_mode / state_schema / checkpointer / name: 进一步控制是否计划模式、状态类型、持久化器，以及这份 agent 的身份名</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">create_deerflow_agent</span>(<span class="tok-attr">model</span>: <span class="tok-cls">BaseChatModel</span>, <span class="tok-attr">tools</span>: <span class="tok-type">list</span>[<span class="tok-cls">BaseTool</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-op">*</span>, <span class="tok-attr">system_prompt</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">middleware</span>: <span class="tok-type">list</span>[<span class="tok-cls">AgentMiddleware</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">features</span>: <span class="tok-cls">RuntimeFeatures</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">extra_middleware</span>: <span class="tok-type">list</span>[<span class="tok-cls">AgentMiddleware</span>] <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">plan_mode</span>: <span class="tok-type">bool</span> <span class="tok-op">=</span> <span class="tok-kw">False</span>, <span class="tok-attr">state_schema</span>: <span class="tok-type">type</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-attr">checkpointer</span><span class="tok-op">=</span><span class="tok-kw">None</span>, <span class="tok-attr">name</span>: <span class="tok-type">str</span> <span class="tok-op">=</span> <span class="tok-str">"default"</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">CompiledStateGraph</span>:</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">middleware</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span> <span class="tok-kw">and</span> <span class="tok-attr">features</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"Cannot specify both 'middleware' and 'features'."</span>)</span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">middleware</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span> <span class="tok-kw">and</span> <span class="tok-attr">extra_middleware</span>:</span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"Cannot use 'extra_middleware' with 'middleware'."</span>)</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">extra_middleware</span>:</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-kw">for</span> <span class="tok-fn">mw</span> <span class="tok-kw">in</span> <span class="tok-attr">extra_middleware</span>:</span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-fn">isinstance</span>(<span class="tok-fn">mw</span>, <span class="tok-cls">AgentMiddleware</span>):</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">                <span class="tok-kw">raise</span> <span class="tok-cls">TypeError</span>(<span class="tok-str">f"extra_middleware items must be AgentMiddleware instances, got {type(mw).__name__}"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">    <span class="tok-com"># 先准备一份“有效参数”底板，后面无论走哪条分支，最终都要汇总成这套可交给 create_agent 的材料</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-fn">effective_tools</span>: <span class="tok-type">list</span>[<span class="tok-cls">BaseTool</span>] <span class="tok-op">=</span> <span class="tok-fn">list</span>(<span class="tok-attr">tools</span> <span class="tok-kw">or</span> [])</span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">    <span class="tok-fn">effective_state</span> <span class="tok-op">=</span> <span class="tok-attr">state_schema</span> <span class="tok-kw">or</span> <span class="tok-cls">ThreadState</span></span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-com"># 分叉 1：调用方完全接管 middleware 链，那 DeerFlow 就不再替你自动拼 features</span></span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">middleware</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-fn">effective_middleware</span> <span class="tok-op">=</span> <span class="tok-fn">list</span>(<span class="tok-attr">middleware</span>)</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-kw">else</span>:</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-com"># 分叉 2：如果没手工给完整链条，就让 RuntimeFeatures 生成一份 DeerFlow 风格的默认能力组合</span></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">        <span class="tok-fn">feat</span> <span class="tok-op">=</span> <span class="tok-attr">features</span> <span class="tok-kw">or</span> <span class="tok-cls">RuntimeFeatures</span>()</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">        <span class="tok-fn">effective_middleware</span>, <span class="tok-fn">extra_tools</span> <span class="tok-op">=</span> <span class="tok-fn">_assemble_from_features</span>(<span class="tok-attr">feat</span>, <span class="tok-attr">name</span><span class="tok-op">=</span><span class="tok-attr">name</span>, <span class="tok-attr">plan_mode</span><span class="tok-op">=</span><span class="tok-attr">plan_mode</span>, <span class="tok-attr">extra_middleware</span><span class="tok-op">=</span><span class="tok-attr">extra_middleware</span> <span class="tok-kw">or</span> [])</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">        <span class="tok-com"># 用户显式传入的 tools 优先，自动注入工具只补缺</span></span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src">        <span class="tok-fn">existing_names</span> <span class="tok-op">=</span> {<span class="tok-fn">t</span>.<span class="tok-attr">name</span> <span class="tok-kw">for</span> <span class="tok-fn">t</span> <span class="tok-kw">in</span> <span class="tok-attr">effective_tools</span>}</span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src">        <span class="tok-kw">for</span> <span class="tok-fn">t</span> <span class="tok-kw">in</span> <span class="tok-attr">extra_tools</span>:</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">t</span>.<span class="tok-attr">name</span> <span class="tok-kw">not in</span> <span class="tok-attr">existing_names</span>:</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">                <span class="tok-attr">effective_tools</span>.<span class="tok-fn">append</span>(<span class="tok-fn">t</span>)</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">                <span class="tok-attr">existing_names</span>.<span class="tok-fn">add</span>(<span class="tok-fn">t</span>.<span class="tok-attr">name</span>)</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">    <span class="tok-com"># 最后一跳才真正落到 LangGraph/LangChain 的 create_agent，前面所有 DeerFlow 逻辑都在为这一句准备材料</span></span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-fn">create_agent</span>(<span class="tok-attr">model</span><span class="tok-op">=</span><span class="tok-attr">model</span>, <span class="tok-attr">tools</span><span class="tok-op">=</span><span class="tok-attr">effective_tools</span> <span class="tok-kw">or</span> <span class="tok-kw">None</span>, <span class="tok-attr">middleware</span><span class="tok-op">=</span><span class="tok-attr">effective_middleware</span>, <span class="tok-attr">system_prompt</span><span class="tok-op">=</span><span class="tok-attr">system_prompt</span>, <span class="tok-attr">state_schema</span><span class="tok-op">=</span><span class="tok-attr">effective_state</span>, <span class="tok-attr">checkpointer</span><span class="tok-op">=</span><span class="tok-attr">checkpointer</span>, <span class="tok-attr">name</span><span class="tok-op">=</span><span class="tok-attr">name</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第 2 到 9 行先做参数互斥校验，意思是 DeerFlow 不允许你一边全盘接管 middleware，一边又让 features 自动拼一半，这样边界会变得不可预测。</li>
+            <li>第 11 到 12 行说明自定义 agent 的底板仍然是 DeerFlow 的标准工具列表和 <code>ThreadState</code>，不是换个名字就另起一套 graph state。</li>
+            <li>第 14 到 18 行是最核心的分叉: 你要么显式传完整 middleware 链，要么让 <code>RuntimeFeatures</code> 去自动生成一条 DeerFlow 风格的能力链。</li>
+            <li>第 19 到 24 行体现了一个非常实用的实现细节: 自动注入工具采用“按名字补缺”，优先保留调用方显式传入的工具。</li>
+            <li>最后第 26 行才真正调用 LangChain 的 <code>create_agent(...)</code>，也就是说 DeerFlow 的自定义 agent 能力，本质上是“如何把 DeerFlow 运行时语义组装到 create_agent 前面”。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：外部调用方传进来的参数，最终是怎样在 Client 里变成真正 Agent 实例的</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/client.py</code>。这段代码把“我给 DeerFlowClient 传了 model、skills、middlewares，最终到底在哪里生效”完整串起来。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">deerflow/client.py :: _get_runnable_config() / _ensure_agent()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">207</span><span class="code-src"><span class="tok-com"># self / thread_id / overrides: 当前 client 实例、这次会话线程，以及调用方临时覆盖项；职责是收束成统一 RunnableConfig</span></span></div>
+                <div class="code-line"><span class="code-ln">208</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_get_runnable_config</span>(<span class="tok-self">self</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span>, <span class="tok-op">**</span><span class="tok-attr">overrides</span>) <span class="tok-op">-&gt;</span> <span class="tok-cls">RunnableConfig</span>:</span></div>
+                <div class="code-line"><span class="code-ln">209</span><span class="code-src">    <span class="tok-com"># 先把 thread_id、模型名、thinking、plan mode 这些 DeerFlow 约定字段统一塞进 configurable</span></span></div>
+                <div class="code-line"><span class="code-ln">210</span><span class="code-src">    <span class="tok-attr">configurable</span> <span class="tok-op">=</span> {</span></div>
+                <div class="code-line"><span class="code-ln">210</span><span class="code-src">        <span class="tok-str">"thread_id"</span>: <span class="tok-attr">thread_id</span>,</span></div>
+                <div class="code-line"><span class="code-ln">211</span><span class="code-src">        <span class="tok-str">"model_name"</span>: <span class="tok-attr">overrides</span>.<span class="tok-fn">get</span>(<span class="tok-str">"model_name"</span>, <span class="tok-self">self</span>.<span class="tok-attr">_model_name</span>),</span></div>
+                <div class="code-line"><span class="code-ln">212</span><span class="code-src">        <span class="tok-str">"thinking_enabled"</span>: <span class="tok-attr">overrides</span>.<span class="tok-fn">get</span>(<span class="tok-str">"thinking_enabled"</span>, <span class="tok-self">self</span>.<span class="tok-attr">_thinking_enabled</span>),</span></div>
+                <div class="code-line"><span class="code-ln">213</span><span class="code-src">        <span class="tok-str">"is_plan_mode"</span>: <span class="tok-attr">overrides</span>.<span class="tok-fn">get</span>(<span class="tok-str">"plan_mode"</span>, <span class="tok-self">self</span>.<span class="tok-attr">_plan_mode</span>),</span></div>
+                <div class="code-line"><span class="code-ln">214</span><span class="code-src">        <span class="tok-str">"subagent_enabled"</span>: <span class="tok-attr">overrides</span>.<span class="tok-fn">get</span>(<span class="tok-str">"subagent_enabled"</span>, <span class="tok-self">self</span>.<span class="tok-attr">_subagent_enabled</span>),</span></div>
+                <div class="code-line"><span class="code-ln">216</span><span class="code-src">    <span class="tok-com"># recursion_limit 也在这一层统一兜底，后面真正运行 graph 时就不用再四处判断默认值</span></span></div>
+                <div class="code-line"><span class="code-ln">217</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-cls">RunnableConfig</span>(<span class="tok-attr">configurable</span><span class="tok-op">=</span><span class="tok-attr">configurable</span>, <span class="tok-attr">recursion_limit</span><span class="tok-op">=</span><span class="tok-attr">overrides</span>.<span class="tok-fn">get</span>(<span class="tok-str">"recursion_limit"</span>, <span class="tok-num">100</span>))</span></div>
+                <div class="code-line"><span class="code-ln">221</span><span class="code-src"><span class="tok-com"># self / config: 当前 client 和这轮运行配置；职责是复用或重建与配置匹配的 agent 实例</span></span></div>
+                <div class="code-line"><span class="code-ln">222</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_ensure_agent</span>(<span class="tok-self">self</span>, <span class="tok-attr">config</span>: <span class="tok-cls">RunnableConfig</span>):</span></div>
+                <div class="code-line"><span class="code-ln">223</span><span class="code-src">    <span class="tok-com"># 先从 configurable 里抽出这轮真正影响 agent 组装结果的关键维度，用它们拼缓存 key</span></span></div>
+                <div class="code-line"><span class="code-ln">224</span><span class="code-src">    <span class="tok-attr">cfg</span> <span class="tok-op">=</span> <span class="tok-attr">config</span>.<span class="tok-fn">get</span>(<span class="tok-str">"configurable"</span>, {})</span></div>
+                <div class="code-line"><span class="code-ln">224</span><span class="code-src">    <span class="tok-attr">key</span> <span class="tok-op">=</span> (</span></div>
+                <div class="code-line"><span class="code-ln">225</span><span class="code-src">        <span class="tok-attr">cfg</span>.<span class="tok-fn">get</span>(<span class="tok-str">"model_name"</span>),</span></div>
+                <div class="code-line"><span class="code-ln">226</span><span class="code-src">        <span class="tok-attr">cfg</span>.<span class="tok-fn">get</span>(<span class="tok-str">"thinking_enabled"</span>),</span></div>
+                <div class="code-line"><span class="code-ln">227</span><span class="code-src">        <span class="tok-attr">cfg</span>.<span class="tok-fn">get</span>(<span class="tok-str">"is_plan_mode"</span>),</span></div>
+                <div class="code-line"><span class="code-ln">228</span><span class="code-src">        <span class="tok-attr">cfg</span>.<span class="tok-fn">get</span>(<span class="tok-str">"subagent_enabled"</span>),</span></div>
+                <div class="code-line"><span class="code-ln">229</span><span class="code-src">        <span class="tok-self">self</span>.<span class="tok-attr">_agent_name</span>,</span></div>
+                <div class="code-line"><span class="code-ln">230</span><span class="code-src">        <span class="tok-fn">frozenset</span>(<span class="tok-self">self</span>.<span class="tok-attr">_available_skills</span>) <span class="tok-kw">if</span> <span class="tok-self">self</span>.<span class="tok-attr">_available_skills</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span> <span class="tok-kw">else</span> <span class="tok-kw">None</span>,</span></div>
+                <div class="code-line"><span class="code-ln">233</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-self">self</span>.<span class="tok-attr">_agent</span> <span class="tok-kw">is not</span> <span class="tok-kw">None</span> <span class="tok-kw">and</span> <span class="tok-self">self</span>.<span class="tok-attr">_agent_config_key</span> <span class="tok-op">==</span> <span class="tok-attr">key</span>:</span></div>
+                <div class="code-line"><span class="code-ln">234</span><span class="code-src">        <span class="tok-kw">return</span></span></div>
+                <div class="code-line"><span class="code-ln">241</span><span class="code-src">    <span class="tok-attr">tools</span> <span class="tok-op">=</span> <span class="tok-fn">_get_tools</span>(<span class="tok-attr">model_name</span><span class="tok-op">=</span><span class="tok-attr">model_name</span>, <span class="tok-attr">subagent_enabled</span><span class="tok-op">=</span><span class="tok-attr">subagent_enabled</span>)</span></div>
+                <div class="code-line"><span class="code-ln">242</span><span class="code-src">    <span class="tok-attr">final_tools</span>, <span class="tok-attr">deferred_setup</span> <span class="tok-op">=</span> <span class="tok-fn">assemble_deferred_tools</span>(<span class="tok-attr">tools</span>, <span class="tok-attr">enabled</span><span class="tok-op">=</span><span class="tok-self">self</span>.<span class="tok-attr">_app_config</span>.<span class="tok-attr">tool_search</span>.<span class="tok-attr">enabled</span>)</span></div>
+                <div class="code-line"><span class="code-ln">248</span><span class="code-src">        <span class="tok-com"># 真正重建时，会把模型、工具、middleware、system_prompt 一整套重新串起来，而不是只换一个模型名</span></span></div>
+                <div class="code-line"><span class="code-ln">249</span><span class="code-src">        <span class="tok-str">"model"</span>: <span class="tok-fn">create_chat_model</span>(<span class="tok-attr">name</span><span class="tok-op">=</span><span class="tok-attr">model_name</span>, <span class="tok-attr">thinking_enabled</span><span class="tok-op">=</span><span class="tok-attr">thinking_enabled</span>, <span class="tok-attr">attach_tracing</span><span class="tok-op">=</span><span class="tok-kw">False</span>),</span></div>
+                <div class="code-line"><span class="code-ln">249</span><span class="code-src">        <span class="tok-str">"tools"</span>: <span class="tok-attr">final_tools</span>,</span></div>
+                <div class="code-line"><span class="code-ln">250</span><span class="code-src">        <span class="tok-str">"middleware"</span>: <span class="tok-fn">build_middlewares</span>(<span class="tok-attr">config</span>, <span class="tok-attr">model_name</span><span class="tok-op">=</span><span class="tok-attr">model_name</span>, <span class="tok-attr">agent_name</span><span class="tok-op">=</span><span class="tok-self">self</span>.<span class="tok-attr">_agent_name</span>, <span class="tok-attr">available_skills</span><span class="tok-op">=</span><span class="tok-self">self</span>.<span class="tok-attr">_available_skills</span>, <span class="tok-attr">custom_middlewares</span><span class="tok-op">=</span><span class="tok-self">self</span>.<span class="tok-attr">_middlewares</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-self">self</span>.<span class="tok-attr">_app_config</span>, <span class="tok-attr">deferred_setup</span><span class="tok-op">=</span><span class="tok-attr">deferred_setup</span>),</span></div>
+                <div class="code-line"><span class="code-ln">259</span><span class="code-src">        <span class="tok-str">"system_prompt"</span>: <span class="tok-fn">apply_prompt_template</span>(<span class="tok-attr">subagent_enabled</span><span class="tok-op">=</span><span class="tok-attr">subagent_enabled</span>, <span class="tok-attr">max_concurrent_subagents</span><span class="tok-op">=</span><span class="tok-attr">max_concurrent_subagents</span>, <span class="tok-attr">agent_name</span><span class="tok-op">=</span><span class="tok-self">self</span>.<span class="tok-attr">_agent_name</span>, <span class="tok-attr">available_skills</span><span class="tok-op">=</span><span class="tok-self">self</span>.<span class="tok-attr">_available_skills</span>, <span class="tok-attr">deferred_names</span><span class="tok-op">=</span><span class="tok-attr">deferred_setup</span>.<span class="tok-attr">deferred_names</span>),</span></div>
+                <div class="code-line"><span class="code-ln">266</span><span class="code-src">        <span class="tok-str">"state_schema"</span>: <span class="tok-cls">ThreadState</span>,</span></div>
+                <div class="code-line"><span class="code-ln">276</span><span class="code-src">    <span class="tok-self">self</span>.<span class="tok-attr">_agent</span> <span class="tok-op">=</span> <span class="tok-fn">create_agent</span>(<span class="tok-op">**</span><span class="tok-attr">kwargs</span>)</span></div>
+                <div class="code-line"><span class="code-ln">277</span><span class="code-src">    <span class="tok-self">self</span>.<span class="tok-attr">_agent_config_key</span> <span class="tok-op">=</span> <span class="tok-attr">key</span></span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第 207 到 216 行说明外部调用时的覆盖项先进入 <code>RunnableConfig.configurable</code>，所以 DeerFlow 的自定义并不是到处传散参数，而是先收束成一个标准运行配置。</li>
+            <li>第 224 到 233 行构造了一个缓存 key，这意味着你多次调用同样参数的 client，不会反复重建 agent；只有模型、思考模式、plan mode、subagent 开关或 skill 集变化时才重建。</li>
+            <li>第 241 到 266 行把前面章节讲过的所有关键部件重新串起来了：工具列表先拿出来，再做 deferred tools，接着拼 middleware，最后再渲染系统提示词。</li>
+            <li>看到第 276 行就能明白，真正的“自定义 agent”并不是一个新的框架分支，而是 DeerFlowClient 把受控参数一路喂给 DeerFlow 自己的组装逻辑后，再统一调用一次 <code>create_agent</code>。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：自定义 Agent 真正跑起来时，Client 的 `stream()` 又如何把它变成可消费事件流</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/client.py</code>。这段能把“组装好的 agent”再往下接到实际调用路径，解释为什么自定义 agent 不只是配置对象，而是完整可运行的对话入口。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">deerflow/client.py :: stream()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">515</span><span class="code-src"><span class="tok-com"># self / message / thread_id / kwargs: 当前 client、用户消息、会话线程，以及这次调用的临时覆盖参数</span></span></div>
+                <div class="code-line"><span class="code-ln">516</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">stream</span>(<span class="tok-self">self</span>, <span class="tok-attr">message</span>: <span class="tok-type">str</span>, <span class="tok-op">*</span>, <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-kw">None</span> <span class="tok-op">=</span> <span class="tok-kw">None</span>, <span class="tok-op">**</span><span class="tok-attr">kwargs</span>):</span></div>
+                <div class="code-line"><span class="code-ln">595</span><span class="code-src">    <span class="tok-com"># 没给 thread_id 时先生成一条临时线程，这样后续 memory、artifacts、tracing 都还有稳定主语</span></span></div>
+                <div class="code-line"><span class="code-ln">596</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">thread_id</span> <span class="tok-kw">is</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">596</span><span class="code-src">        <span class="tok-attr">thread_id</span> <span class="tok-op">=</span> <span class="tok-fn">str</span>(<span class="tok-fn">uuid</span>.<span class="tok-fn">uuid4</span>())</span></div>
+                <div class="code-line"><span class="code-ln">598</span><span class="code-src">    <span class="tok-attr">config</span> <span class="tok-op">=</span> <span class="tok-self">self</span>.<span class="tok-fn">_get_runnable_config</span>(<span class="tok-attr">thread_id</span>, <span class="tok-op">**</span><span class="tok-attr">kwargs</span>)</span></div>
+                <div class="code-line"><span class="code-ln">604</span><span class="code-src">    <span class="tok-com"># 接着把 tracing、Langfuse 元数据和 agent 实例准备好，确保这次流式调用有完整观测上下文</span></span></div>
+                <div class="code-line"><span class="code-ln">605</span><span class="code-src">    <span class="tok-attr">tracing_callbacks</span> <span class="tok-op">=</span> <span class="tok-fn">build_tracing_callbacks</span>()</span></div>
+                <div class="code-line"><span class="code-ln">611</span><span class="code-src">    <span class="tok-fn">inject_langfuse_metadata</span>(<span class="tok-attr">config</span>, <span class="tok-attr">thread_id</span><span class="tok-op">=</span><span class="tok-attr">thread_id</span>, <span class="tok-attr">user_id</span><span class="tok-op">=</span><span class="tok-fn">get_effective_user_id</span>(), <span class="tok-attr">assistant_id</span><span class="tok-op">=</span><span class="tok-self">self</span>.<span class="tok-attr">_agent_name</span> <span class="tok-kw">or</span> <span class="tok-str">"lead-agent"</span>, <span class="tok-attr">model_name</span><span class="tok-op">=</span><span class="tok-attr">configurable</span>.<span class="tok-fn">get</span>(<span class="tok-str">"model_name"</span>) <span class="tok-kw">or</span> <span class="tok-self">self</span>.<span class="tok-attr">_model_name</span>, <span class="tok-attr">environment</span><span class="tok-op">=</span><span class="tok-self">self</span>.<span class="tok-attr">_environment</span> <span class="tok-kw">or</span> <span class="tok-attr">os</span>.<span class="tok-attr">environ</span>.<span class="tok-fn">get</span>(<span class="tok-str">"DEER_FLOW_ENV"</span>) <span class="tok-kw">or</span> <span class="tok-attr">os</span>.<span class="tok-attr">environ</span>.<span class="tok-fn">get</span>(<span class="tok-str">"ENVIRONMENT"</span>))</span></div>
+                <div class="code-line"><span class="code-ln">622</span><span class="code-src">    <span class="tok-self">self</span>.<span class="tok-fn">_ensure_agent</span>(<span class="tok-attr">config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">624</span><span class="code-src">    <span class="tok-com"># 真正进入 runtime 前，先把输入消息和 thread 上下文包装成 DeerFlow 统一的 state/context 协议</span></span></div>
+                <div class="code-line"><span class="code-ln">625</span><span class="code-src">    <span class="tok-attr">state</span>: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">Any</span>] <span class="tok-op">=</span> {<span class="tok-str">"messages"</span>: [<span class="tok-cls">HumanMessage</span>(<span class="tok-attr">content</span><span class="tok-op">=</span><span class="tok-attr">message</span>)]}</span></div>
+                <div class="code-line"><span class="code-ln">625</span><span class="code-src">    <span class="tok-attr">context</span> <span class="tok-op">=</span> {<span class="tok-str">"thread_id"</span>: <span class="tok-attr">thread_id</span>}</span></div>
+                <div class="code-line"><span class="code-ln">628</span><span class="code-src">        <span class="tok-attr">context</span>[<span class="tok-str">"agent_name"</span>] <span class="tok-op">=</span> <span class="tok-self">self</span>.<span class="tok-attr">_agent_name</span></span></div>
+                <div class="code-line"><span class="code-ln">685</span><span class="code-src">    <span class="tok-com"># 最后开始真正消费 graph 的多路流式输出，再把它翻译成 client 层对外暴露的 StreamEvent</span></span></div>
+                <div class="code-line"><span class="code-ln">686</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-attr">item</span> <span class="tok-kw">in</span> <span class="tok-self">self</span>.<span class="tok-attr">_agent</span>.<span class="tok-fn">stream</span>(<span class="tok-attr">state</span>, <span class="tok-attr">config</span><span class="tok-op">=</span><span class="tok-attr">config</span>, <span class="tok-attr">context</span><span class="tok-op">=</span><span class="tok-attr">context</span>, <span class="tok-attr">stream_mode</span><span class="tok-op">=</span>[<span class="tok-str">"values"</span>, <span class="tok-str">"messages"</span>, <span class="tok-str">"custom"</span>]):</span></div>
+                <div class="code-line"><span class="code-ln">695</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">mode</span> <span class="tok-op">==</span> <span class="tok-str">"custom"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">696</span><span class="code-src">            <span class="tok-kw">yield</span> <span class="tok-cls">StreamEvent</span>(<span class="tok-attr">type</span><span class="tok-op">=</span><span class="tok-str">"custom"</span>, <span class="tok-attr">data</span><span class="tok-op">=</span><span class="tok-attr">chunk</span>)</span></div>
+                <div class="code-line"><span class="code-ln">706</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">mode</span> <span class="tok-op">==</span> <span class="tok-str">"messages"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">716</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">msg_chunk</span>, <span class="tok-cls">AIMessage</span>):</span></div>
+                <div class="code-line"><span class="code-ln">721</span><span class="code-src">                <span class="tok-attr">counted_usage</span> <span class="tok-op">=</span> <span class="tok-fn">_account_usage</span>(<span class="tok-attr">msg_id</span>, <span class="tok-attr">msg_chunk</span>.<span class="tok-attr">usage_metadata</span>)</span></div>
+                <div class="code-line"><span class="code-ln">726</span><span class="code-src">                    <span class="tok-kw">yield</span> <span class="tok-self">self</span>.<span class="tok-fn">_ai_text_event</span>(<span class="tok-attr">msg_id</span>, <span class="tok-attr">text</span>, <span class="tok-attr">counted_usage</span>, <span class="tok-attr">additional_kwargs_delta</span>)</span></div>
+                <div class="code-line"><span class="code-ln">734</span><span class="code-src">                    <span class="tok-kw">yield</span> <span class="tok-self">self</span>.<span class="tok-fn">_ai_tool_calls_event</span>(<span class="tok-attr">msg_id</span>, <span class="tok-attr">msg_chunk</span>.<span class="tok-attr">tool_calls</span>, <span class="tok-attr">additional_kwargs_delta</span>)</span></div>
+                <div class="code-line"><span class="code-ln">737</span><span class="code-src">        <span class="tok-kw">elif</span> <span class="tok-fn">isinstance</span>(<span class="tok-attr">msg_chunk</span>, <span class="tok-cls">ToolMessage</span>):</span></div>
+                <div class="code-line"><span class="code-ln">739</span><span class="code-src">            <span class="tok-kw">yield</span> <span class="tok-self">self</span>.<span class="tok-fn">_tool_message_event</span>(<span class="tok-attr">msg_chunk</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>这一段把“自定义 agent”从构建阶段推进到运行阶段了：先生成 runnable config，再注入 tracing 元数据，然后调用 `_ensure_agent()` 保证当前配置下的 agent 已经建好。</li>
+            <li>第 624 到 628 行说明真正的线程上下文仍然是 DeerFlow 统一那套 `messages + thread_id + agent_name` 协议，所以自定义 agent 并没有跳出系统原有运行轨道。</li>
+            <li>第 685 行之后的 `stream_mode=["values","messages","custom"]` 特别关键，它解释了为什么 embedded client 能和 Gateway SSE 保持相近语义：同样订阅多种流模式，只是这里直接产出 Python 结构，而不是 SSE JSON。</li>
+            <li>读完这里，用户就能把上一段的 agent 组装代码和这一段的流式消费代码接起来，形成“参数 -> agent -> stream 事件”的完整调用链。</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="config">
+        <h2>配置面与使用方式</h2>
+        <ul>
+          <li><code>backend/packages/harness/deerflow/client.py</code> 当前实际公开的定制面主要是 <code>model_name</code>、<code>agent_name</code>、<code>available_skills</code> 和 <code>middlewares</code> 等参数；这里讲的是现状，不等同于 RFC 里更理想化的未来接口分层。</li>
+          <li><code>backend/packages/harness/deerflow/agents/factory.py</code> 则负责把这些覆盖项落实成工具集合、middleware 链和 prompt/runtime 组合。</li>
+          <li><code>backend/docs/rfc-create-deerflow-agent.md</code> 强调的是未来希望达到的参数覆盖优先、配置回退其次路线；阅读时要把它和 <code>backend/packages/harness/deerflow/client.py</code> 当前已经实现的公开参数区分开。</li>
+          <li>如果你还需要自定义 skill、自定义 subagent 或不同模型策略，这些也应沿 DeerFlow 现有配置和注册机制扩展，而不是硬 fork 一套平行工厂。</li>
+        </ul>
+      </section>
+
+      <section id="tradeoffs">
+        <h2>关键实现细节与权衡</h2>
+        <ul>
+          <li>走 <code>backend/packages/harness/deerflow/client.py</code> 的好处是可以直接复用 DeerFlow 现有能力；代价是你也会继承它当前已经公开、但仍然有限的参数面以及配置与运行时假设。</li>
+          <li><code>backend/packages/harness/deerflow/agents/factory.py</code> 提供了很强的组合能力，但它本质仍是内部装配层，不适合被当成外部稳定 SDK 契约使用。</li>
+          <li><code>backend/docs/rfc-create-deerflow-agent.md</code> 之所以强调“唯一公开 API”与“纯参数工厂”，是为了减少隐式 I/O 和全局状态给自定义 agent 带来的困扰；但这应被理解为 RFC 设计目标，而不是已经完整兑现的现状描述。</li>
+        </ul>
+      </section>
+
+      <section id="limits">
+        <h2>当前限制、边界与非目标</h2>
+        <ul>
+          <li>构建自定义 agent 不等于当前就有一套完全独立、零隐式依赖的 agent SDK。</li>
+          <li>如果你直接深入内部工厂层，可能会碰到全局配置、extensions 状态和运行时装配细节，而这些并不都是面向外部承诺的稳定接口。</li>
+          <li>本章不鼓励复制 DeerFlow 默认执行引擎再魔改，那样最容易偏离仓库的真实能力演进路径。</li>
+        </ul>
+      </section>
+
+      <section id="relations">
+        <h2>它与 DeerFlow 其他能力的关系</h2>
+        <ul>
+          <li>它和第 10 章执行引擎相连，因为自定义 agent 最终还是要回到 DeerFlow 的 agent 构建与执行主线。</li>
+          <li>它和第 11、30 章 skills 相连，因为自定义 agent 通常也要决定允许哪些 skills、如何使用这些能力包。</li>
+          <li>它和第 21 章模型集成相连，因为模型覆盖是自定义 agent 最常见的定制面之一。</li>
+          <li>它和 RFC 文档相连，因为 <code>backend/docs/rfc-create-deerflow-agent.md</code> 实际上就是理解这层边界的最佳设计说明。</li>
+        </ul>
+        <div class="highlight">
+          建议把 <code>backend/packages/harness/deerflow/client.py</code>、<code>backend/packages/harness/deerflow/agents/factory.py</code> 和 <code>backend/docs/rfc-create-deerflow-agent.md</code> 连起来读。
+        </div>
+      </section>
+
+      <div id="page-nav"></div>
+    </div>
   </main>
 </div>
 <script src="assets/nav.js"></script>

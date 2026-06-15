@@ -6,215 +6,7 @@
     <title>自定义Skills完全指南 · DeerFlow 学习系列</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
-        /* 页面特定样式 - 与深色主题兼容 */
-        
-        .toc {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--accent);
-            padding: 20px;
-            margin-bottom: 40px;
-            border-radius: 8px;
-        }
-        
-        .toc h2 {
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .toc li:before {
-            content: "▸";
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: bold;
-        }
-        
-        .toc a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .toc a:hover {
-            color: var(--accent-2);
-            text-decoration: underline;
-        }
-        
-        section {
-            margin-bottom: 50px;
-        }
-        
-        /* 代码块样式 */
-        .code-block {
-            background: var(--bg-code);
-            color: var(--text-soft);
-            padding: 18px 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 18px 0;
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 13.5px;
-            line-height: 1.65;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-        }
-        
-        .code-block code {
-            background: none;
-            border: none;
-            padding: 0;
-            color: var(--text-soft);
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            white-space: pre;
-            display: block;
-        }
-        
-        .code-block::-webkit-scrollbar {
-            height: 9px;
-        }
-        
-        .code-block::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-        
-        /* 提示框样式 */
-        .highlight {
-            background: var(--bg-soft);
-            padding: 15px 18px;
-            border-left: 4px solid var(--orange);
-            margin: 18px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .key-point {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--green);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--green);
-        }
-        
-        .key-point strong {
-            color: var(--green-soft);
-            font-weight: 650;
-        }
-        
-        .example-case {
-            background: var(--bg-soft);
-            border-left: 4px solid var(--orange);
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-        }
-        
-        .example-case strong {
-            color: var(--orange);
-            font-weight: 650;
-        }
-        
-        .warning {
-            background: var(--bg-soft);
-            border-left: 4px solid #ff6b6b;
-            padding: 15px 18px;
-            margin: 15px 0;
-            border-radius: 8px;
-            color: var(--text-soft);
-            border: 1px solid var(--border);
-            border-left: 4px solid #ff6b6b;
-        }
-        
-        .warning strong {
-            color: #ff6b6b;
-            font-weight: 650;
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 18px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-        }
-        
-        .comparison-table th {
-            background: var(--bg-soft);
-            color: var(--text);
-            padding: 11px 15px;
-            text-align: left;
-            font-weight: 650;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .comparison-table td {
-            padding: 11px 15px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-soft);
-        }
-        
-        .comparison-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .comparison-table tr:hover td {
-            background: rgba(88,166,255,0.04);
-        }
-        
-        .flow-diagram {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        
-        .flow-step {
-            background: var(--bg-card);
-            border: 1.5px solid var(--accent);
-            color: var(--text);
-            padding: 12px 22px;
-            border-radius: 10px;
-            min-width: 120px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .flow-arrow {
-            font-size: 20px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            padding: 2px 0;
-        }
+        section { margin-bottom: 50px; }
     </style>
 </head>
 <body>
@@ -223,331 +15,336 @@
   <nav class="sidebar" id="sidebar"></nav>
   <main class="main">
     <div class="content">
-            <h1>自定义Skills完全指南</h1>
-            <p class="page-subtitle">DeerFlow 学习系列 - 第 30 章</p>
-            
-            <div class="toc">
-                <h2>📖 目录</h2>
-                <ul>
-                    <li><a href="#introduction">简介</a></li>
-                    <li><a href="#skill-structure">Skill 结构</a></li>
-                    <li><a href="#implementation">实现步骤</a></li>
-                    <li><a href="#advanced-features">高级特性</a></li>
-                    <li><a href="#testing">测试</a></li>
-                    <li><a href="#deployment">部署</a></li>
-                    <li><a href="#best-practices">最佳实践</a></li>
-                    <li><a href="#summary">总结</a></li>
-                </ul>
-            </div>
-            
-            <section id="introduction">
-                <h2>简介</h2>
-                <p>
-                    自定义 Skill 是扩展 Agent 功能的核心方式。通过编写自定义 Skill，可以让 Agent 执行任何你想要的操作。本章讲解如何从零开始编写、测试和部署自定义 Skill。
-                </p>
-                <div class="key-point">
-                    <strong>学习目标：</strong>
-                    <ul>
-                        <li>理解 Skill 的结构和生命周期</li>
-                        <li>掌握编写自定义 Skill 的完整流程</li>
-                        <li>学会测试和调试 Skill</li>
-                        <li>了解部署和维护 Skill</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <section id="skill-structure">
-                <h2>Skill 结构</h2>
-                <p>
-                    每个 Skill 都有标准的结构和接口。理解这个结构是编写 Skill 的基础。
-                </p>
-                
-                <h3>Skill 的基本组成</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">from</span> abc <span class="tok-kw">import</span> <span class="tok-cls">ABC</span>, abstractmethod
-<span class="tok-kw">from</span> typing <span class="tok-kw">import</span> <span class="tok-cls">Any</span>, <span class="tok-cls">Dict</span>
+      <h1>自定义Skills完全指南</h1>
+      <p class="page-subtitle">DeerFlow 学习系列 - 第 30 章</p>
 
-<span class="tok-kw">class</span> <span class="tok-cls">Skill</span>(<span class="tok-cls">ABC</span>):
-    <span class="tok-str">"""Skill 基类"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>, name: <span class="tok-str">str</span>, description: <span class="tok-str">str</span>):
-        <span class="tok-kw">self</span>.name = name
-        <span class="tok-kw">self</span>.description = description
-        <span class="tok-kw">self</span>.version = <span class="tok-str">"1.0.0"</span>
-    
-    @abstractmethod
-    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, **kwargs) -> <span class="tok-cls">Any</span>:
-        <span class="tok-str">"""执行 Skill"""</span>
-        <span class="tok-kw">pass</span>
-    
-    @abstractmethod
-    <span class="tok-kw">def</span> <span class="tok-fn">validate_input</span>(<span class="tok-kw">self</span>, **kwargs) -> <span class="tok-str">bool</span>:
-        <span class="tok-str">"""验证输入参数"""</span>
-        <span class="tok-kw">pass</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">get_metadata</span>(<span class="tok-kw">self</span>) -> <span class="tok-cls">Dict</span>:
-        <span class="tok-str">"""获取 Skill 元数据"""</span>
-        <span class="tok-kw">return</span> {
-            <span class="tok-str">"name"</span>: <span class="tok-kw">self</span>.name,
-            <span class="tok-str">"description"</span>: <span class="tok-kw">self</span>.description,
-            <span class="tok-str">"version"</span>: <span class="tok-kw">self</span>.version
-        }
-</code></div>
-            </section>
-            
-            <section id="implementation">
-                <h2>实现步骤</h2>
-                <p>
-                    编写自定义 Skill 的完整步骤。
-                </p>
-                
-                <h3>第 1 步：定义 Skill 类</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">DataAnalysisSkill</span>(<span class="tok-cls">Skill</span>):
-    <span class="tok-str">"""数据分析 Skill"""</span>
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-fn">super</span>().<span class="tok-fn">__init__</span>(
-            name=<span class="tok-str">"data_analysis"</span>,
-            description=<span class="tok-str">"分析数据并生成报告"</span>
-        )
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">validate_input</span>(<span class="tok-kw">self</span>, **kwargs) -> <span class="tok-str">bool</span>:
-        <span class="tok-str">"""验证输入"""</span>
-        required_fields = [<span class="tok-str">"data"</span>, <span class="tok-str">"analysis_type"</span>]
-        <span class="tok-kw">return</span> <span class="tok-fn">all</span>(field <span class="tok-kw">in</span> kwargs <span class="tok-kw">for</span> field <span class="tok-kw">in</span> required_fields)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">execute</span>(<span class="tok-kw">self</span>, **kwargs):
-        <span class="tok-str">"""执行分析"""</span>
-        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-kw">self</span>.<span class="tok-fn">validate_input</span>(**kwargs):
-            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"Invalid input"</span>)
-        
-        data = kwargs[<span class="tok-str">"data"</span>]
-        analysis_type = kwargs[<span class="tok-str">"analysis_type"</span>]
-        
-        <span class="tok-com"># 执行分析逻辑</span>
-        result = <span class="tok-kw">self</span>.<span class="tok-fn">analyze</span>(data, analysis_type)
-        <span class="tok-kw">return</span> result
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">analyze</span>(<span class="tok-kw">self</span>, data, analysis_type):
-        <span class="tok-str">"""分析数据"""</span>
-        <span class="tok-kw">if</span> analysis_type == <span class="tok-str">"summary"</span>:
-            <span class="tok-kw">return</span> <span class="tok-kw">self</span>.<span class="tok-fn">summarize</span>(data)
-        <span class="tok-kw">elif</span> analysis_type == <span class="tok-str">"trend"</span>:
-            <span class="tok-kw">return</span> <span class="tok-kw">self</span>.<span class="tok-fn">analyze_trend</span>(data)
-        <span class="tok-kw">else</span>:
-            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"Unknown analysis type"</span>)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">summarize</span>(<span class="tok-kw">self</span>, data):
-        <span class="tok-str">"""生成摘要"""</span>
-        <span class="tok-kw">return</span> {<span class="tok-str">"type"</span>: <span class="tok-str">"summary"</span>, <span class="tok-str">"data"</span>: data}
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">analyze_trend</span>(<span class="tok-kw">self</span>, data):
-        <span class="tok-str">"""分析趋势"""</span>
-        <span class="tok-kw">return</span> {<span class="tok-str">"type"</span>: <span class="tok-str">"trend"</span>, <span class="tok-str">"data"</span>: data}
-</code></div>
-                
-                <div class="example-case">
-                    <strong>示例：</strong> 完整的 Skill 实现<br>
-                    <div class="code-block"><code>
-<span class="tok-com"># 使用 Skill</span>
-skill = <span class="tok-cls">DataAnalysisSkill</span>()
+      <div class="deerflow-map">
+        <h3>本章讲的是用户如何在 DeerFlow 里定义、安装和维护自己的 skill</h3>
+        <p>这一章不是解释整个 skills 系统如何工作，而是贴着 DeerFlow 当前仓库，讲“你要自己做一个 skill 时，目录长什么样、归档怎么安装、Gateway 怎么管理、为什么它会影响 agent 行为，以及哪些资源文件会被保留给 skill 使用”。</p>
+      </div>
 
-<span class="tok-com"># 执行 Skill</span>
-result = skill.<span class="tok-fn">execute</span>(
-    data=[<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">4</span>, <span class="tok-num">5</span>],
-    analysis_type=<span class="tok-str">"summary"</span>
-)
+      <div class="toc">
+        <h3>目录</h3>
+        <ul>
+          <li><a href="#problem">这项能力在 DeerFlow 中解决什么问题</a></li>
+          <li><a href="#codebase">这项能力在代码库中的位置</a></li>
+          <li><a href="#flow">真实运行链路或数据链路</a></li>
+          <li><a href="#config">配置面与使用方式</a></li>
+          <li><a href="#tradeoffs">关键实现细节与权衡</a></li>
+          <li><a href="#limits">当前限制、边界与非目标</a></li>
+          <li><a href="#relations">它与 DeerFlow 其他能力的关系</a></li>
+        </ul>
+      </div>
 
-<span class="tok-fn">print</span>(result)
-<span class="tok-com"># 输出: {'type': 'summary', 'data': [1, 2, 3, 4, 5]}</span>
-</code></div>
-                </div>
-            </section>
-            
-            <section id="advanced-features">
-                <h2>高级特性</h2>
-                <p>
-                    除了基本功能，Skill 还支持一些高级特性来增强功能和性能。
-                </p>
-                
-                <h3>异步执行</h3>
-                <p>
-                    对于耗时操作，可以使用异步执行提高效率：
-                </p>
-                <div class="code-block"><code>
-<span class="tok-kw">import</span> asyncio
-
-<span class="tok-kw">class</span> <span class="tok-cls">AsyncDataAnalysisSkill</span>(<span class="tok-cls">Skill</span>):
-    <span class="tok-kw">async</span> <span class="tok-kw">def</span> <span class="tok-fn">execute_async</span>(<span class="tok-kw">self</span>, **kwargs):
-        <span class="tok-str">"""异步执行"""</span>
-        <span class="tok-kw">return</span> <span class="tok-kw">await</span> <span class="tok-kw">self</span>.<span class="tok-fn">analyze_async</span>(kwargs)
-    
-    <span class="tok-kw">async</span> <span class="tok-kw">def</span> <span class="tok-fn">analyze_async</span>(<span class="tok-kw">self</span>, kwargs):
-        <span class="tok-str">"""异步分析"""</span>
-        <span class="tok-kw">await</span> asyncio.<span class="tok-fn">sleep</span>(<span class="tok-num">1</span>)  <span class="tok-com"># 模拟耗时操作</span>
-        <span class="tok-kw">return</span> {<span class="tok-str">"status"</span>: <span class="tok-str">"completed"</span>}
-</code></div>
-                
-                <h3>缓存和记忆化</h3>
-                <p>
-                    为 Skill 添加缓存以提高性能：
-                </p>
-                <div class="code-block"><code>
-<span class="tok-kw">from</span> functools <span class="tok-kw">import</span> lru_cache
-
-<span class="tok-kw">class</span> <span class="tok-cls">CachedSkill</span>(<span class="tok-cls">Skill</span>):
-    @lru_cache(maxsize=<span class="tok-num">128</span>)
-    <span class="tok-kw">def</span> <span class="tok-fn">expensive_operation</span>(<span class="tok-kw">self</span>, key: <span class="tok-str">str</span>):
-        <span class="tok-str">"""昂贵的操作，结果会被缓存"""</span>
-        <span class="tok-com"># 执行昂贵的计算</span>
-        <span class="tok-kw">return</span> <span class="tok-str">f"result_for_{key}"</span>
-</code></div>
-                
-                <h3>错误恢复</h3>
-                <p>
-                    实现错误恢复机制确保 Skill 的健壮性：
-                </p>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">RobustSkill</span>(<span class="tok-cls">Skill</span>):
-    <span class="tok-kw">def</span> <span class="tok-fn">execute_with_retry</span>(<span class="tok-kw">self</span>, **kwargs):
-        <span class="tok-str">"""带重试的执行"""</span>
-        max_retries = <span class="tok-num">3</span>
-        <span class="tok-kw">for</span> attempt <span class="tok-kw">in</span> <span class="tok-fn">range</span>(max_retries):
-            <span class="tok-kw">try</span>:
-                <span class="tok-kw">return</span> <span class="tok-kw">self</span>.<span class="tok-fn">execute</span>(**kwargs)
-            <span class="tok-kw">except</span> <span class="tok-cls">Exception</span> <span class="tok-kw">as</span> e:
-                <span class="tok-kw">if</span> attempt == max_retries - <span class="tok-num">1</span>:
-                    <span class="tok-kw">raise</span>
-                <span class="tok-fn">print</span>(<span class="tok-str">f"Retry {attempt + 1}"</span>)
-</code></div>
-            </section>
-            
-            <section id="testing">
-                <h2>测试</h2>
-                <p>
-                    充分的测试是确保 Skill 质量的关键。
-                </p>
-                
-                <h3>单元测试</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">import</span> unittest
-
-<span class="tok-kw">class</span> <span class="tok-cls">TestDataAnalysisSkill</span>(unittest.<span class="tok-cls">TestCase</span>):
-    <span class="tok-kw">def</span> <span class="tok-fn">setUp</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.skill = <span class="tok-cls">DataAnalysisSkill</span>()
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">test_valid_input</span>(<span class="tok-kw">self</span>):
-        <span class="tok-str">"""测试有效输入"""</span>
-        result = <span class="tok-kw">self</span>.skill.<span class="tok-fn">execute</span>(
-            data=[<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>],
-            analysis_type=<span class="tok-str">"summary"</span>
-        )
-        <span class="tok-kw">self</span>.<span class="tok-fn">assertIsNotNone</span>(result)
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">test_invalid_input</span>(<span class="tok-kw">self</span>):
-        <span class="tok-str">"""测试无效输入"""</span>
-        <span class="tok-kw">with</span> <span class="tok-kw">self</span>.<span class="tok-fn">assertRaises</span>(<span class="tok-cls">ValueError</span>):
-            <span class="tok-kw">self</span>.skill.<span class="tok-fn">execute</span>(data=[<span class="tok-num">1</span>, <span class="tok-num">2</span>])
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">test_metadata</span>(<span class="tok-kw">self</span>):
-        <span class="tok-str">"""测试元数据"""</span>
-        metadata = <span class="tok-kw">self</span>.skill.<span class="tok-fn">get_metadata</span>()
-        <span class="tok-kw">self</span>.<span class="tok-fn">assertEqual</span>(metadata[<span class="tok-str">"name"</span>], <span class="tok-str">"data_analysis"</span>)
-</code></div>
-            </section>
-            
-            <section id="deployment">
-                <h2>部署</h2>
-                <p>
-                    部署 Skill 使其可以被 Agent 使用。
-                </p>
-                
-                <h3>部署步骤</h3>
-                <ol>
-                    <li><strong>打包：</strong> 将 Skill 代码打包为模块</li>
-                    <li><strong>注册：</strong> 在 Agent 中注册 Skill</li>
-                    <li><strong>验证：</strong> 验证 Skill 可以正常使用</li>
-                    <li><strong>监控：</strong> 监控 Skill 的执行情况</li>
-                </ol>
-                
-                <h3>注册 Skill</h3>
-                <div class="code-block"><code>
-<span class="tok-kw">class</span> <span class="tok-cls">Agent</span>:
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">self</span>):
-        <span class="tok-kw">self</span>.skills = {}
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">register_skill</span>(<span class="tok-kw">self</span>, skill: <span class="tok-cls">Skill</span>):
-        <span class="tok-str">"""注册 Skill"""</span>
-        <span class="tok-kw">self</span>.skills[skill.name] = skill
-    
-    <span class="tok-kw">def</span> <span class="tok-fn">execute_skill</span>(<span class="tok-kw">self</span>, skill_name: <span class="tok-str">str</span>, **kwargs):
-        <span class="tok-str">"""执行 Skill"""</span>
-        <span class="tok-kw">if</span> skill_name <span class="tok-kw">not</span> <span class="tok-kw">in</span> <span class="tok-kw">self</span>.skills:
-            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Skill {skill_name} not found"</span>)
-        
-        skill = <span class="tok-kw">self</span>.skills[skill_name]
-        <span class="tok-kw">return</span> skill.<span class="tok-fn">execute</span>(**kwargs)
-
-<span class="tok-com"># 使用示例</span>
-agent = <span class="tok-cls">Agent</span>()
-agent.<span class="tok-fn">register_skill</span>(<span class="tok-cls">DataAnalysisSkill</span>())
-result = agent.<span class="tok-fn">execute_skill</span>(<span class="tok-str">"data_analysis"</span>, data=[<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>], analysis_type=<span class="tok-str">"summary"</span>)
-</code></div>
-            </section>
-            
-            <section id="best-practices">
-                <h2>最佳实践</h2>
-                
-                <h3>1. 清晰的接口</h3>
-                <p>
-                    Skill 的接口应该清晰、简单。参数和返回值应该有明确的类型和说明。
-                </p>
-                
-                <h3>2. 错误处理</h3>
-                <p>
-                    实现完善的错误处理。验证输入，捕获异常，提供有意义的错误信息。
-                </p>
-                
-                <h3>3. 文档</h3>
-                <p>
-                    为 Skill 编写清晰的文档。说明参数、返回值、异常和使用示例。
-                </p>
-                
-                <h3>4. 版本管理</h3>
-                <p>
-                    维护 Skill 的版本。当 API 改变时更新版本号。
-                </p>
-                
-                <h3>5. 性能考虑</h3>
-                <p>
-                    优化 Skill 的性能。考虑缓存、异步执行等优化方法。
-                </p>
-                
-                <div class="key-point">
-                    <strong>关键点：</strong> 好的 Skill 应该是可复用、可测试、易维护的。
-                </div>
-            </section>
-            
-            <section id="summary">
-                <h2>总结</h2>
-                <p>
-                    编写自定义 Skill 是扩展 Agent 功能的核心能力。通过遵循标准的结构、完善的测试和最佳实践，可以创建高质量、可复用的 Skill。关键要点包括：
-                </p>
-                <div class="highlight">
-                    <strong>核心要点：</strong>
-                    <ul>
-                        <li><strong>Skill 结构：</strong> 继承基类、实现 execute 和 validate_input 方法</li>
-                        <li><strong>实现步骤：</strong> 定义类、实现核心逻辑、处理错误、提供元数据</li>
-                        <li><strong>测试：</strong> 单元测试、集成测试、边界测试</li>
-                        <li><strong>部署：</strong> 打包、注册、验证、监控</li>
-                        <li><strong>最佳实践：</strong> 清晰接口、错误处理、文档、版本管理、性能优化</li>
-                    </ul>
-                </div>
-            </section>
-            
-            <div id="page-nav"></div>
+      <section id="problem">
+        <h2>这项能力在 DeerFlow 中解决什么问题</h2>
+        <p>当你希望 DeerFlow 的 agent 形成某种稳定工作法，例如固定的排障流程、特定格式的文档生成方式、某类外部系统的使用约定，最合适的扩展点通常不是再加一个 tool，而是做一个自定义 skill。skill 更适合承载工作说明、模板、参考资料和配套脚本资源。</p>
+        <div class="warning">
+          <strong>分工边界：</strong> 本章讲用户如何定义和构建自定义 skills；<code>11-skills-system.html</code> 讲整个 skills 系统如何运作。
         </div>
+      </section>
+
+      <section id="codebase">
+        <h2>这项能力在代码库中的位置</h2>
+        <table class="comparison-table">
+          <tr>
+            <th>路径</th>
+            <th>职责</th>
+            <th>为什么要看</th>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/skills/</code></td>
+            <td>skills 类型、校验、存储、权限与 slash 解析</td>
+            <td>这是自定义 skill 真正落地的主目录</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/skills/installer.py</code></td>
+            <td>解包 <code>.skill</code> 归档、安全扫描、路径检查与安装</td>
+            <td>说明 DeerFlow 接受的不是任意 ZIP，而是受控 skill 包</td>
+          </tr>
+          <tr>
+            <td><code>backend/app/gateway/routers/skills.py</code></td>
+            <td>列出、安装、编辑、删除、回滚自定义 skills</td>
+            <td>这是你通过 Gateway 管理 skill 的入口</td>
+          </tr>
+          <tr>
+            <td><code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code></td>
+            <td>延迟工具发现</td>
+            <td>很多 skill 会教 agent 什么时候去搜索工具，而不是自己替代工具</td>
+          </tr>
+        </table>
+      </section>
+
+      <section id="flow">
+        <h2>真实运行链路或数据链路</h2>
+        <div class="flow-visual">
+          <div class="flow-visual-title">
+            <strong>自定义 Skill 生效流程图</strong>
+            <span>写完 skill 文件不等于立刻可用，真正生效前还要过一整条安装链</span>
+          </div>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">01</div>
+              <div class="flow-step-copy">
+                <strong>作者先整理一个技能目录</strong>
+                <p>最基本的是 <code>SKILL.md</code>，也可以带上 references、templates 和 scripts 等辅助材料。</p>
+                <div class="flow-step-path"><code>skill folder</code> + <code>SKILL.md</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">02</div>
+              <div class="flow-step-copy">
+                <strong>然后把它打包成可安装的 skill 归档</strong>
+                <p>只有进入统一归档格式，后面的安装器和管理面才能接手。</p>
+                <div class="flow-step-path"><code>.skill archive</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-purple">
+              <div class="flow-step-num">03</div>
+              <div class="flow-step-copy">
+                <strong>管理面先接住安装请求</strong>
+                <p>技能不会直接靠“丢进某个目录”生效，而是要先通过 skills 路由进入系统管理面。</p>
+                <div class="flow-step-path"><code>gateway/routers/skills.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-orange">
+              <div class="flow-step-num">04</div>
+              <div class="flow-step-copy">
+                <strong>安装器负责解包、安全扫描和写入存储</strong>
+                <p>safe extract、安全校验和 storage install 都在这里完成，避免技能包成为任意文件写入入口。</p>
+                <div class="flow-step-path"><code>skills/installer.py</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">05</div>
+              <div class="flow-step-copy">
+                <strong>安装完成后还要进入启用态</strong>
+                <p>只有被 storage 或配置显式启用，后续新 run 才会真的把它视为有效技能。</p>
+                <div class="flow-step-path"><code>skill enabled in storage / config</code></div>
+              </div>
+            </div>
+            <div class="flow-step flow-step-accent-green">
+              <div class="flow-step-num">06</div>
+              <div class="flow-step-copy">
+                <strong>之后的 Lead Agent prompt 才会在新运行里看见它</strong>
+                <p>也就是说，Skill 真正改变模型行为的时机，是后续 run 组装系统提示的时候。</p>
+                <div class="flow-step-path"><code>lead agent prompt sees enabled skill</code></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p>如果是浏览器或脚本触发安装，自定义 skill 往往先出现在某个 thread 的 artifact 或输出目录里，再由 <code>backend/app/gateway/routers/skills.py</code> 通过 thread 虚拟路径找到归档并安装。安装后，skills storage 会把它归入 DeerFlow 的可管理 skills 集合，后续 run 才能看到它的 skills 元数据并在需要时再去读取具体内容。</p>
+        <p>这条链非常重要，因为它说明“写一个 skill 文件”并不等于“agent 立刻可用”。真正生效之前，还要经过归档、扫描、安装、启用和 prompt 刷新这几步。</p>
+        <div class="source-walkthrough">
+          <h4>核心源码：一个自定义 skill 从 thread 里的 `.skill` 文件变成系统可用能力</h4>
+          <p class="source-caption">节选自 <code>backend/app/gateway/routers/skills.py</code>。这一段能把“上传 skill 包后为什么还要安装、刷新、扫描”讲得非常具体。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">gateway/routers/skills.py :: install_skill() / update_custom_skill()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-com"># SkillInstallRequest: Gateway 安装技能接口的请求体，描述“从哪个线程里的哪个归档路径安装 skill”</span></span></div>
+                <div class="code-line"><span class="code-ln">1</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">SkillInstallRequest</span>(<span class="tok-cls">BaseModel</span>):</span></div>
+                <div class="code-line"><span class="code-ln">2</span><span class="code-src">    <span class="tok-attr">thread_id</span>: <span class="tok-type">str</span></span></div>
+                <div class="code-line"><span class="code-ln">3</span><span class="code-src">    <span class="tok-attr">path</span>: <span class="tok-type">str</span></span></div>
+                <div class="code-line"><span class="code-ln">4</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">5</span><span class="code-src"><span class="tok-com"># request: 指向 thread 内某个 skill 归档的安装请求；config: 当前技能存储和扫描策略的配置入口</span></span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">install_skill</span>(<span class="tok-attr">request</span>: <span class="tok-cls">SkillInstallRequest</span>, <span class="tok-attr">config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">=</span> <span class="tok-fn">Depends</span>(<span class="tok-attr">get_config</span>)) <span class="tok-op">-&gt;</span> <span class="tok-cls">SkillInstallResponse</span>:</span></div>
+                <div class="code-line"><span class="code-ln">6</span><span class="code-src">    <span class="tok-kw">try</span>:</span></div>
+                <div class="code-line"><span class="code-ln">7</span><span class="code-src">        <span class="tok-com"># 先把线程里的虚拟路径解析成宿主机真实路径，避免随便给任意文件路径</span></span></div>
+                <div class="code-line"><span class="code-ln">8</span><span class="code-src">        <span class="tok-fn">skill_file_path</span> <span class="tok-op">=</span> <span class="tok-fn">resolve_thread_virtual_path</span>(<span class="tok-attr">request</span>.<span class="tok-attr">thread_id</span>, <span class="tok-attr">request</span>.<span class="tok-attr">path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">9</span><span class="code-src">        <span class="tok-com"># 真正安装动作交给 storage + installer，router 只负责编排输入输出</span></span></div>
+                <div class="code-line"><span class="code-ln">10</span><span class="code-src">        <span class="tok-fn">result</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">get_or_new_skill_storage</span>(<span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">config</span>).<span class="tok-fn">ainstall_skill_from_archive</span>(<span class="tok-attr">skill_file_path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">11</span><span class="code-src">        <span class="tok-com"># 装完以后必须刷新 prompt cache，否则后续 run 里还看不到新 skill</span></span></div>
+                <div class="code-line"><span class="code-ln">12</span><span class="code-src">        <span class="tok-kw">await</span> <span class="tok-fn">refresh_skills_system_prompt_cache_async</span>()</span></div>
+                <div class="code-line"><span class="code-ln">13</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-cls">SkillInstallResponse</span>(<span class="tok-op">**</span><span class="tok-attr">result</span>)</span></div>
+                <div class="code-line"><span class="code-ln">14</span><span class="code-src">    <span class="tok-kw">except</span> <span class="tok-cls">FileNotFoundError</span> <span class="tok-kw">as</span> <span class="tok-fn">e</span>:</span></div>
+                <div class="code-line"><span class="code-ln">15</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">HTTPException</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-num">404</span>, <span class="tok-attr">detail</span><span class="tok-op">=</span><span class="tok-fn">str</span>(<span class="tok-fn">e</span>))</span></div>
+                <div class="code-line"><span class="code-ln">16</span><span class="code-src">    <span class="tok-kw">except</span> <span class="tok-cls">SkillAlreadyExistsError</span> <span class="tok-kw">as</span> <span class="tok-fn">e</span>:</span></div>
+                <div class="code-line"><span class="code-ln">17</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">HTTPException</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-num">409</span>, <span class="tok-attr">detail</span><span class="tok-op">=</span><span class="tok-fn">str</span>(<span class="tok-fn">e</span>))</span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src">    <span class="tok-kw">except</span> <span class="tok-cls">ValueError</span> <span class="tok-kw">as</span> <span class="tok-fn">e</span>:</span></div>
+                <div class="code-line"><span class="code-ln">19</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">HTTPException</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-num">400</span>, <span class="tok-attr">detail</span><span class="tok-op">=</span><span class="tok-fn">str</span>(<span class="tok-fn">e</span>))</span></div>
+                <div class="code-line"><span class="code-ln">20</span><span class="code-src"></span></div>
+                <div class="code-line"><span class="code-ln">21</span><span class="code-src"><span class="tok-com"># skill_name / request: 指定要编辑哪份自定义技能以及新的 SKILL.md 内容；config: 提供校验、扫描、history 和缓存刷新能力</span></span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">update_custom_skill</span>(<span class="tok-attr">skill_name</span>: <span class="tok-type">str</span>, <span class="tok-attr">request</span>: <span class="tok-cls">CustomSkillUpdateRequest</span>, <span class="tok-attr">config</span>: <span class="tok-cls">AppConfig</span> <span class="tok-op">=</span> <span class="tok-fn">Depends</span>(<span class="tok-attr">get_config</span>)) <span class="tok-op">-&gt;</span> <span class="tok-cls">CustomSkillContentResponse</span>:</span></div>
+                <div class="code-line"><span class="code-ln">22</span><span class="code-src">    <span class="tok-fn">storage</span> <span class="tok-op">=</span> <span class="tok-fn">get_or_new_skill_storage</span>(<span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">23</span><span class="code-src">    <span class="tok-attr">storage</span>.<span class="tok-fn">ensure_custom_skill_is_editable</span>(<span class="tok-attr">skill_name</span>)</span></div>
+                <div class="code-line"><span class="code-ln">24</span><span class="code-src">    <span class="tok-attr">storage</span>.<span class="tok-fn">validate_skill_markdown_content</span>(<span class="tok-attr">skill_name</span>, <span class="tok-attr">request</span>.<span class="tok-attr">content</span>)</span></div>
+                <div class="code-line"><span class="code-ln">25</span><span class="code-src">    <span class="tok-com"># 编辑不是直接写盘，先做内容安全扫描</span></span></div>
+                <div class="code-line"><span class="code-ln">26</span><span class="code-src">    <span class="tok-fn">scan</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">scan_skill_content</span>(<span class="tok-attr">request</span>.<span class="tok-attr">content</span>, <span class="tok-attr">executable</span><span class="tok-op">=</span><span class="tok-kw">False</span>, <span class="tok-attr">location</span><span class="tok-op">=</span><span class="tok-str">f"{skill_name}/{SKILL_MD_FILE}"</span>, <span class="tok-attr">app_config</span><span class="tok-op">=</span><span class="tok-attr">config</span>)</span></div>
+                <div class="code-line"><span class="code-ln">27</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">scan</span>.<span class="tok-attr">decision</span> <span class="tok-op">==</span> <span class="tok-str">"block"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">28</span><span class="code-src">        <span class="tok-kw">raise</span> <span class="tok-cls">HTTPException</span>(<span class="tok-attr">status_code</span><span class="tok-op">=</span><span class="tok-num">400</span>, <span class="tok-attr">detail</span><span class="tok-op">=</span><span class="tok-str">f"Security scan blocked the edit: {scan.reason}"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">29</span><span class="code-src">    <span class="tok-fn">prev_content</span> <span class="tok-op">=</span> <span class="tok-attr">storage</span>.<span class="tok-fn">read_custom_skill</span>(<span class="tok-attr">skill_name</span>)</span></div>
+                <div class="code-line"><span class="code-ln">30</span><span class="code-src">    <span class="tok-attr">storage</span>.<span class="tok-fn">write_custom_skill</span>(<span class="tok-attr">skill_name</span>, <span class="tok-attr">SKILL_MD_FILE</span>, <span class="tok-attr">request</span>.<span class="tok-attr">content</span>)</span></div>
+                <div class="code-line"><span class="code-ln">31</span><span class="code-src">    <span class="tok-com"># 写入 history，后面 rollback 才有依据</span></span></div>
+                <div class="code-line"><span class="code-ln">32</span><span class="code-src">    <span class="tok-attr">storage</span>.<span class="tok-fn">append_history</span>(<span class="tok-attr">skill_name</span>, {<span class="tok-str">"action"</span>: <span class="tok-str">"human_edit"</span>, <span class="tok-str">"prev_content"</span>: <span class="tok-attr">prev_content</span>, <span class="tok-str">"new_content"</span>: <span class="tok-attr">request</span>.<span class="tok-attr">content</span>, <span class="tok-str">"scanner"</span>: {<span class="tok-str">"decision"</span>: <span class="tok-attr">scan</span>.<span class="tok-attr">decision</span>, <span class="tok-str">"reason"</span>: <span class="tok-attr">scan</span>.<span class="tok-attr">reason</span>}})</span></div>
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src">    <span class="tok-kw">await</span> <span class="tok-fn">refresh_skills_system_prompt_cache_async</span>()</span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src">    <span class="tok-kw">return</span> <span class="tok-kw">await</span> <span class="tok-fn">get_custom_skill</span>(<span class="tok-attr">skill_name</span>, <span class="tok-attr">config</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第 8 行先做 <code>resolve_thread_virtual_path(...)</code>，说明安装入口不是信任前端随便传一个宿主机绝对路径，而是严格从 thread 视角把虚拟路径翻译成真实文件。</li>
+            <li>第 10 行真正调用的是 storage 的异步安装逻辑，所以 router 的职责是协议编排，不是自己解压 zip 包。</li>
+            <li>第 11 到 12 行非常关键: 安装成功以后必须刷新 skills prompt cache，否则 lead agent 下一轮还是拿着旧的 enabled skills 提示。</li>
+            <li>编辑 skill 时也不是“改个 markdown 文件就完了”。第 23 到 32 行依次做可编辑性校验、markdown 结构校验、安全扫描、写盘和历史记录。</li>
+            <li>这就解释了为什么 DeerFlow 的自定义 skill 更像受控能力包，而不是一个任意文本片段。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：安装器真正干了什么，为什么一个 `.skill` 包不能直接解压就算完成</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/skills/installer.py</code>。这段源码把“安全解包、扫描文件、落到最终目录”的细节全部展开，读完就能明白 DeerFlow 为什么把自定义 skill 当成受控能力包。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">skills/installer.py :: safe_extract_skill_archive() / _scan_skill_archive_contents_or_raise()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">33</span><span class="code-src"><span class="tok-com"># info: zip 包中的单个成员条目，用来判断它是否存在绝对路径、.. 穿越这类危险写出路径</span></span></div>
+                <div class="code-line"><span class="code-ln">34</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">is_unsafe_zip_member</span>(<span class="tok-attr">info</span>: <span class="tok-cls">zipfile</span>.<span class="tok-cls">ZipInfo</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">bool</span>:</span></div>
+                <div class="code-line"><span class="code-ln">38</span><span class="code-src">    <span class="tok-attr">normalized</span> <span class="tok-op">=</span> <span class="tok-attr">info</span>.<span class="tok-attr">filename</span>.<span class="tok-fn">replace</span>(<span class="tok-str">"\\"</span>, <span class="tok-str">"/"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">39</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">normalized</span>.<span class="tok-fn">startswith</span>(<span class="tok-str">"/"</span>):</span></div>
+                <div class="code-line"><span class="code-ln">40</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">46</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-str">".."</span> <span class="tok-kw">in</span> <span class="tok-attr">path</span>.<span class="tok-attr">parts</span>:</span></div>
+                <div class="code-line"><span class="code-ln">47</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-kw">True</span></span></div>
+                <div class="code-line"><span class="code-ln">81</span><span class="code-src"><span class="tok-com"># zip_ref / dest_path / max_total_size: 技能归档、临时解压目录和总写出上限，职责是安全落盘而不是图快直接 extractall</span></span></div>
+                <div class="code-line"><span class="code-ln">82</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">safe_extract_skill_archive</span>(<span class="tok-attr">zip_ref</span>, <span class="tok-attr">dest_path</span>, <span class="tok-attr">max_total_size</span>: <span class="tok-type">int</span> <span class="tok-op">=</span> <span class="tok-num">512</span> <span class="tok-op">*</span> <span class="tok-num">1024</span> <span class="tok-op">*</span> <span class="tok-num">1024</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">96</span><span class="code-src">    <span class="tok-attr">dest_root</span> <span class="tok-op">=</span> <span class="tok-attr">dest_path</span>.<span class="tok-fn">resolve</span>()</span></div>
+                <div class="code-line"><span class="code-ln">99</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-attr">info</span> <span class="tok-kw">in</span> <span class="tok-attr">zip_ref</span>.<span class="tok-fn">infolist</span>():</span></div>
+                <div class="code-line"><span class="code-ln">100</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-fn">is_unsafe_zip_member</span>(<span class="tok-attr">info</span>):</span></div>
+                <div class="code-line"><span class="code-ln">101</span><span class="code-src">            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Archive contains unsafe member path: {info.filename!r}"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">103</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-fn">is_symlink_member</span>(<span class="tok-attr">info</span>):</span></div>
+                <div class="code-line"><span class="code-ln">104</span><span class="code-src">            <span class="tok-attr">logger</span>.<span class="tok-fn">warning</span>(<span class="tok-str">"Skipping symlink entry in skill archive: %s"</span>, <span class="tok-attr">info</span>.<span class="tok-attr">filename</span>)</span></div>
+                <div class="code-line"><span class="code-ln">107</span><span class="code-src">        <span class="tok-attr">normalized_name</span> <span class="tok-op">=</span> <span class="tok-attr">posixpath</span>.<span class="tok-fn">normpath</span>(<span class="tok-attr">info</span>.<span class="tok-attr">filename</span>.<span class="tok-fn">replace</span>(<span class="tok-str">"\\"</span>, <span class="tok-str">"/"</span>))</span></div>
+                <div class="code-line"><span class="code-ln">109</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">member_path</span>.<span class="tok-fn">resolve</span>().<span class="tok-fn">is_relative_to</span>(<span class="tok-attr">dest_root</span>):</span></div>
+                <div class="code-line"><span class="code-ln">110</span><span class="code-src">            <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">f"Zip entry escapes destination: {info.filename!r}"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">117</span><span class="code-src">        <span class="tok-kw">with</span> <span class="tok-attr">zip_ref</span>.<span class="tok-fn">open</span>(<span class="tok-attr">info</span>) <span class="tok-kw">as</span> <span class="tok-attr">src</span>, <span class="tok-attr">member_path</span>.<span class="tok-fn">open</span>(<span class="tok-str">"wb"</span>) <span class="tok-kw">as</span> <span class="tok-attr">dst</span>:</span></div>
+                <div class="code-line"><span class="code-ln">118</span><span class="code-src">            <span class="tok-kw">while</span> <span class="tok-attr">chunk</span> <span class="tok-op">:=</span> <span class="tok-attr">src</span>.<span class="tok-fn">read</span>(<span class="tok-num">65536</span>):</span></div>
+                <div class="code-line"><span class="code-ln">120</span><span class="code-src">                <span class="tok-kw">if</span> <span class="tok-attr">total_written</span> <span class="tok-op">&gt;</span> <span class="tok-attr">max_total_size</span>:</span></div>
+                <div class="code-line"><span class="code-ln">121</span><span class="code-src">                    <span class="tok-kw">raise</span> <span class="tok-cls">ValueError</span>(<span class="tok-str">"Skill archive is too large or appears highly compressed."</span>)</span></div>
+                <div class="code-line"><span class="code-ln">152</span><span class="code-src"><span class="tok-com"># skill_dir / path / skill_name: 当前技能目录、待扫描文件和技能名；executable: 这份文件是否按脚本类更严格标准审查</span></span></div>
+                <div class="code-line"><span class="code-ln">153</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">_scan_skill_file_or_raise</span>(<span class="tok-attr">skill_dir</span>, <span class="tok-attr">path</span>, <span class="tok-attr">skill_name</span>, <span class="tok-op">*</span>, <span class="tok-attr">executable</span>: <span class="tok-type">bool</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">156</span><span class="code-src">        <span class="tok-attr">content</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-attr">asyncio</span>.<span class="tok-fn">to_thread</span>(<span class="tok-attr">path</span>.<span class="tok-fn">read_text</span>, <span class="tok-attr">encoding</span><span class="tok-op">=</span><span class="tok-str">"utf-8"</span>)</span></div>
+                <div class="code-line"><span class="code-ln">161</span><span class="code-src">        <span class="tok-attr">result</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-fn">scan_skill_content</span>(<span class="tok-attr">content</span>, <span class="tok-attr">executable</span><span class="tok-op">=</span><span class="tok-attr">executable</span>, <span class="tok-attr">location</span><span class="tok-op">=</span><span class="tok-attr">location</span>)</span></div>
+                <div class="code-line"><span class="code-ln">167</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">decision</span> <span class="tok-op">==</span> <span class="tok-str">"block"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">171</span><span class="code-src">    <span class="tok-kw">if</span> <span class="tok-attr">executable</span> <span class="tok-kw">and</span> <span class="tok-attr">decision</span> <span class="tok-op">!=</span> <span class="tok-str">"allow"</span>:</span></div>
+                <div class="code-line"><span class="code-ln">182</span><span class="code-src"><span class="tok-com"># skill_dir / skill_name: 一整个已解压技能目录和其名字；职责是把 SKILL.md、references、scripts 等可用文件逐个审一遍</span></span></div>
+                <div class="code-line"><span class="code-ln">183</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">_scan_skill_archive_contents_or_raise</span>(<span class="tok-attr">skill_dir</span>: <span class="tok-cls">Path</span>, <span class="tok-attr">skill_name</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">184</span><span class="code-src">    <span class="tok-attr">skill_md</span> <span class="tok-op">=</span> <span class="tok-attr">skill_dir</span> <span class="tok-op">/</span> <span class="tok-str">"SKILL.md"</span></span></div>
+                <div class="code-line"><span class="code-ln">185</span><span class="code-src">    <span class="tok-kw">await</span> <span class="tok-fn">_scan_skill_file_or_raise</span>(<span class="tok-attr">skill_dir</span>, <span class="tok-attr">skill_md</span>, <span class="tok-attr">skill_name</span>, <span class="tok-attr">executable</span><span class="tok-op">=</span><span class="tok-kw">False</span>)</span></div>
+                <div class="code-line"><span class="code-ln">187</span><span class="code-src">    <span class="tok-kw">for</span> <span class="tok-attr">path</span> <span class="tok-kw">in</span> <span class="tok-kw">await</span> <span class="tok-attr">asyncio</span>.<span class="tok-fn">to_thread</span>(<span class="tok-fn">_collect_scannable_files</span>, <span class="tok-attr">skill_dir</span>):</span></div>
+                <div class="code-line"><span class="code-ln">193</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-fn">_should_scan_support_file</span>(<span class="tok-attr">rel_path</span>):</span></div>
+                <div class="code-line"><span class="code-ln">196</span><span class="code-src">        <span class="tok-kw">await</span> <span class="tok-fn">_scan_skill_file_or_raise</span>(<span class="tok-attr">skill_dir</span>, <span class="tok-attr">path</span>, <span class="tok-attr">skill_name</span>, <span class="tok-attr">executable</span><span class="tok-op">=</span><span class="tok-fn">_is_script_support_file</span>(<span class="tok-attr">rel_path</span>))</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>第一段先挡住最典型的 zip 攻击面：绝对路径、`..` 穿越、符号链接和超大压缩包，所以 DeerFlow 安装 skill 时考虑的是“系统边界”，不是“方便解包”。</li>
+            <li>第 107 到 121 行可以直接看出它不是一次性 <code>extractall()</code>，而是逐成员写出、逐块累计大小，这样才能防 zip bomb。</li>
+            <li>第二段的扫描不是只看 <code>SKILL.md</code>。`references/`、`templates/` 和 `scripts/` 里能参与运行时的文件都会被挑出来检查，尤其脚本文件必须拿到更严格的 `allow` 结果。</li>
+            <li>把这一段和前面的 router 结合起来看，就能串出完整链路：Gateway 负责找到归档并调用 storage，installer 负责安全落盘，最后 prompt cache 刷新才让 skill 在下一轮 run 中真正可见。</li>
+          </ul>
+        </div>
+        <div class="source-walkthrough">
+          <h4>核心源码：归档通过扫描之后，SkillStorage 怎么把它正式提交成系统可管理技能</h4>
+          <p class="source-caption">节选自 <code>backend/packages/harness/deerflow/skills/storage/local_skill_storage.py</code> 和 <code>skill_storage.py</code>。这一段把“临时目录里的技能”转成“系统里真正存在的自定义技能”的最后一跳讲清楚。</p>
+          <div class="annotated-code">
+            <div class="code-window">
+              <div class="code-window-header">
+                <div class="code-window-dots"><span></span><span></span><span></span></div>
+                <div class="code-window-title">skills/storage/local_skill_storage.py :: _prepare_skill_archive() / _commit_skill_install()</div>
+              </div>
+              <div class="code-window-body">
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"><span class="tok-com"># SkillStorage: 技能存储后端的抽象基类，把“校验规则 + 安装协议”固定下来，具体落盘方式交给子类实现</span></span></div>
+                <div class="code-line"><span class="code-ln">18</span><span class="code-src"><span class="tok-kw">class</span> <span class="tok-cls">SkillStorage</span>(<span class="tok-cls">ABC</span>):</span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src">    <span class="tok-com"># name: 候选 skill 名称；这里先统一做 hyphen-case、长度和协议层面的基本合法性校验</span></span></div>
+                <div class="code-line"><span class="code-ln">35</span><span class="code-src">    <span class="tok-deco">@staticmethod</span></span></div>
+                <div class="code-line"><span class="code-ln">36</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">validate_skill_name</span>(<span class="tok-attr">name</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:</span></div>
+                <div class="code-line"><span class="code-ln">63</span><span class="code-src">    <span class="tok-com"># name / content: 目标 skill 名与整份 SKILL.md 文本，要在这里一起验证 frontmatter 与请求名是否一致</span></span></div>
+                <div class="code-line"><span class="code-ln">63</span><span class="code-src">    <span class="tok-deco">@staticmethod</span></span></div>
+                <div class="code-line"><span class="code-ln">64</span><span class="code-src">    <span class="tok-kw">def</span> <span class="tok-fn">validate_skill_markdown_content</span>(<span class="tok-attr">name</span>: <span class="tok-type">str</span>, <span class="tok-attr">content</span>: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">69</span><span class="code-src">        <span class="tok-com"># 这里会临时写出一份虚拟 skill 目录再跑 frontmatter 校验，避免只做字符串层面的浅检查</span></span></div>
+                <div class="code-line"><span class="code-ln">69</span><span class="code-src">        <span class="tok-kw">with</span> <span class="tok-attr">tempfile</span>.<span class="tok-fn">TemporaryDirectory</span>() <span class="tok-kw">as</span> <span class="tok-attr">tmp_dir</span>:</span></div>
+                <div class="code-line"><span class="code-ln">73</span><span class="code-src">            <span class="tok-attr">is_valid</span>, <span class="tok-attr">message</span>, <span class="tok-attr">parsed_name</span> <span class="tok-op">=</span> <span class="tok-fn">_validate_skill_frontmatter</span>(<span class="tok-attr">temp_skill_dir</span>)</span></div>
+                <div class="code-line"><span class="code-ln">76</span><span class="code-src">            <span class="tok-kw">if</span> <span class="tok-attr">parsed_name</span> <span class="tok-op">!=</span> <span class="tok-attr">name</span>:</span></div>
+                <div class="code-line"><span class="code-ln">135</span><span class="code-src"><span class="tok-com"># self / archive_path: 当前存储后端实例和要安装的归档路径，职责是从 archive 走到“正式提交成自定义技能”</span></span></div>
+                <div class="code-line"><span class="code-ln">136</span><span class="code-src"><span class="tok-kw">async def</span> <span class="tok-fn">ainstall_skill_from_archive</span>(<span class="tok-self">self</span>, <span class="tok-attr">archive_path</span>: <span class="tok-type">str</span> <span class="tok-op">|</span> <span class="tok-cls">Path</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>:</span></div>
+                <div class="code-line"><span class="code-ln">153</span><span class="code-src">        <span class="tok-com"># 先确认归档确实存在，再走“安全解压 -> 解析技能目录 -> 校验 frontmatter -> 预留目标目录”这条标准流水线</span></span></div>
+                <div class="code-line"><span class="code-ln">154</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> <span class="tok-attr">path</span>.<span class="tok-fn">is_file</span>():</span></div>
+                <div class="code-line"><span class="code-ln">164</span><span class="code-src">        <span class="tok-kw">with</span> <span class="tok-attr">zf</span>:</span></div>
+                <div class="code-line"><span class="code-ln">165</span><span class="code-src">            <span class="tok-fn">safe_extract_skill_archive</span>(<span class="tok-attr">zf</span>, <span class="tok-attr">tmp_path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">167</span><span class="code-src">        <span class="tok-attr">skill_dir</span> <span class="tok-op">=</span> <span class="tok-fn">resolve_skill_dir_from_archive</span>(<span class="tok-attr">tmp_path</span>)</span></div>
+                <div class="code-line"><span class="code-ln">169</span><span class="code-src">        <span class="tok-attr">is_valid</span>, <span class="tok-attr">message</span>, <span class="tok-attr">skill_name</span> <span class="tok-op">=</span> <span class="tok-fn">_validate_skill_frontmatter</span>(<span class="tok-attr">skill_dir</span>)</span></div>
+                <div class="code-line"><span class="code-ln">175</span><span class="code-src">        <span class="tok-attr">target</span> <span class="tok-op">=</span> <span class="tok-attr">custom_dir</span> <span class="tok-op">/</span> <span class="tok-attr">skill_name</span></span></div>
+                <div class="code-line"><span class="code-ln">176</span><span class="code-src">        <span class="tok-kw">if</span> <span class="tok-attr">target</span>.<span class="tok-fn">exists</span>():</span></div>
+                <div class="code-line"><span class="code-ln">181</span><span class="code-src">        <span class="tok-kw">return</span> <span class="tok-attr">skill_dir</span>, <span class="tok-attr">skill_name</span>, <span class="tok-attr">target</span></span></div>
+                <div class="code-line"><span class="code-ln">183</span><span class="code-src"><span class="tok-com"># self / skill_dir / skill_name / custom_dir / target: 把临时目录里已经验证过的技能安全搬进正式 custom skills 目录</span></span></div>
+                <div class="code-line"><span class="code-ln">184</span><span class="code-src"><span class="tok-kw">def</span> <span class="tok-fn">_commit_skill_install</span>(<span class="tok-self">self</span>, <span class="tok-attr">skill_dir</span>: <span class="tok-cls">Path</span>, <span class="tok-attr">skill_name</span>: <span class="tok-type">str</span>, <span class="tok-attr">custom_dir</span>: <span class="tok-cls">Path</span>, <span class="tok-attr">target</span>: <span class="tok-cls">Path</span>) <span class="tok-op">-&gt;</span> <span class="tok-kw">None</span>:</span></div>
+                <div class="code-line"><span class="code-ln">186</span><span class="code-src">        <span class="tok-com"># 真正提交时不直接 copy 到最终目录，而是先写 staging，再做一次原子式搬运</span></span></div>
+                <div class="code-line"><span class="code-ln">187</span><span class="code-src">        <span class="tok-kw">with</span> <span class="tok-attr">tempfile</span>.<span class="tok-fn">TemporaryDirectory</span>(<span class="tok-attr">prefix</span><span class="tok-op">=</span><span class="tok-str">f".installing-{skill_name}-"</span>, <span class="tok-attr">dir</span><span class="tok-op">=</span><span class="tok-attr">custom_dir</span>) <span class="tok-kw">as</span> <span class="tok-attr">staging_root</span>:</span></div>
+                <div class="code-line"><span class="code-ln">188</span><span class="code-src">            <span class="tok-attr">staging_target</span> <span class="tok-op">=</span> <span class="tok-cls">Path</span>(<span class="tok-attr">staging_root</span>) <span class="tok-op">/</span> <span class="tok-attr">skill_name</span></span></div>
+                <div class="code-line"><span class="code-ln">189</span><span class="code-src">            <span class="tok-attr">shutil</span>.<span class="tok-fn">copytree</span>(<span class="tok-attr">skill_dir</span>, <span class="tok-attr">staging_target</span>)</span></div>
+                <div class="code-line"><span class="code-ln">190</span><span class="code-src">            <span class="tok-fn">_move_staged_skill_into_reserved_target</span>(<span class="tok-attr">staging_target</span>, <span class="tok-attr">target</span>)</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="annotation-list">
+            <li>前半段在抽象基类里就已经把名字、frontmatter、相对路径这些协议规则固定下来了，所以 DeerFlow 管 skill 不是“碰巧目录这么放”，而是有一套稳定协议。</li>
+            <li>真正安装时不是扫描通过就直接复制到最终目录。它先解析 frontmatter 里的技能名，再确认目标目录不存在，最后进一个 `.installing-*` 临时 staging 目录。</li>
+            <li>第 187 到 190 行非常重要：先复制到 staging，再通过 <code>_move_staged_skill_into_reserved_target()</code> 原子式提交，这样即使中途失败，也不会把半装好的技能留在最终技能目录里。</li>
+            <li>把这一段和前面的 installer、router 连起来，读者就能看到完整闭环：上传归档 -> 安全解压 -> 内容扫描 -> frontmatter 校验 -> staging 提交 -> prompt cache 刷新。</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="config">
+        <h2>配置面与使用方式</h2>
+        <ul>
+          <li>自定义 skill 至少要包含 <code>SKILL.md</code>，其余支持文件通常落在 <code>references/</code>、<code>templates/</code> 或 <code>scripts/</code> 下。</li>
+          <li><code>backend/packages/harness/deerflow/skills/installer.py</code> 会拒绝路径穿越、符号链接和不安全归档成员，所以 skill 包结构必须干净且可扫描。</li>
+          <li><code>backend/app/gateway/routers/skills.py</code> 提供安装、启停、编辑、查看历史和回滚能力，这意味着自定义 skill 不是“一次拷贝完就再也不管”的静态资源。</li>
+          <li><code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 让 skill 可以把“先搜索某类 MCP 工具再执行”的工作法教给 agent，而不是把所有工具 schema 永远写死进 skill 文本。</li>
+        </ul>
+      </section>
+
+      <section id="tradeoffs">
+        <h2>关键实现细节与权衡</h2>
+        <ul>
+          <li>DeerFlow 选择 skill 目录 + 归档安装模型，而不是让用户直接往数据库里写一段提示词，这样能携带模板、参考资料和脚本。</li>
+          <li><code>backend/packages/harness/deerflow/skills/installer.py</code> 的安全扫描会增加安装成本，但它是把自定义 skill 当成系统边界处理的必要代价。</li>
+          <li>Gateway 支持在线编辑和回滚自定义 skills，这对迭代很友好，但也意味着 skill 不是“写完就固定”的一次性产物。</li>
+          <li>skill 更适合提供工作法和资源，而不是直接代替 runtime orchestration；这能保持边界清晰，但也要求用户分清该用 skill、tool 还是 subagent。</li>
+        </ul>
+      </section>
+
+      <section id="limits">
+        <h2>当前限制、边界与非目标</h2>
+        <ul>
+          <li>自定义 skill 不是任意插件执行环境。是否能携带脚本、脚本是否会在后续场景中被使用，都要服从 DeerFlow 当前的安全与工具边界。</li>
+          <li>写好 <code>SKILL.md</code> 并不会自动给 agent 新增 API 权限；如果需要新工具，还要回到工具与配置层处理。</li>
+          <li>本章不教你修改 skills 系统底层实现，那是第 11 章和源码层面的主题。</li>
+          <li>自定义 skill 的价值主要体现在后续运行时“变得可见且可按需激活”，而不是安装动作本身。默认情况下进入提示面的是 skills 元数据与使用规则；完整 <code>SKILL.md</code> 通常要靠按需 <code>read_file</code>，或通过显式 slash 激活进入更直接的注入路径。</li>
+        </ul>
+      </section>
+
+      <section id="relations">
+        <h2>它与 DeerFlow 其他能力的关系</h2>
+        <ul>
+          <li>它和第 11 章 skills 系统相连，因为第 11 章解释系统怎么运作，本章解释你如何往系统里放入自己的能力包。</li>
+          <li>它和第 20 章上下文工程相连，因为启用中的自定义 skill 会进入后续 run 的可见 skills 提示面，而完整 skill 内容则通常按需读取或在显式激活时进入更直接的运行上下文。</li>
+          <li>它和第 23 章高级模式相连，因为很多实用 skill 会指导 agent 何时使用 <code>tool_search</code>、何时委派任务、如何分阶段执行。</li>
+          <li>它和 Gateway API 相连，因为安装、编辑、回滚和启停这些动作都通过 <code>backend/app/gateway/routers/skills.py</code> 完成。</li>
+        </ul>
+        <div class="highlight">
+          建议把 <code>backend/packages/harness/deerflow/skills/</code>、<code>backend/packages/harness/deerflow/skills/installer.py</code>、<code>backend/app/gateway/routers/skills.py</code> 和 <code>backend/packages/harness/deerflow/tools/builtins/tool_search.py</code> 放在一起读。
+        </div>
+      </section>
+
+      <div id="page-nav"></div>
+    </div>
   </main>
 </div>
 <script src="assets/nav.js"></script>
