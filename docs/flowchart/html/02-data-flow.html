@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据流 · DeerFlow 流程图</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+<div class="toc"><div class="toc-title">📖 本页目录</div><ul><li class=""><a href="#1-请求数据流图">1. 请求数据流图</a></li><li class=""><a href="#2-流式响应数据流图">2. 流式响应数据流图</a></li><li class=""><a href="#3-状态数据流图">3. 状态数据流图</a></li><li class=""><a href="#4-工具调用数据流图">4. 工具调用数据流图</a></li><li class=""><a href="#5-记忆系统数据流图">5. 记忆系统数据流图</a></li><li class=""><a href="#6-sandbox-文件系统数据流图">6. Sandbox 文件系统数据流图</a></li><li class=""><a href="#7-子代理执行数据流图">7. 子代理执行数据流图</a></li><li class=""><a href="#图表说明">图表说明</a></li><li class="toc-sub"><a href="#颜色图例">颜色图例</a></li><li class="toc-sub"><a href="#数据流特点">数据流特点</a></li><li class="toc-sub"><a href="#关键数据对象">关键数据对象</a></li></ul></div>
+<div class="page-head"><span class="page-num">02</span><div class="page-stats"><span class="ps-item"><b>7</b> Mermaid 图</span><span class="ps-dot">·</span><span class="ps-item"><b>12</b> 章节</span></div></div><h1 id="deerflow-数据流图">DeerFlow 数据流图</h1>
+<p>本文档包含 DeerFlow 项目的数据流相关 Mermaid 流程图，展示数据如何在系统各组件之间流动。</p>
+<h2 id="1-请求数据流图">1. 请求数据流图</h2>
+<p>展示用户请求从前端到后端处理的完整数据流动过程。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #1</div><pre class="mermaid">graph TB
+    Start([用户请求]) --&gt; Auth[API Gateway&lt;br/&gt;AuthMiddleware 认证&lt;br/&gt;+ CSRF 校验]
+    Auth --&gt; Parse[请求解析&lt;br/&gt;POST /api/threads/&amp;#123;id&amp;#125;/runs/stream]
+    
+    Parse --&gt; ThreadCheck{线程已有运行中 Run？}
+    ThreadCheck --&gt;|是，且需等待| JoinRun[joinStream 重连现有 Run]
+    ThreadCheck --&gt;|否| NewRun[创建新 Run]
+    
+    JoinRun --&gt; BuildChain[构建中间件链]
+    NewRun --&gt; BuildChain
+    
+    BuildChain --&gt; BeforeChain[before_model 中间件链&lt;br/&gt;按注册顺序触发]
+    
+    BeforeChain --&gt; Prepare[准备 LLM 请求]
+    Prepare --&gt; ContextBuild[构建上下文]
+    ContextBuild --&gt; ModelSelect[模型选择]
+    
+    ModelSelect --&gt; LLMCall[LLM API 调用]
+    LLMCall --&gt; ToolCheck{LLM 输出含工具调用？}
+    
+    ToolCheck --&gt;|是，普通工具| ToolExec[工具执行]
+    ToolCheck --&gt;|是，task 工具| SubAgent[委托子代理]
+    ToolCheck --&gt;|否| FormatResp[格式化响应]
+    
+    ToolExec --&gt; ToolResult[工具结果]
+    ToolResult --&gt; UpdateState[更新 ThreadState]
+    UpdateState --&gt; LLMCall
+    
+    SubAgent --&gt; ToolResult
+    FormatResp --&gt; AfterChain[after_model 中间件链&lt;br/&gt;按注册逆序触发]
+    
+    AfterChain --&gt; MemoryUpdate[更新 Memory&lt;br/&gt;MemoryMiddleware 异步]
+    AfterChain --&gt; StatePersist[状态持久化]
+    
+    MemoryUpdate --&gt; Persist[持久化]
+    StatePersist --&gt; Persist
+    
+    Persist --&gt; SSE[通过 SSE 连接返回]
+    Frontend[前端经 SSE 长连接接收]
+    SSE --&gt; Frontend
+    Frontend --&gt; End([完成])
+    
+    style Start fill:#e1f5ff
+    style End fill:#ffe1e1
+    style LLMCall fill:#fff4e1
+    style ToolExec fill:#f0e1ff
+    style Persist fill:#e1ffe1</pre></div>
+<h2 id="2-流式响应数据流图">2. 流式响应数据流图</h2>
+<p>展示 SSE 流式响应的数据流动过程。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #2</div><pre class="mermaid">sequenceDiagram
+    participant User as 用户
+    participant Frontend as 前端
+    participant API as API Gateway
+    participant Agent as Agent Runtime
+    participant Middleware as 中间件链
+    participant LLM as LLM Provider
+    participant State as 状态存储
+    
+    User-&gt;&gt;Frontend: 发送消息
+    Frontend-&gt;&gt;API: POST /api/threads/&amp;#123;id&amp;#125;/runs/stream (SSE)
+    API-&gt;&gt;Agent: 创建运行
+    Agent-&gt;&gt;Middleware: before_model 中间件链
+    
+    loop 流式生成
+        Middleware-&gt;&gt;LLM: 流式请求
+        LLM--&gt;&gt;Middleware: 流式 token
+        Middleware-&gt;&gt;Middleware: 中间件处理
+        Middleware-&gt;&gt;Agent: yield token
+        Agent-&gt;&gt;API: 发送 SSE 事件
+        API-&gt;&gt;Frontend: SSE: token
+        Frontend-&gt;&gt;User: 显示 token
+    end
+    
+    loop 工具调用
+        LLM--&gt;&gt;Middleware: 工具调用
+        Middleware-&gt;&gt;Agent: 执行工具
+        Agent--&gt;&gt;Middleware: 工具结果
+        Middleware-&gt;&gt;LLM: 携带工具结果继续
+        LLM--&gt;&gt;Middleware: 更多 token
+    end
+    
+    Agent-&gt;&gt;Middleware: after_model 中间件链 (逆序)
+    Agent-&gt;&gt;Agent: 完成标记
+    Agent-&gt;&gt;State: 持久化 ThreadState
+    Agent-&gt;&gt;API: 完成事件
+    API-&gt;&gt;Frontend: SSE: end
+    Frontend-&gt;&gt;User: 显示完成</pre></div>
+<h2 id="3-状态数据流图">3. 状态数据流图</h2>
+<p>展示 ThreadState 在各中间件之间的数据流动和更新。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #3</div><pre class="mermaid">graph TB
+    subgraph "ThreadState 初始状态"
+        Init[空状态] --&gt; Sandbox[SandboxState]
+        Init --&gt; ThreadData[ThreadDataState]
+        Init --&gt; Artifacts[Artifacts]
+        Init --&gt; Todos[Todos]
+    end
+    
+    subgraph "before_model 中间件 (顺序)"
+        ThreadLoad[ThreadDataMiddleware&lt;br/&gt;加载线程数据]
+        SandboxInit[SandboxMiddleware&lt;br/&gt;初始化沙盒]
+        DynamicCtx[DynamicContextMiddleware&lt;br/&gt;注入日期/记忆]
+        SkillAct[SkillActivationMiddleware&lt;br/&gt;激活技能]
+        Summarize[SummarizationMiddleware&lt;br/&gt;准备摘要 条件]
+        TodoCheck[TodoMiddleware&lt;br/&gt;检查待办 仅 plan_mode]
+    end
+    
+    subgraph "after_model 中间件 (逆序)"
+        ErrorHandle[ToolErrorHandling&lt;br/&gt;错误处理]
+        TitleGen[TitleMiddleware&lt;br/&gt;生成标题]
+        MemorySave[MemoryMiddleware&lt;br/&gt;保存记忆]
+        ViewImg[ViewImageMiddleware&lt;br/&gt;记录查看 仅 supports_vision]
+    end
+    
+    subgraph "State 更新操作"
+        MergeArtifacts[合并 artifacts]
+        MergeTodos[合并 todos]
+        MergeImages[合并查看图像]
+        UpdateThreadData[更新线程数据]
+    end
+    
+    Init --&gt; ThreadLoad
+    ThreadLoad --&gt; SandboxInit
+    SandboxInit --&gt; DynamicCtx
+    DynamicCtx --&gt; SkillAct
+    SkillAct --&gt; Summarize
+    Summarize --&gt; TodoCheck
+    TodoCheck --&gt; LLM[LLM 执行]
+    LLM --&gt; ErrorHandle
+    ErrorHandle --&gt; TitleGen
+    TitleGen --&gt; MemorySave
+    MemorySave --&gt; ViewImg
+    
+    ViewImg --&gt; MergeArtifacts
+    ViewImg --&gt; MergeTodos
+    ViewImg --&gt; MergeImages
+    ViewImg --&gt; UpdateThreadData
+    
+    MergeArtifacts --&gt; FinalState[最终 ThreadState]
+    MergeTodos --&gt; FinalState
+    MergeImages --&gt; FinalState
+    UpdateThreadData --&gt; FinalState
+    
+    FinalState --&gt; Persist[持久化到存储]
+    
+    style Init fill:#e1f5ff
+    style LLM fill:#fff4e1
+    style FinalState fill:#ffe1e1
+    style Persist fill:#e1ffe1</pre></div>
+<h2 id="4-工具调用数据流图">4. 工具调用数据流图</h2>
+<p>展示工具调用的完整数据流，包括内置工具和 MCP 工具。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #4</div><pre class="mermaid">graph TB
+    Start[LLM 输出工具调用] --&gt; ParseTool[解析工具调用]
+    ParseTool --&gt; ToolType{工具名称？}
+    
+    ToolType --&gt;|内置工具名&lt;br/&gt;如 present_file/view_image| BuiltIn[内置工具库]
+    ToolType --&gt;|MCP 注册的工具名| MCP[MCP 客户端]
+    ToolType --&gt;|task| SubAgent[子代理执行]
+    
+    subgraph "内置工具执行"
+        BuiltIn --&gt; Validate[参数验证]
+        Validate --&gt; ExecLocal[本地执行]
+        ExecLocal --&gt; ResultLocal[返回结果]
+    end
+    
+    subgraph "MCP 工具执行"
+        MCP --&gt; MCPExec[MCP 服务器执行&lt;br/&gt;stdio/sse/http 传输]
+        MCPExec --&gt; MCPResult[返回 MCP 结果]
+    end
+    
+    subgraph "子代理执行"
+        SubAgent --&gt; CreateTask[创建任务&lt;br/&gt;subagent_enabled=False]
+        CreateTask --&gt; AsyncExec[ThreadPoolExecutor 异步执行]
+        AsyncExec --&gt; Poll[每 5 秒轮询状态]
+        Poll --&gt; SubResult[返回子代理结果]
+    end
+    
+    ResultLocal --&gt; FormatOutput[格式化输出]
+    MCPResult --&gt; FormatOutput
+    SubResult --&gt; FormatOutput
+    
+    FormatOutput --&gt; UpdateContext[更新 LLM 上下文]
+    UpdateContext --&gt; Continue[继续生成]
+    
+    style Start fill:#e1f5ff
+    style Continue fill:#fff4e1
+    style SubAgent fill:#f0e1ff
+    style MCP fill:#ffe1e1</pre></div>
+<h2 id="5-记忆系统数据流图">5. 记忆系统数据流图</h2>
+<p>展示 Memory 系统的数据提取、存储和检索流程。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #5</div><pre class="mermaid">graph TB
+    subgraph "记忆提取阶段"
+        Conversation[对话完成] --&gt; Filter[过滤消息]
+        Filter --&gt; UserMsg[用户消息]
+        Filter --&gt; AIResp[AI 响应]
+        
+        UserMsg --&gt; Queue[记忆队列]
+        AIResp --&gt; Queue
+        
+        Queue --&gt; Extract[异步提取器]
+    end
+    
+    subgraph "记忆处理"
+        Extract --&gt; Summarize[摘要生成]
+        Summarize --&gt; KeyExtract[关键信息提取]
+        KeyExtract --&gt; MemoryObj[创建记忆对象]
+    end
+    
+    subgraph "记忆存储"
+        MemoryObj --&gt; Dedup[去重检查]
+        Dedup --&gt; Storage[持久化存储]
+        Storage --&gt; UpdateIndex[更新索引]
+    end
+    
+    subgraph "记忆检索阶段"
+        NewThread[新线程开始] --&gt; ContextBuild[构建上下文]
+        ContextBuild --&gt; Retrieve[检索相关记忆]
+        Retrieve --&gt; Rank[排序相关度]
+        Rank --&gt; Select[选择 Top-K 记忆]
+        Select --&gt; Inject[注入上下文]
+    end
+    
+    subgraph "记忆更新"
+        UpdateIndex --&gt; Merge[合并相似记忆]
+        Merge --&gt; Prune[过期清理]
+        Prune --&gt; Storage
+    end
+    
+    style Conversation fill:#e1f5ff
+    style Storage fill:#e1ffe1
+    style Inject fill:#fff4e1</pre></div>
+<h2 id="6-sandbox-文件系统数据流图">6. Sandbox 文件系统数据流图</h2>
+<p>展示 Sandbox 中的虚拟路径映射和文件系统操作。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #6</div><pre class="mermaid">graph TB
+    subgraph "虚拟路径层"
+        UserPath["/mnt/user-data/&lt;br/&gt;workspace / uploads / outputs"]
+        SkillsPath["/mnt/skills/"]
+        WorkspacePath["/mnt/acp-workspace/&lt;br/&gt;(ACP 代理只读工作区)"]
+    end
+    
+    subgraph "映射层"
+        UserPath --&gt; MapUser[映射到用户目录]
+        SkillsPath --&gt; MapSkills[映射到 skills 目录]
+        WorkspacePath --&gt; MapWS[映射到工作区]
+    end
+    
+    subgraph "Sandbox 层"
+        MapUser --&gt; SandboxFS[Sandbox 文件系统]
+        MapSkills --&gt; SandboxFS
+        MapWS --&gt; SandboxFS
+        
+        SandboxFS --&gt; Isolate[隔离执行环境]
+    end
+    
+    subgraph "执行层"
+        Isolate --&gt; PythonExec[Python 执行器]
+        PythonExec --&gt; FileOps[文件操作]
+    end
+    
+    subgraph "真实文件系统"
+        MapUser --&gt; RealUser[真实用户目录]
+        MapSkills --&gt; RealSkills[真实 skills 目录]
+        MapWS --&gt; RealWS[真实工作区]
+    end
+    
+    FileOps --&gt; OpType{操作类型？}
+    OpType --&gt;|读取| RealUser
+    OpType --&gt;|读取| RealSkills
+    OpType --&gt;|读取| RealWS
+    OpType --&gt;|写入| RealUser
+    OpType --&gt;|写入| RealSkills
+    OpType --&gt;|写入| RealWS
+    
+    style UserPath fill:#e1f5ff
+    style SkillsPath fill:#fff4e1
+    style WorkspacePath fill:#f0e1ff
+    style RealUser fill:#e1ffe1
+    style RealSkills fill:#e1ffe1
+    style RealWS fill:#e1ffe1</pre></div>
+<h2 id="7-子代理执行数据流图">7. 子代理执行数据流图</h2>
+<p>展示子代理的异步执行和状态流转。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #7</div><pre class="mermaid">graph TB
+    subgraph "子代理创建"
+        Parent[父代理] --&gt; CreateTask[创建任务]
+        CreateTask --&gt; AssignID[分配任务 ID]
+        AssignID --&gt; InitState[初始化状态]
+    end
+    
+    subgraph "状态流转"
+        InitState --&gt; PENDING[状态：PENDING]
+        PENDING --&gt; Dispatch[分发到执行器]
+        Dispatch --&gt; RUNNING[状态：RUNNING]
+        RUNNING --&gt; Exec[执行 LLM 循环]
+        Exec --&gt; CheckStatus{状态检查}
+    end
+    
+    subgraph "执行状态"
+        CheckStatus --&gt;|完成 | COMPLETED[状态：COMPLETED]
+        CheckStatus --&gt;|超时 | TIMED_OUT[状态：TIMED_OUT]
+        CheckStatus --&gt;|错误 | FAILED[状态：FAILED]
+        CheckStatus --&gt;|取消 | CANCELLED[状态：CANCELLED]
+    end
+    
+    subgraph "结果处理"
+        COMPLETED --&gt; Collect[收集结果]
+        TIMED_OUT --&gt; Collect
+        FAILED --&gt; Collect
+        CANCELLED --&gt; Collect
+        
+        Collect --&gt; FormatResult[格式化结果]
+        FormatResult --&gt; ReturnToParent[返回给父代理]
+    end
+    
+    subgraph "并发控制"
+        Executor[执行器池] --&gt; Limit{并发限制？}
+        Limit --&gt;|是 | Queue[加入队列]
+        Limit --&gt;|否 | Exec
+        Queue --&gt; Available[可用时执行]
+        Available --&gt; Exec
+    end
+    
+    style PENDING fill:#fff4e1
+    style RUNNING fill:#e1f5ff
+    style COMPLETED fill:#e1ffe1
+    style FAILED fill:#ffe1e1
+    style ReturnToParent fill:#f0e1ff</pre></div>
+<h2 id="图表说明">图表说明</h2>
+<h3 id="颜色图例">颜色图例</h3>
+<ul>
+<li><code>#e1f5ff</code> (蓝色): 起始/输入状态</li>
+<li><code>#fff4e1</code> (黄色): 处理/执行状态</li>
+<li><code>#f0e1ff</code> (紫色): 特殊功能</li>
+<li><code>#e1ffe1</code> (绿色): 完成/输出状态</li>
+<li><code>#ffe1e1</code> (红色): 错误/终止状态</li>
+</ul>
+<h3 id="数据流特点">数据流特点</h3>
+<ol>
+<li><strong>流式处理</strong>: 所有响应都通过 SSE 流式传输，实现实时交互</li>
+<li><strong>状态管理</strong>: ThreadState 作为单一事实源，所有中间件共享和更新</li>
+<li><strong>异步执行</strong>: 子代理、记忆提取等操作异步执行，不阻塞主流程</li>
+<li><strong>隔离执行</strong>: Sandbox 提供隔离的执行环境，保护系统安全</li>
+<li><strong>持久化</strong>: 所有状态和记忆都会持久化到存储，支持跨会话</li>
+</ol>
+<h3 id="关键数据对象">关键数据对象</h3>
+<ul>
+<li><strong>ThreadState</strong>: 包含所有运行时状态的 TypedDict</li>
+<li><strong>Run</strong>: 运行记录，包含完整的执行历史</li>
+<li><strong>Memory</strong>: 持久化的对话记忆</li>
+<li><strong>Artifact</strong>: 工具执行产生的数据文件</li>
+<li><strong>Todo</strong>: 待办事项列表</li>
+</ul>
+      <div id="page-nav"></div>
+    </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose',
+    flowchart: { curve: 'stepAfter', htmlLabels: true, nodeSpacing: 55, rankSpacing: 65, useMaxWidth: true },
+    themeVariables: { darkMode: true, background: '#0d1117', primaryColor: '#1f2937',
+      primaryTextColor: '#e6edf3', primaryBorderColor: '#58a6ff', lineColor: '#9aa4b2',
+      secondaryColor: '#161b22', tertiaryColor: '#1a2029', textColor: '#e6edf3' } });
+  const renderAll = () => mermaid.run({ querySelector: 'pre.mermaid' })
+    .catch(e => console.error('mermaid render error:', e));
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderAll);
+  } else {
+    renderAll();
+  }
+</script>
+</body>
+</html>

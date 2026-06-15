@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>高级特性 · DeerFlow 流程图</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+<div class="toc"><div class="toc-title">📖 本页目录</div><ul><li class=""><a href="#1-mcp-协议集成">1. MCP 协议集成</a></li><li class="toc-sub"><a href="#1-1-mcp-连接流程">1.1 MCP 连接流程</a></li><li class="toc-sub"><a href="#1-2-mcp-资源管理">1.2 MCP 资源管理</a></li><li class="toc-sub"><a href="#1-3-mcp-工具调用">1.3 MCP 工具调用</a></li><li class=""><a href="#2-流式处理系统">2. 流式处理系统</a></li><li class="toc-sub"><a href="#2-1-流式响应架构">2.1 流式响应架构</a></li><li class="toc-sub"><a href="#2-2-sse-流式传输">2.2 SSE 流式传输</a></li><li class="toc-sub"><a href="#2-3-流式状态管理">2.3 流式状态管理</a></li><li class=""><a href="#3-并发控制系统">3. 并发控制系统</a></li><li class="toc-sub"><a href="#3-1-并发请求控制">3.1 并发请求控制</a></li><li class="toc-sub"><a href="#3-2-子代理并发控制">3.2 子代理并发控制</a></li><li class="toc-sub"><a href="#3-3-线程池管理">3.3 线程池管理</a></li><li class=""><a href="#4-性能优化系统">4. 性能优化系统</a></li><li class="toc-sub"><a href="#4-1-缓存策略">4.1 缓存策略</a></li><li class="toc-sub"><a href="#4-2-查询优化">4.2 查询优化</a></li><li class="toc-sub"><a href="#4-3-批量处理">4.3 批量处理</a></li><li class=""><a href="#5-安全机制">5. 安全机制</a></li><li class="toc-sub"><a href="#5-1-输入验证">5.1 输入验证</a></li><li class="toc-sub"><a href="#5-2-输出过滤">5.2 输出过滤</a></li><li class="toc-sub"><a href="#5-3-访问控制">5.3 访问控制</a></li><li class=""><a href="#6-国际化系统">6. 国际化系统</a></li><li class="toc-sub"><a href="#6-1-语言切换流程">6.1 语言切换流程</a></li><li class="toc-sub"><a href="#6-2-资源加载策略">6.2 资源加载策略</a></li><li class=""><a href="#7-主题系统">7. 主题系统</a></li><li class="toc-sub"><a href="#7-1-主题切换流程">7.1 主题切换流程</a></li><li class="toc-sub"><a href="#7-2-主题配置结构">7.2 主题配置结构</a></li><li class=""><a href="#8-插件扩展系统">8. 插件扩展系统</a></li><li class="toc-sub"><a href="#8-1-插件加载流程">8.1 插件加载流程</a></li><li class="toc-sub"><a href="#8-2-插件钩子系统">8.2 插件钩子系统</a></li><li class=""><a href="#9-测试策略">9. 测试策略</a></li><li class="toc-sub"><a href="#9-1-测试层级">9.1 测试层级</a></li><li class="toc-sub"><a href="#9-2-测试执行流程">9.2 测试执行流程</a></li><li class=""><a href="#10-ci-cd-流程">10. CI/CD 流程</a></li><li class="toc-sub"><a href="#10-1-持续集成流程">10.1 持续集成流程</a></li><li class="toc-sub"><a href="#10-2-持续部署流程">10.2 持续部署流程</a></li><li class=""><a href="#总结">总结</a></li></ul></div>
+<div class="page-head"><span class="page-num">10</span><div class="page-stats"><span class="ps-item"><b>25</b> Mermaid 图</span><span class="ps-dot">·</span><span class="ps-item"><b>37</b> 章节</span></div></div><h1 id="deerflow-高级特性流程图">DeerFlow 高级特性流程图</h1>
+<p>本文档包含 DeerFlow 项目的高级特性流程图，包括 MCP 协议集成、流式处理、并发控制、性能优化、安全机制、国际化、主题系统、插件扩展、测试策略、CI/CD 等补充流程图。</p>
+<hr/>
+<h2 id="1-mcp-协议集成">1. MCP 协议集成</h2>
+<h3 id="1-1-mcp-连接流程">1.1 MCP 连接流程</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #1</div><pre class="mermaid">sequenceDiagram
+    participant Client as MCP 客户端
+    participant Server as MCP 服务器
+    participant Protocol as 协议层
+    participant Resources as 资源管理
+    participant Tools as 工具管理
+    
+    Client-&gt;&gt;Protocol: 建立连接
+    Protocol-&gt;&gt;Protocol: 握手验证
+    Protocol--&gt;&gt;Client: 连接确认
+    
+    Client-&gt;&gt;Protocol: 初始化请求
+    Protocol-&gt;&gt;Server: 转发初始化
+    Server-&gt;&gt;Resources: 加载资源
+    Server-&gt;&gt;Tools: 加载工具
+    Server--&gt;&gt;Protocol: 初始化响应
+    Protocol--&gt;&gt;Client: 初始化完成
+    
+    Client-&gt;&gt;Protocol: 订阅资源
+    Protocol-&gt;&gt;Resources: 更新订阅
+    Resources--&gt;&gt;Client: 订阅确认
+    
+    Client-&gt;&gt;Tools: 调用工具
+    Tools-&gt;&gt;Server: 执行工具
+    Server--&gt;&gt;Tools: 返回结果
+    Tools--&gt;&gt;Client: 工具响应
+    
+    Note over Client,Tools: MCP 通信完成</pre></div>
+<h3 id="1-2-mcp-资源管理">1.2 MCP 资源管理</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #2</div><pre class="mermaid">graph TB
+    Start([开始]) --&gt; RegisterResource[注册资源]
+    RegisterResource --&gt; DefineURI[定义 URI 模板]
+    DefineURI --&gt; DefineSchema[定义 Schema]
+    DefineSchema --&gt; CacheResource[缓存资源]
+    
+    CacheResource --&gt; Subscribe{订阅检查}
+    Subscribe --&gt;|有订阅 | NotifySubscribers[通知订阅者]
+    Subscribe --&gt;|无订阅 | Ready([就绪])
+    
+    NotifySubscribers --&gt; Ready
+    
+    Ready --&gt; ReadResource[读取资源]
+    ReadResource --&gt; ResolveURI[解析 URI]
+    ResolveURI --&gt; FetchData[获取数据]
+    FetchData --&gt; FormatResponse[格式化响应]
+    FormatResponse --&gt; ReturnResource[返回资源]
+    
+    style Start fill:#e1f5ff
+    style Ready fill:#d4edda
+    style RegisterResource fill:#fff3cd
+    style ReadResource fill:#d1ecf1</pre></div>
+<h3 id="1-3-mcp-工具调用">1.3 MCP 工具调用</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #3</div><pre class="mermaid">graph LR
+    Client[客户端] --&gt; CallTool[调用工具]
+    CallTool --&gt; ValidateParams{验证参数}
+    
+    ValidateParams --&gt;|有效 | ExecuteTool[执行工具]
+    ValidateParams --&gt;|无效 | ReturnError[返回错误]
+    
+    ExecuteTool --&gt; CallInternal[调用内部函数]
+    CallInternal --&gt; ProcessResult[处理结果]
+    ProcessResult --&gt; FormatResponse[格式化响应]
+    FormatResponse --&gt; ReturnResult[返回结果]
+    
+    ReturnError --&gt; End([结束])
+    ReturnResult --&gt; End
+    
+    style Client fill:#e1f5ff
+    style ExecuteTool fill:#fff3cd
+    style ProcessResult fill:#d1ecf1
+    style ReturnResult fill:#d4edda</pre></div>
+<hr/>
+<h2 id="2-流式处理系统">2. 流式处理系统</h2>
+<h3 id="2-1-流式响应架构">2.1 流式响应架构</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #4</div><pre class="mermaid">graph TB
+    Start([请求开始]) --&gt; ProcessRequest[处理请求]
+    ProcessRequest --&gt; GenerateChunk[生成数据块]
+    
+    GenerateChunk --&gt; SendChunk[发送数据块]
+    SendChunk --&gt; CheckComplete{是否完成}
+    
+    CheckComplete --&gt;|未完成 | GenerateChunk
+    CheckComplete --&gt;|已完成 | Finalize[完成处理]
+    
+    Finalize --&gt; SendFinal[发送最终结果]
+    SendFinal --&gt; Cleanup[清理资源]
+    Cleanup --&gt; End([结束])
+    
+    style Start fill:#e1f5ff
+    style End fill:#d4edda
+    style ProcessRequest fill:#fff3cd
+    style GenerateChunk fill:#d1ecf1
+    style SendChunk fill:#d1ecf1</pre></div>
+<h3 id="2-2-sse-流式传输">2.2 SSE 流式传输</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #5</div><pre class="mermaid">sequenceDiagram
+    participant Client as 客户端
+    participant Server as 服务器
+    participant Stream as 流处理器
+    participant LLM as LLM 服务
+    
+    Client-&gt;&gt;Server: 建立 SSE 连接
+    Server--&gt;&gt;Client: 连接确认
+    
+    loop 流式处理
+        Client-&gt;&gt;Server: 发送请求
+        Server-&gt;&gt;Stream: 创建流
+        Stream-&gt;&gt;LLM: 请求流式响应
+        
+        loop 每个 token
+            LLM--&gt;&gt;Stream: 返回 token
+            Stream-&gt;&gt;Stream: 格式化数据
+            Stream--&gt;&gt;Server: SSE 事件
+            Server--&gt;&gt;Client: 推送事件
+        end
+        
+        LLM--&gt;&gt;Stream: 完成信号
+        Stream--&gt;&gt;Server: 流完成
+        Server--&gt;&gt;Client: 完成事件
+    end
+    
+    Note over Client,Server: 流式传输完成</pre></div>
+<h3 id="2-3-流式状态管理">2.3 流式状态管理</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #6</div><pre class="mermaid">graph TB
+    Start([流开始]) --&gt; InitState[初始化状态]
+    InitState --&gt; ListenStream[监听流]
+    
+    ListenStream --&gt; ReceiveEvent{接收事件}
+    ReceiveEvent --&gt;|DataEvent | UpdateData[更新数据]
+    ReceiveEvent --&gt;|ChunkEvent | UpdateChunk[更新块]
+    ReceiveEvent --&gt;|StatusEvent | UpdateStatus[更新状态]
+    ReceiveEvent --&gt;|ErrorEvent | HandleError[处理错误]
+    ReceiveEvent --&gt;|DoneEvent | Finalize[完成]
+    
+    UpdateData --&gt; MergeState[合并状态]
+    UpdateChunk --&gt; MergeState
+    UpdateStatus --&gt; MergeState
+    
+    MergeState --&gt; RenderUpdate[渲染更新]
+    RenderUpdate --&gt; ListenStream
+    
+    HandleError --&gt; ReportError[报告错误]
+    ReportError --&gt; StopStream[停止流]
+    StopStream --&gt; End([结束])
+    
+    Finalize --&gt; SaveState[保存状态]
+    SaveState --&gt; End
+    
+    style Start fill:#e1f5ff
+    style End fill:#d4edda
+    style ListenStream fill:#fff3cd
+    style MergeState fill:#d1ecf1</pre></div>
+<hr/>
+<h2 id="3-并发控制系统">3. 并发控制系统</h2>
+<h3 id="3-1-并发请求控制">3.1 并发请求控制</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #7</div><pre class="mermaid">graph TB
+    Start([请求到达]) --&gt; CheckQueue{检查队列}
+    
+    CheckQueue --&gt;|有空位 | AllowRequest[允许请求]
+    CheckQueue --&gt;|队列满 | QueueRequest[排队请求]
+    
+    AllowRequest --&gt; ExecuteRequest[执行请求]
+    QueueRequest --&gt; WaitSlot{等待槽位}
+    
+    WaitSlot --&gt;|获得槽位 | ExecuteRequest
+    WaitSlot --&gt;|超时 | RejectRequest[拒绝请求]
+    
+    ExecuteRequest --&gt; ProcessRequest[处理请求]
+    ProcessRequest --&gt; ReleaseSlot[释放槽位]
+    
+    ReleaseSlot --&gt; CheckQueue
+    RejectRequest --&gt; End([结束])
+    
+    style Start fill:#e1f5ff
+    style End fill:#d4edda
+    style CheckQueue fill:#fff3cd
+    style ExecuteRequest fill:#d1ecf1</pre></div>
+<h3 id="3-2-子代理并发控制">3.2 子代理并发控制</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #8</div><pre class="mermaid">graph TB
+    Start([子代理创建]) --&gt; CheckLimit{检查并发限制}
+    
+    CheckLimit --&gt;|未超限 | CreateSubagent[创建子代理]
+    CheckLimit --&gt;|已超限 | QueueSubagent[加入队列]
+    
+    CreateSubagent --&gt; ExecuteSubagent[执行子代理]
+    QueueSubagent --&gt; WaitSlot{等待槽位}
+    
+    WaitSlot --&gt;|获得槽位 | CreateSubagent
+    WaitSlot --&gt;|超时 | TimeoutSubagent[超时处理]
+    
+    ExecuteSubagent --&gt; MonitorSubagent[监控状态]
+    MonitorSubagent --&gt; CheckStatus{检查状态}
+    
+    CheckStatus --&gt;|进行中 | MonitorSubagent
+    CheckStatus --&gt;|完成 | CollectResult[收集结果]
+    CheckStatus --&gt;|失败 | HandleFailure[处理失败]
+    
+    CollectResult --&gt; ReleaseSlot[释放槽位]
+    HandleFailure --&gt; ReleaseSlot
+    
+    ReleaseSlot --&gt; Ready([就绪])
+    
+    style Start fill:#e1f5ff
+    style Ready fill:#d4edda
+    style CheckLimit fill:#fff3cd
+    style ExecuteSubagent fill:#d1ecf1</pre></div>
+<h3 id="3-3-线程池管理">3.3 线程池管理</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #9</div><pre class="mermaid">stateDiagram-v2
+    [*] --&gt; Idle: 系统启动
+    Idle --&gt; Active: 接收任务
+    Active --&gt; Processing: 分配任务
+    Processing --&gt; Complete: 任务完成
+    Complete --&gt; Active: 处理下一任务
+    Active --&gt; Idle: 无任务
+    
+    Processing --&gt; Error: 任务错误
+    Error --&gt; Retry: 重试任务
+    Retry --&gt; Processing
+    Retry --&gt; Failed: 重试失败
+    Failed --&gt; Cleanup: 清理资源
+    Cleanup --&gt; Idle
+    
+    Active --&gt; ScaleUp: 负载高
+    Idle --&gt; ScaleDown: 负载低
+    ScaleUp --&gt; Active
+    ScaleDown --&gt; Idle
+    
+    note right of Active: 活跃状态&lt;br/&gt;处理任务
+    note right of Processing: 处理中&lt;br/&gt;占用线程
+    note right of Idle: 空闲&lt;br/&gt;可接收任务</pre></div>
+<hr/>
+<h2 id="4-性能优化系统">4. 性能优化系统</h2>
+<h3 id="4-1-缓存策略">4.1 缓存策略</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #10</div><pre class="mermaid">graph TB
+    Start([请求到达]) --&gt; CheckCache{检查缓存}
+    
+    CheckCache --&gt;|命中 | ReturnCache[返回缓存]
+    CheckCache --&gt;|未命中 | FetchData[获取数据]
+    
+    FetchData --&gt; ProcessData[处理数据]
+    ProcessData --&gt; UpdateCache[更新缓存]
+    UpdateCache --&gt; ReturnData[返回数据]
+    
+    ReturnCache --&gt; End([结束])
+    ReturnData --&gt; End
+    
+    style Start fill:#e1f5ff
+    style End fill:#d4edda
+    style CheckCache fill:#fff3cd
+    style UpdateCache fill:#d1ecf1</pre></div>
+<h3 id="4-2-查询优化">4.2 查询优化</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #11</div><pre class="mermaid">graph TB
+    Start([查询请求]) --&gt; ParseQuery[解析查询]
+    ParseQuery --&gt; OptimizeQuery[优化查询]
+    OptimizeQuery --&gt; CheckIndex{检查索引}
+    
+    CheckIndex --&gt;|有索引 | UseIndex[使用索引]
+    CheckIndex --&gt;|无索引 | FullScan[全表扫描]
+    
+    UseIndex --&gt; ExecuteQuery[执行查询]
+    FullScan --&gt; ExecuteQuery
+    
+    ExecuteQuery --&gt; CacheResult[缓存结果]
+    CacheResult --&gt; FormatResult[格式化结果]
+    FormatResult --&gt; ReturnResult[返回结果]
+    
+    style Start fill:#e1f5ff
+    style ReturnResult fill:#d4edda
+    style ParseQuery fill:#fff3cd
+    style OptimizeQuery fill:#d1ecf1
+    style CheckIndex fill:#f8d7da</pre></div>
+<h3 id="4-3-批量处理">4.3 批量处理</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #12</div><pre class="mermaid">sequenceDiagram
+    participant Collector as 收集器
+    participant Buffer as 缓冲区
+    participant Processor as 处理器
+    participant Queue as 任务队列
+    
+    loop 收集阶段
+        Collector-&gt;&gt;Buffer: 添加任务
+        Buffer-&gt;&gt;Buffer: 累积任务
+        alt 达到批量大小
+            Buffer--&gt;&gt;Collector: 批量就绪
+        end
+    end
+    
+    Collector-&gt;&gt;Queue: 提交批量任务
+    Queue-&gt;&gt;Processor: 分发任务
+    Processor-&gt;&gt;Processor: 批量处理
+    Processor--&gt;&gt;Queue: 处理完成
+    Queue--&gt;&gt;Collector: 批量完成
+    
+    Note over Collector,Queue: 批量处理完成</pre></div>
+<hr/>
+<h2 id="5-安全机制">5. 安全机制</h2>
+<h3 id="5-1-输入验证">5.1 输入验证</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #13</div><pre class="mermaid">graph TB
+    Start([输入到达]) --&gt; ValidateFormat{验证格式}
+    
+    ValidateFormat --&gt;|格式正确 | ValidateContent{验证内容}
+    ValidateFormat --&gt;|格式错误 | RejectInput[拒绝输入]
+    
+    ValidateContent --&gt; CheckSize{检查大小}
+    CheckSize --&gt;|大小正常 | CheckType{检查类型}
+    CheckSize --&gt;|过大 | RejectInput
+    
+    CheckType --&gt;|类型正常 | CheckSecurity{安全检查}
+    CheckType --&gt;|类型错误 | RejectInput
+    
+    CheckSecurity --&gt; CheckInjection{注入检查}
+    CheckInjection --&gt;|无注入 | ValidateParams{参数验证}
+    CheckInjection --&gt;|有注入 | RejectInput
+    
+    ValidateParams --&gt;|验证通过 | AcceptInput[接受输入]
+    ValidateParams --&gt;|验证失败 | RejectInput
+    
+    AcceptInput --&gt; End([结束])
+    RejectInput --&gt; LogReject[记录拒绝]
+    LogReject --&gt; End
+    
+    style Start fill:#e1f5ff
+    style End fill:#d4edda
+    style ValidateFormat fill:#fff3cd
+    style CheckSecurity fill:#f8d7da
+    style AcceptInput fill:#d4edda</pre></div>
+<h3 id="5-2-输出过滤">5.2 输出过滤</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #14</div><pre class="mermaid">graph TB
+    Start([输出准备]) --&gt; FilterContent[过滤内容]
+    FilterContent --&gt; CheckXSS{检查 XSS}
+    
+    CheckXSS --&gt;|有 XSS | SanitizeXSS[清理 XSS]
+    CheckXSS --&gt;|无 XSS | CheckSQL{检查 SQL 注入}
+    
+    SanitizeXSS --&gt; CheckSQL
+    CheckSQL --&gt;|有注入 | SanitizeSQL[清理 SQL]
+    CheckSQL --&gt;|无注入 | CheckPII{检查敏感信息}
+    
+    SanitizeSQL --&gt; CheckPII
+    CheckPII --&gt;|有 PII | MaskPII[脱敏 PII]
+    CheckPII --&gt;|无 PII | CheckRate{检查速率}
+    
+    MaskPII --&gt; CheckRate
+    CheckRate --&gt;|超限 | RateLimit[限流]
+    CheckRate --&gt;|正常 | ReturnOutput[返回输出]
+    
+    RateLimit --&gt; ReturnOutput
+    
+    style Start fill:#e1f5ff
+    style ReturnOutput fill:#d4edda
+    style FilterContent fill:#fff3cd
+    style CheckXSS fill:#f8d7da</pre></div>
+<h3 id="5-3-访问控制">5.3 访问控制</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #15</div><pre class="mermaid">graph TB
+    Start([访问请求]) --&gt; Authenticate[认证用户]
+    Authenticate --&gt; CheckRole{检查角色}
+    
+    CheckRole --&gt;|有角色 | CheckPermission{检查权限}
+    CheckRole --&gt;|无角色 | DenyAccess[拒绝访问]
+    
+    CheckPermission --&gt;|有权限 | AllowAccess[允许访问]
+    CheckPermission --&gt;|无权限 | DenyAccess
+    
+    AllowAccess --&gt; LogAccess[记录访问]
+    DenyAccess --&gt; LogDeny[记录拒绝]
+    
+    LogAccess --&gt; GrantAccess[授予访问]
+    LogDeny --&gt; DenyAccess
+    
+    GrantAccess --&gt; End([结束])
+    DenyAccess --&gt; End
+    
+    style Start fill:#e1f5ff
+    style End fill:#d4edda
+    style Authenticate fill:#fff3cd
+    style CheckPermission fill:#f8d7da
+    style AllowAccess fill:#d4edda</pre></div>
+<hr/>
+<h2 id="6-国际化系统">6. 国际化系统</h2>
+<h3 id="6-1-语言切换流程">6.1 语言切换流程</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #16</div><pre class="mermaid">sequenceDiagram
+    participant Client as 客户端
+    participant LangService as 语言服务
+    participant Locale as 区域设置
+    participant Resource as 资源文件
+    
+    Client-&gt;&gt;LangService: 请求语言切换
+    LangService-&gt;&gt;Locale: 设置区域
+    Locale--&gt;&gt;LangService: 区域确认
+    
+    LangService-&gt;&gt;Resource: 加载资源
+    Resource--&gt;&gt;LangService: 返回资源
+    
+    LangService-&gt;&gt;Client: 应用语言
+    Client-&gt;&gt;Client: 更新 UI
+    Client--&gt;&gt;LangService: 确认完成
+    
+    Note over Client,Resource: 语言切换完成</pre></div>
+<h3 id="6-2-资源加载策略">6.2 资源加载策略</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #17</div><pre class="mermaid">graph TB
+    Start([资源请求]) --&gt; CheckCache{检查缓存}
+    
+    CheckCache --&gt;|命中 | ReturnCache[返回缓存]
+    CheckCache --&gt;|未命中 | LoadResource[加载资源]
+    
+    LoadResource --&gt; CheckDefault{检查默认}
+    CheckDefault --&gt;|有默认 | UseDefault[使用默认]
+    CheckDefault --&gt;|无默认 | LoadFallback[加载后备]
+    
+    UseDefault --&gt; CacheResource[缓存资源]
+    LoadFallback --&gt; CacheResource
+    
+    CacheResource --&gt; ReturnResource[返回资源]
+    ReturnCache --&gt; End([结束])
+    ReturnResource --&gt; End
+    
+    style Start fill:#e1f5ff
+    style End fill:#d4edda
+    style CheckCache fill:#fff3cd
+    style LoadResource fill:#d1ecf1</pre></div>
+<hr/>
+<h2 id="7-主题系统">7. 主题系统</h2>
+<h3 id="7-1-主题切换流程">7.1 主题切换流程</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #18</div><pre class="mermaid">graph TB
+    Start([主题切换]) --&gt; LoadTheme[加载主题]
+    LoadTheme --&gt; ParseTheme[解析主题配置]
+    ParseTheme --&gt; ValidateTheme{验证主题}
+    
+    ValidateTheme --&gt;|有效 | ApplyTheme[应用主题]
+    ValidateTheme --&gt;|无效 | LoadDefault[加载默认]
+    
+    ApplyTheme --&gt; UpdateCSS[更新 CSS 变量]
+    UpdateCSS --&gt; UpdateComponents[更新组件]
+    UpdateComponents --&gt; SavePreference[保存偏好]
+    
+    SavePreference --&gt; Ready([就绪])
+    LoadDefault --&gt; ApplyTheme
+    
+    style Start fill:#e1f5ff
+    style Ready fill:#d4edda
+    style LoadTheme fill:#fff3cd
+    style ApplyTheme fill:#d1ecf1</pre></div>
+<h3 id="7-2-主题配置结构">7.2 主题配置结构</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #19</div><pre class="mermaid">graph TB
+    Theme[主题配置]
+    
+    Theme --&gt; Colors[颜色配置]
+    Theme --&gt; Spacing[间距配置]
+    Theme --&gt; Typography[排版配置]
+    Theme --&gt; Shadows[阴影配置]
+    Theme --&gt; Borders[边框配置]
+    
+    Colors --&gt; Primary[主色]
+    Colors --&gt; Secondary[辅色]
+    Colors --&gt; Background[背景色]
+    Colors --&gt; Text[文本色]
+    
+    Spacing --&gt; XS[超小间距]
+    Spacing --&gt; SM[小间距]
+    Spacing --&gt; MD[中等间距]
+    Spacing --&gt; LG[大间距]
+    
+    Typography --&gt; FontFamily[字体族]
+    Typography --&gt; FontSize[字体大小]
+    Typography --&gt; LineHeight[行高]
+    
+    Shadows --&gt; Small[小阴影]
+    Shadows --&gt; Medium[中等阴影]
+    Shadows --&gt; Large[大阴影]
+    
+    Borders --&gt; Radius[圆角]
+    Borders --&gt; Width[边框宽度]
+    
+    style Theme fill:#e1f5ff
+    style Colors fill:#d1ecf1
+    style Spacing fill:#d1ecf1
+    style Typography fill:#d1ecf1
+    style Shadows fill:#d1ecf1
+    style Borders fill:#d1ecf1</pre></div>
+<hr/>
+<h2 id="8-插件扩展系统">8. 插件扩展系统</h2>
+<h3 id="8-1-插件加载流程">8.1 插件加载流程</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #20</div><pre class="mermaid">graph TB
+    Start([启动]) --&gt; ScanPlugins[扫描插件目录]
+    ScanPlugins --&gt; LoadManifest[加载插件清单]
+    LoadManifest --&gt; ValidateManifest{验证清单}
+    
+    ValidateManifest --&gt;|有效 | CheckDependencies{检查依赖}
+    ValidateManifest --&gt;|无效 | LogError[记录错误]
+    
+    CheckDependencies --&gt;|满足 | LoadPlugin[加载插件]
+    CheckDependencies --&gt;|不满足 | SkipPlugin[跳过插件]
+    
+    LoadPlugin --&gt; RegisterHooks[注册钩子]
+    RegisterHooks --&gt; RegisterComponents[注册组件]
+    RegisterComponents --&gt; RegisterRoutes[注册路由]
+    
+    RegisterRoutes --&gt; Ready([就绪])
+    LogError --&gt; CheckMore{检查更多}
+    SkipPlugin --&gt; CheckMore
+    
+    CheckMore --&gt;|有更多 | ScanPlugins
+    CheckMore --&gt;|无更多 | Ready
+    
+    style Start fill:#e1f5ff
+    style Ready fill:#d4edda
+    style ScanPlugins fill:#fff3cd
+    style LoadPlugin fill:#d1ecf1</pre></div>
+<h3 id="8-2-插件钩子系统">8.2 插件钩子系统</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #21</div><pre class="mermaid">graph LR
+    Plugin[插件] --&gt; OnInit[初始化钩子]
+    Plugin --&gt; OnMount[挂载钩子]
+    Plugin --&gt; OnUpdate[更新钩子]
+    Plugin --&gt; OnUnmount[卸载钩子]
+    
+    OnInit --&gt; InitPlugin[初始化插件]
+    OnMount --&gt; MountComponent[挂载组件]
+    OnUpdate --&gt; UpdateState[更新状态]
+    OnUnmount --&gt; Cleanup[清理资源]
+    
+    InitPlugin --&gt; Ready([就绪])
+    MountComponent --&gt; Ready
+    UpdateState --&gt; Ready
+    Cleanup --&gt; Done([完成])
+    
+    style Plugin fill:#e1f5ff
+    style Ready fill:#d4edda
+    style Done fill:#d4edda</pre></div>
+<hr/>
+<h2 id="9-测试策略">9. 测试策略</h2>
+<h3 id="9-1-测试层级">9.1 测试层级</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #22</div><pre class="mermaid">graph TB
+    Testing[测试策略]
+    
+    Testing --&gt; UnitTest[单元测试]
+    Testing --&gt; IntegrationTest[集成测试]
+    Testing --&gt; E2ETest[E2E 测试]
+    Testing --&gt; PerformanceTest[性能测试]
+    
+    UnitTest --&gt; TestUnit[测试单元]
+    IntegrationTest --&gt; TestIntegration[测试集成]
+    E2ETest --&gt; TestE2E[测试端到端]
+    PerformanceTest --&gt; TestPerformance[测试性能]
+    
+    TestUnit --&gt; ReportUnit[报告单元]
+    TestIntegration --&gt; ReportIntegration[报告集成]
+    TestE2E --&gt; ReportE2E[报告 E2E]
+    TestPerformance --&gt; ReportPerformance[报告性能]
+    
+    ReportUnit --&gt; Aggregate[汇总]
+    ReportIntegration --&gt; Aggregate
+    ReportE2E --&gt; Aggregate
+    ReportPerformance --&gt; Aggregate
+    
+    Aggregate --&gt; Ready([就绪])
+    
+    style Testing fill:#e1f5ff
+    style Ready fill:#d4edda
+    style UnitTest fill:#d1ecf1
+    style IntegrationTest fill:#d1ecf1
+    style E2ETest fill:#d1ecf1
+    style PerformanceTest fill:#d1ecf1</pre></div>
+<h3 id="9-2-测试执行流程">9.2 测试执行流程</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #23</div><pre class="mermaid">sequenceDiagram
+    participant Runner as 测试运行器
+    participant Suite as 测试套件
+    participant Test as 测试用例
+    participant Mock as 模拟层
+    participant Report as 报告生成器
+    
+    Runner-&gt;&gt;Suite: 加载套件
+    Suite-&gt;&gt;Test: 执行测试
+    
+    loop 每个测试
+        Test-&gt;&gt;Mock: 设置模拟
+        Test-&gt;&gt;Test: 执行测试
+        Test-&gt;&gt;Test: 验证结果
+        alt 测试通过
+            Test--&gt;&gt;Suite: 通过
+        else 测试失败
+            Test--&gt;&gt;Suite: 失败
+        end
+    end
+    
+    Suite--&gt;&gt;Runner: 套件完成
+    Runner-&gt;&gt;Report: 生成报告
+    Report--&gt;&gt;Runner: 返回报告
+    
+    Note over Runner,Report: 测试执行完成</pre></div>
+<hr/>
+<h2 id="10-ci-cd-流程">10. CI/CD 流程</h2>
+<h3 id="10-1-持续集成流程">10.1 持续集成流程</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #24</div><pre class="mermaid">graph TB
+    Start([代码提交]) --&gt; TriggerCI[触发 CI]
+    TriggerCI --&gt; CheckoutCode[检出代码]
+    CheckoutCode --&gt; InstallDeps[安装依赖]
+    InstallDeps --&gt; RunLint[运行 lint]
+    RunLint --&gt; RunTest[运行测试]
+    
+    RunTest --&gt; CheckTest{测试通过？}
+    CheckTest --&gt;|是 | Build[构建应用]
+    CheckTest --&gt;|否 | FailCI[失败]
+    
+    Build --&gt; RunE2E[运行 E2E]
+    RunE2E --&gt; CheckE2E{E2E 通过？}
+    CheckE2E --&gt;|是 | ScanSecurity[安全扫描]
+    CheckE2E --&gt;|否 | FailCI
+    
+    ScanSecurity --&gt; CheckSecurity{安全通过？}
+    CheckSecurity --&gt;|是 | CreateArtifact[创建制品]
+    CheckSecurity --&gt;|否 | FailCI
+    
+    CreateArtifact --&gt; Ready([就绪])
+    FailCI --&gt; Notify[通知失败]
+    Notify --&gt; End([结束])
+    
+    style Start fill:#e1f5ff
+    style Ready fill:#d4edda
+    style RunTest fill:#fff3cd
+    style Build fill:#d1ecf1
+    style ScanSecurity fill:#f8d7da</pre></div>
+<h3 id="10-2-持续部署流程">10.2 持续部署流程</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #25</div><pre class="mermaid">sequenceDiagram
+    participant Trigger as 触发器
+    participant Deploy as 部署服务
+    participant Stage1 as 阶段 1 环境
+    participant Stage2 as 阶段 2 环境
+    participant Prod as 生产环境
+    participant Monitor as 监控系统
+    
+    Trigger-&gt;&gt;Deploy: 触发部署
+    Deploy-&gt;&gt;Stage1: 部署到阶段 1
+    Stage1--&gt;&gt;Deploy: 部署完成
+    
+    Deploy-&gt;&gt;Monitor: 监控指标
+    Monitor--&gt;&gt;Deploy: 健康检查
+    
+    alt 健康
+        Deploy-&gt;&gt;Stage2: 部署到阶段 2
+        Stage2--&gt;&gt;Deploy: 部署完成
+        
+        Deploy-&gt;&gt;Monitor: 监控指标
+        Monitor--&gt;&gt;Deploy: 健康检查
+        
+        alt 健康
+            Deploy-&gt;&gt;Prod: 部署到生产
+            Prod--&gt;&gt;Deploy: 部署完成
+            
+            Deploy-&gt;&gt;Monitor: 持续监控
+            Monitor--&gt;&gt;Deploy: 正常运行
+        else 不健康
+            Deploy-&gt;&gt;Rollback1[回滚阶段 1]
+            Rollback1--&gt;&gt;Deploy: 回滚完成
+        end
+    else 不健康
+        Deploy-&gt;&gt;Rollback0[回滚触发器]
+        Rollback0--&gt;&gt;Deploy: 回滚完成
+    end
+    
+    Note over Trigger,Monitor: 部署完成</pre></div>
+<hr/>
+<h2 id="总结">总结</h2>
+<p>本章节涵盖了 DeerFlow 项目的高级特性流程图，包括：</p>
+<ol>
+<li><strong>MCP 协议集成</strong>：连接流程、资源管理、工具调用</li>
+<li><strong>流式处理系统</strong>：响应架构、SSE 传输、状态管理</li>
+<li><strong>并发控制系统</strong>：请求控制、子代理并发、线程池管理</li>
+<li><strong>性能优化系统</strong>：缓存策略、查询优化、批量处理</li>
+<li><strong>安全机制</strong>：输入验证、输出过滤、访问控制</li>
+<li><strong>国际化系统</strong>：语言切换、资源加载</li>
+<li><strong>主题系统</strong>：主题切换、配置结构</li>
+<li><strong>插件扩展系统</strong>：插件加载、钩子系统</li>
+<li><strong>测试策略</strong>：测试层级、执行流程</li>
+<li><strong>CI/CD 流程</strong>：持续集成、持续部署</li>
+</ol>
+<p>这些流程图与前面的所有文档一起，构成了完整的 DeerFlow 项目技术文档体系，涵盖了从架构设计到实现细节的各个方面。</p>
+      <div id="page-nav"></div>
+    </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose',
+    flowchart: { curve: 'stepAfter', htmlLabels: true, nodeSpacing: 55, rankSpacing: 65, useMaxWidth: true },
+    themeVariables: { darkMode: true, background: '#0d1117', primaryColor: '#1f2937',
+      primaryTextColor: '#e6edf3', primaryBorderColor: '#58a6ff', lineColor: '#9aa4b2',
+      secondaryColor: '#161b22', tertiaryColor: '#1a2029', textColor: '#e6edf3' } });
+  const renderAll = () => mermaid.run({ querySelector: 'pre.mermaid' })
+    .catch(e => console.error('mermaid render error:', e));
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderAll);
+  } else {
+    renderAll();
+  }
+</script>
+</body>
+</html>

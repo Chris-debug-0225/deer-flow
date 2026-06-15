@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>流程图总索引 · DeerFlow 流程图</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+
+
+      <div class="hero">
+        <span class="tag">deerflow · mermaid · 流程图集</span>
+        <h1>DeerFlow 完整流程图</h1>
+        <p>基于 <strong>11 篇文档</strong>、约 <strong>122+ 张 Mermaid 图表</strong>，覆盖 DeerFlow 架构、数据流、Agent 执行、Sandbox、记忆、前端、配置与高级特性的完整可视化文档。所有图表均忠实还原源 Markdown，支持深色主题在线渲染。</p>
+        <div class="stats">
+          <div class="stat"><div class="n">11</div><div class="l">文档章节</div></div>
+          <div class="stat"><div class="n">122</div><div class="l">Mermaid 图表</div></div>
+          <div class="stat"><div class="n">100%</div><div class="l">对照源文档</div></div>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-title">📖 如何使用本图集</div>
+        <p>左侧导航选择章节；每个 Mermaid 图表会在页面打开时由浏览器自动渲染（需联网加载 mermaid.js）。图表内容与 <code>docs/flowchart/*.md</code> 源文件<strong>完全一致</strong>，未做任何修改。</p>
+      </div>
+
+      <h2>🗂️ 章节速览</h2>
+      <div class="grid cols-3">
+        <a class="feature" href="01-architecture.html"><div class="ic">01</div><h4>系统架构</h4><p>整体系统架构、请求处理流程、组件依赖、数据流架构、中间件链、配置系统。</p><div class="feature-meta"><span class="badge blue">6 张图</span></div></a><a class="feature" href="02-data-flow.html"><div class="ic">02</div><h4>数据流</h4><p>请求、流式响应（SSE）、状态、工具调用、记忆、Sandbox、子代理数据流。</p><div class="feature-meta"><span class="badge blue">7 张图</span></div></a><a class="feature" href="03-lead-agent-calls.html"><div class="ic">03</div><h4>Lead Agent 调用链</h4><p>Lead Agent 工厂构建、请求处理、中间件链、LLM 节点、工具调用、错误处理。</p><div class="feature-meta"><span class="badge blue">8 张图</span></div></a><a class="feature" href="04-subagent-execution.html"><div class="ic">04</div><h4>子代理执行</h4><p>子代理生命周期、执行引擎、状态流转、并发控制、结果轮询、清理机制。</p><div class="feature-meta"><span class="badge blue">10 张图</span></div></a><a class="feature" href="05-sandbox-execution.html"><div class="ic">05</div><h4>Sandbox 执行</h4><p>Sandbox 生命周期、中间件调用、虚拟文件系统、Docker/本地执行、资源管理。</p><div class="feature-meta"><span class="badge blue">8 张图</span></div></a><a class="feature" href="06-memory-system.html"><div class="ic">06</div><h4>记忆系统</h4><p>记忆系统架构、提取时序、检索注入、去重合并、更新清理、评分机制。</p><div class="feature-meta"><span class="badge blue">8 张图</span></div></a><a class="feature" href="07-frontend-architecture.html"><div class="ic">07</div><h4>前端架构（上）</h4><p>前端整体架构、页面路由、工作区布局、组件层级、API 通信架构。</p><div class="feature-meta"><span class="badge blue">11 张图</span></div></a><a class="feature" href="08-frontend-architecture.html"><div class="ic">08</div><h4>前端架构（下）</h4><p>输入框交互、技能建议、状态管理、消息去重合并、流式处理、命令面板。</p><div class="feature-meta"><span class="badge blue">15 张图</span></div></a><a class="feature" href="09-config-skills-tools.html"><div class="ic">09</div><h4>配置与技能工具</h4><p>配置系统、Skills 加载、工具注册、文件上传、频道、模型路由、认证授权、部署。</p><div class="feature-meta"><span class="badge blue">24 张图</span></div></a><a class="feature" href="10-advanced-features.html"><div class="ic">10</div><h4>高级特性</h4><p>MCP 协议、流式处理、并发控制、缓存优化、安全机制、国际化、插件、CI/CD。</p><div class="feature-meta"><span class="badge blue">25 张图</span></div></a>
+      </div>
+
+      <h2>🎯 推荐阅读路径</h2>
+      <div class="diagram">
+        <div class="dbox">01 系统架构</div>
+        <div class="darrow">▼</div>
+        <div class="dbox alt">02 数据流 → 03 Lead Agent</div>
+        <div class="darrow">▼</div>
+        <div class="dbox green">04 子代理 → 05 Sandbox → 06 记忆</div>
+        <div class="darrow">▼</div>
+        <div class="dbox orange">07/08 前端 → 09 配置 → 10 高级特性</div>
+      </div>
+      <div id="page-nav"></div>
+    
+      <div id="page-nav"></div>
+    </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose',
+    flowchart: { curve: 'stepAfter', htmlLabels: true, nodeSpacing: 55, rankSpacing: 65, useMaxWidth: true },
+    themeVariables: { darkMode: true, background: '#0d1117', primaryColor: '#1f2937',
+      primaryTextColor: '#e6edf3', primaryBorderColor: '#58a6ff', lineColor: '#9aa4b2',
+      secondaryColor: '#161b22', tertiaryColor: '#1a2029', textColor: '#e6edf3' } });
+  const renderAll = () => mermaid.run({ querySelector: 'pre.mermaid' })
+    .catch(e => console.error('mermaid render error:', e));
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderAll);
+  } else {
+    renderAll();
+  }
+</script>
+</body>
+</html>

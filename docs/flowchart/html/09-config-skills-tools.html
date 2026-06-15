@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>配置与技能工具 · DeerFlow 流程图</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+<div class="toc"><div class="toc-title">📖 本页目录</div><ul><li class=""><a href="#1-配置系统架构">1. 配置系统架构</a></li><li class="toc-sub"><a href="#1-1-配置加载流程">1.1 配置加载流程</a></li><li class="toc-sub"><a href="#1-2-配置结构">1.2 配置结构</a></li><li class="toc-sub"><a href="#1-3-配置热重载">1.3 配置热重载</a></li><li class=""><a href="#2-skills-系统">2. Skills 系统</a></li><li class="toc-sub"><a href="#2-1-skills-加载机制">2.1 Skills 加载机制</a></li><li class="toc-sub"><a href="#2-2-skill-发现与匹配">2.2 Skill 发现与匹配</a></li><li class="toc-sub"><a href="#2-3-skill-生命周期">2.3 Skill 生命周期</a></li><li class="toc-sub"><a href="#2-4-skill-注册与发现">2.4 Skill 注册与发现</a></li><li class=""><a href="#3-工具系统">3. 工具系统</a></li><li class="toc-sub"><a href="#3-1-工具注册与发现">3.1 工具注册与发现</a></li><li class="toc-sub"><a href="#3-2-工具调用流程">3.2 工具调用流程</a></li><li class="toc-sub"><a href="#3-3-工具错误处理">3.3 工具错误处理</a></li><li class=""><a href="#4-上传系统">4. 上传系统</a></li><li class="toc-sub"><a href="#4-1-文件上传流程">4.1 文件上传流程</a></li><li class="toc-sub"><a href="#4-2-虚拟文件系统">4.2 虚拟文件系统</a></li><li class=""><a href="#5-频道系统">5. 频道系统</a></li><li class="toc-sub"><a href="#5-1-频道创建与管理">5.1 频道创建与管理</a></li><li class="toc-sub"><a href="#5-2-频道消息流转">5.2 频道消息流转</a></li><li class=""><a href="#6-模型系统">6. 模型系统</a></li><li class="toc-sub"><a href="#6-1-模型选择流程">6.1 模型选择流程</a></li><li class="toc-sub"><a href="#6-2-模型路由">6.2 模型路由</a></li><li class=""><a href="#7-消息处理系统">7. 消息处理系统</a></li><li class="toc-sub"><a href="#7-1-消息处理流程">7.1 消息处理流程</a></li><li class="toc-sub"><a href="#7-2-消息去重与合并">7.2 消息去重与合并</a></li><li class=""><a href="#8-认证与授权系统">8. 认证与授权系统</a></li><li class="toc-sub"><a href="#8-1-认证流程">8.1 认证流程</a></li><li class="toc-sub"><a href="#8-2-授权流程">8.2 授权流程</a></li><li class=""><a href="#9-监控与日志系统">9. 监控与日志系统</a></li><li class="toc-sub"><a href="#9-1-日志收集流程">9.1 日志收集流程</a></li><li class="toc-sub"><a href="#9-2-监控指标收集">9.2 监控指标收集</a></li><li class=""><a href="#10-部署架构">10. 部署架构</a></li><li class="toc-sub"><a href="#10-1-容器化部署">10.1 容器化部署</a></li><li class="toc-sub"><a href="#10-2-云原生部署">10.2 云原生部署</a></li><li class=""><a href="#总结">总结</a></li></ul></div>
+<div class="page-head"><span class="page-num">09</span><div class="page-stats"><span class="ps-item"><b>24</b> Mermaid 图</span><span class="ps-dot">·</span><span class="ps-item"><b>36</b> 章节</span></div></div><h1 id="deerflow-配置与技能系统流程图">DeerFlow 配置与技能系统流程图</h1>
+<p>本文档包含 DeerFlow 项目的配置系统、技能系统、工具系统、上传系统、频道系统、模型系统、消息处理系统、认证授权系统、监控日志系统、部署架构等补充流程图。</p>
+<hr/>
+<h2 id="1-配置系统架构">1. 配置系统架构</h2>
+<h3 id="1-1-配置加载流程">1.1 配置加载流程</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #1</div><pre class="mermaid">graph TB
+    Start([开始]) --&gt; LoadConfig[加载配置文件&lt;br/&gt;config.yaml]
+    LoadConfig --&gt; CheckEnv{检查环境变量}
+    CheckEnv --&gt;|存在 | OverrideConfig[覆盖配置项]
+    CheckEnv --&gt;|不存在 | SkipOverride[跳过覆盖]
+    OverrideConfig --&gt; ValidateConfig[验证配置]
+    SkipOverride --&gt; ValidateConfig
+    ValidateConfig --&gt; CheckModel{检查模型配置}
+    CheckModel --&gt;|未配置 | LoadDefault[加载默认模型]
+    CheckModel --&gt;|已配置 | LoadCustom[加载自定义模型]
+    LoadDefault --&gt; InitSandbox[初始化 Sandbox]
+    LoadCustom --&gt; InitSandbox
+    InitSandbox --&gt; InitSkills[初始化 Skills]
+    InitSkills --&gt; InitTools[初始化工具系统]
+    InitTools --&gt; InitMiddleware[初始化中间件]
+    InitMiddleware --&gt; BuildAgent[构建 Lead Agent]
+    BuildAgent --&gt; Ready([就绪])
+    
+    style Start fill:#e1f5ff
+    style Ready fill:#d4edda
+    style LoadConfig fill:#fff3cd
+    style ValidateConfig fill:#f8d7da
+    style BuildAgent fill:#d1ecf1</pre></div>
+<h3 id="1-2-配置结构">1.2 配置结构</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #2</div><pre class="mermaid">graph TB
+    Config[配置根节点]
+    
+    Config --&gt; Server[服务器配置]
+    Config --&gt; Model[模型配置]
+    Config --&gt; Sandbox[Sandbox 配置]
+    Config --&gt; Skills[Skills 配置]
+    Config --&gt; Tools[工具配置]
+    Config --&gt; Middleware[中间件配置]
+    Config --&gt; Memory[记忆配置]
+    Config --&gt; Upload[上传配置]
+    Config --&gt; Features[功能特性]
+    
+    Server --&gt; ServerHost[主机地址]
+    Server --&gt; ServerPort[端口]
+    Server --&gt; ServerWorkers[工作进程数]
+    
+    Model --&gt; DefaultModel[默认模型]
+    Model --&gt; ModelList[模型列表]
+    Model --&gt; ProviderConfig[提供商配置]
+    
+    Sandbox --&gt; SandboxMode[Sandbox 模式&lt;br/&gt;docker/local]
+    Sandbox --&gt; SandboxImage[Docker 镜像]
+    Sandbox --&gt; SandboxTimeout[超时设置]
+    
+    Skills --&gt; SkillList[技能列表]
+    Skills --&gt; SkillAutoLoad[自动加载策略]
+    
+    Tools --&gt; ToolList[工具列表]
+    Tools --&gt; ToolTimeout[工具超时]
+    
+    Middleware --&gt; MiddlewareChain[中间件链顺序]
+    Middleware --&gt; MiddlewareConfig[各中间件配置]
+    
+    Memory --&gt; MemoryEnabled[记忆启用]
+    Memory --&gt; MemoryRetention[记忆保留期]
+    
+    Upload --&gt; UploadDir[上传目录]
+    Upload --&gt; UploadMaxSize[最大文件大小]
+    
+    Features --&gt; FeatureFlags[功能标志]
+    Features --&gt; Experimental[实验性功能]
+    
+    style Config fill:#e1f5ff
+    style Server fill:#d1ecf1
+    style Model fill:#d1ecf1
+    style Sandbox fill:#d1ecf1
+    style Skills fill:#d1ecf1
+    style Tools fill:#d1ecf1
+    style Middleware fill:#d1ecf1
+    style Memory fill:#d1ecf1
+    style Upload fill:#d1ecf1
+    style Features fill:#d1ecf1</pre></div>
+<h3 id="1-3-配置热重载">1.3 配置热重载</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #3</div><pre class="mermaid">sequenceDiagram
+    participant User as 用户
+    participant File as 配置文件
+    participant Watcher as 文件监听器
+    participant Loader as 配置加载器
+    participant Agent as Lead Agent
+    participant Cache as 配置缓存
+    
+    User-&gt;&gt;File: 修改配置文件
+    File--&gt;&gt;Watcher: 文件变更事件
+    Watcher-&gt;&gt;Loader: 触发重载
+    Loader-&gt;&gt;Cache: 清除旧配置
+    Loader-&gt;&gt;File: 读取新配置
+    Loader-&gt;&gt;Loader: 验证配置
+    alt 配置有效
+        Loader-&gt;&gt;Cache: 存储新配置
+        Loader-&gt;&gt;Agent: 重新构建 Agent
+        Agent--&gt;&gt;Cache: 返回新实例
+        Cache--&gt;&gt;Loader: 重载完成
+        Loader--&gt;&gt;Watcher: 重载成功
+    else 配置无效
+        Loader--&gt;&gt;Watcher: 重载失败
+        Watcher--&gt;&gt;User: 错误提示
+    end
+    
+    Note over User,Cache: 系统无缝切换新配置</pre></div>
+<hr/>
+<h2 id="2-skills-系统">2. Skills 系统</h2>
+<h3 id="2-1-skills-加载机制">2.1 Skills 加载机制</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #4</div><pre class="mermaid">graph TB
+    Start([启动]) --&gt; LoadConfig[读取 Skills 配置]
+    LoadConfig --&gt; CheckAutoLoad{检查自动加载策略}
+    
+    CheckAutoLoad --&gt;|All| LoadAll[加载所有 Skills]
+    CheckAutoLoad --&gt;|OnDemand| CheckContext[检查上下文]
+    CheckAutoLoad --&gt;|Manual| WaitTrigger[等待用户触发]
+    
+    LoadAll --&gt; InitAllSkills[初始化所有 Skill 实例]
+    CheckContext --&gt; MatchSkill{匹配相关 Skill}
+    MatchSkill --&gt;|匹配 | LoadSkill[加载对应 Skill]
+    MatchSkill --&gt;|不匹配 | SkipLoad[跳过加载]
+    WaitTrigger --&gt; UserAction[用户操作]
+    UserAction --&gt; TriggerSkill[触发 Skill]
+    TriggerSkill --&gt; LoadSkill
+    
+    InitAllSkills --&gt; RegisterSkill[注册 Skill]
+    LoadSkill --&gt; RegisterSkill
+    SkipLoad --&gt; CheckMore{检查更多 Skill}
+    
+    RegisterSkill --&gt; CheckMore
+    CheckMore --&gt;|有更多 | CheckAutoLoad
+    CheckMore --&gt;|无更多 | BuildRegistry[构建 Skill 注册表]
+    
+    BuildRegistry --&gt; Ready([就绪])
+    
+    style Start fill:#e1f5ff
+    style Ready fill:#d4edda
+    style LoadConfig fill:#fff3cd
+    style RegisterSkill fill:#d1ecf1
+    style BuildRegistry fill:#d1ecf1</pre></div>
+<h3 id="2-2-skill-发现与匹配">2.2 Skill 发现与匹配</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #5</div><pre class="mermaid">graph LR
+    Input[用户输入] --&gt; ParseInput[解析输入]
+    ParseInput --&gt; ExtractIntent[提取意图]
+    ExtractIntent --&gt; SearchSkills[搜索相关 Skills]
+    
+    SearchSkills --&gt; MatchName{名称匹配}
+    MatchName --&gt;|精确 | ScoreSkill[评分]
+    MatchName --&gt;|模糊 | SemanticMatch[语义匹配]
+    SemanticMatch --&gt; ScoreSkill
+    
+    ScoreSkill --&gt; CheckContext{上下文匹配}
+    CheckContext --&gt;|满足 | CheckPermissions{权限检查}
+    CheckContext --&gt;|不满足 | SkipSkill[跳过]
+    
+    CheckPermissions --&gt;|允许 | AddToPool[加入候选池]
+    CheckPermissions --&gt;|拒绝 | SkipSkill
+    
+    AddToPool --&gt; SortSkills[排序 Skills]
+    SortSkills --&gt; SelectTop[选择 Top Skills]
+    SelectTop --&gt; InjectToContext[注入到上下文]
+    InjectToContext --&gt; Ready([就绪])
+    
+    style Input fill:#e1f5ff
+    style Ready fill:#d4edda
+    style SearchSkills fill:#fff3cd
+    style ScoreSkill fill:#d1ecf1
+    style SelectTop fill:#d4edda</pre></div>
+<h3 id="2-3-skill-生命周期">2.3 Skill 生命周期</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #6</div><pre class="mermaid">stateDiagram-v2
+    [*] --&gt; Unloaded: 系统启动
+    Unloaded --&gt; Loading: 需要加载
+    Loading --&gt; Loaded: 加载完成
+    Loaded --&gt; Active: 被调用
+    Active --&gt; Idle: 调用结束
+    Idle --&gt; Loaded: 保留在内存
+    Idle --&gt; Unloaded: 内存清理
+    
+    Loaded --&gt; Unloading: 标记卸载
+    Unloading --&gt; Unloaded: 卸载完成
+    
+    Active --&gt; Error: 调用错误
+    Error --&gt; Loaded: 恢复
+    
+    Unloaded --&gt; Loading: 按需加载
+    Loading --&gt; Error: 加载失败
+    Error --&gt; Unloaded: 回滚
+    
+    note right of Loaded: 已加载到内存&lt;br/&gt;可快速调用
+    note right of Active: 正在执行中
+    note right of Idle: 空闲状态&lt;br/&gt;可快速恢复
+    note right of Unloaded: 未加载&lt;br/&gt;节省内存</pre></div>
+<h3 id="2-4-skill-注册与发现">2.4 Skill 注册与发现</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #7</div><pre class="mermaid">graph TB
+    Start([开始]) --&gt; ScanDir[扫描 Skills 目录]
+    ScanDir --&gt; ParseManifest[解析 manifest.json]
+    ParseManifest --&gt; ValidateManifest{验证清单}
+    
+    ValidateManifest --&gt;|有效 | ExtractInfo[提取技能信息]
+    ValidateManifest --&gt;|无效 | LogError[记录错误]
+    LogError --&gt; SkipSkill[跳过该 Skill]
+    
+    ExtractInfo --&gt; RegisterSkill[注册到注册表]
+    SkipSkill --&gt; CheckMore{检查更多}
+    RegisterSkill --&gt; CheckMore
+    
+    CheckMore --&gt;|有更多 | ScanDir
+    CheckMore --&gt;|无更多 | BuildIndex[构建索引]
+    
+    BuildIndex --&gt; IndexName[按名称索引]
+    IndexName --&gt; IndexTag[按标签索引]
+    IndexTag --&gt; IndexCategory[按分类索引]
+    IndexCategory --&gt; IndexCapability[按能力索引]
+    
+    IndexCapability --&gt; Ready([就绪])
+    
+    style Start fill:#e1f5ff
+    style Ready fill:#d4edda
+    style ScanDir fill:#fff3cd
+    style BuildIndex fill:#d1ecf1
+    style IndexName fill:#d1ecf1
+    style IndexTag fill:#d1ecf1
+    style IndexCategory fill:#d1ecf1
+    style IndexCapability fill:#d1ecf1</pre></div>
+<hr/>
+<h2 id="3-工具系统">3. 工具系统</h2>
+<h3 id="3-1-工具注册与发现">3.1 工具注册与发现</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #8</div><pre class="mermaid">graph TB
+    Start([启动]) --&gt; ScanTools[扫描工具目录]
+    ScanTools --&gt; LoadBuiltins[加载内置工具]
+    ScanTools --&gt; LoadCustom[加载自定义工具]
+    
+    LoadBuiltins --&gt; ParseTool[解析工具定义]
+    LoadCustom --&gt; ParseTool
+    
+    ParseTool --&gt; ValidateTool{验证工具}
+    ValidateTool --&gt;|有效 | RegisterTool[注册工具]
+    ValidateTool --&gt;|无效 | LogError[记录错误]
+    
+    RegisterTool --&gt; AddToRegistry[添加到工具注册表]
+    LogError --&gt; CheckMore{检查更多}
+    AddToRegistry --&gt; CheckMore
+    
+    CheckMore --&gt;|有更多 | ScanTools
+    CheckMore --&gt;|无更多 | BuildRegistry[构建完整注册表]
+    
+    BuildRegistry --&gt; IndexTools[建立工具索引]
+    IndexTools --&gt; AutoComplete[生成自动完成]
+    AutoComplete --&gt; Ready([就绪])
+    
+    style Start fill:#e1f5ff
+    style Ready fill:#d4edda
+    style ScanTools fill:#fff3cd
+    style BuildRegistry fill:#d1ecf1
+    style IndexTools fill:#d1ecf1</pre></div>
+<h3 id="3-2-工具调用流程">3.2 工具调用流程</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #9</div><pre class="mermaid">sequenceDiagram
+    participant Agent as Lead Agent
+    participant ToolRegistry as 工具注册表
+    participant Tool as 工具实例
+    participant Sandbox as Sandbox
+    participant Result as 结果处理器
+    
+    Agent-&gt;&gt;ToolRegistry: 查找工具
+    ToolRegistry--&gt;&gt;Agent: 返回工具定义
+    Agent-&gt;&gt;Tool: 调用工具
+    Tool-&gt;&gt;Tool: 参数验证
+    alt 参数有效
+        Tool-&gt;&gt;Sandbox: 在沙盒中执行
+        Sandbox-&gt;&gt;Sandbox: 执行工具逻辑
+        Sandbox--&gt;&gt;Tool: 返回结果
+        Tool-&gt;&gt;Result: 处理结果
+        Result--&gt;&gt;Agent: 返回工具结果
+    else 参数无效
+        Tool--&gt;&gt;Agent: 返回错误
+    end
+    
+    Agent-&gt;&gt;Agent: 将结果注入上下文
+    Note over Agent,Result: 工具调用完成</pre></div>
+<h3 id="3-3-工具错误处理">3.3 工具错误处理</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #10</div><pre class="mermaid">graph TB
+    Start([工具调用开始]) --&gt; ExecuteTool[执行工具]
+    ExecuteTool --&gt; CheckError{检查错误}
+    
+    CheckError --&gt;|无错误 | ProcessResult[处理结果]
+    CheckError --&gt;|参数错误 | ValidateParams[验证参数]
+    CheckError --&gt;|执行错误 | RetryTool{是否可重试}
+    CheckError --&gt;|超时错误 | TimeoutHandler[超时处理]
+    
+    ValidateParams --&gt; FixParams[修复参数]
+    FixParams --&gt; ExecuteTool
+    
+    RetryTool --&gt;|是 | RetryExecute[重新执行]
+    RetryTool --&gt;|否 | ErrorHandler[错误处理]
+    
+    RetryExecute --&gt; CheckError
+    TimeoutHandler --&gt; ErrorHandler
+    ErrorHandler --&gt; ReportError[报告错误]
+    
+    ProcessResult --&gt; InjectContext[注入上下文]
+    ReportError --&gt; InjectContext
+    
+    InjectContext --&gt; End([结束])
+    
+    style Start fill:#e1f5ff
+    style End fill:#d4edda
+    style ExecuteTool fill:#fff3cd
+    style CheckError fill:#f8d7da
+    style ProcessResult fill:#d4edda</pre></div>
+<hr/>
+<h2 id="4-上传系统">4. 上传系统</h2>
+<h3 id="4-1-文件上传流程">4.1 文件上传流程</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #11</div><pre class="mermaid">graph TB
+    Start([开始上传]) --&gt; InitUpload[初始化上传]
+    InitUpload --&gt; CheckFile{检查文件}
+    
+    CheckFile --&gt;|大小检查 | ValidateSize{文件大小}
+    CheckFile --&gt;|类型检查 | ValidateType{文件类型}
+    CheckFile --&gt;|病毒扫描 | ScanVirus[病毒扫描]
+    
+    ValidateSize --&gt;|超过限制 | RejectUpload[拒绝上传]
+    ValidateSize --&gt;|符合 | CheckType{类型检查}
+    CheckType --&gt;|不支持 | RejectUpload
+    CheckType --&gt;|支持 | ScanVirus
+    
+    ScanVirus --&gt;|发现病毒 | RejectUpload
+    ScanVirus --&gt;|干净 | CreateTemp[创建临时文件]
+    
+    CreateTemp --&gt; StreamUpload[流式上传]
+    StreamUpload --&gt; CalculateHash[计算文件哈希]
+    CalculateHash --&gt; DedupCheck{去重检查}
+    
+    DedupCheck --&gt;|已存在 | ReturnExisting[返回现有文件]
+    DedupCheck --&gt;|新文件 | SaveFile[保存文件]
+    
+    SaveFile --&gt; UpdateMetadata[更新元数据]
+    UpdateMetadata --&gt; GeneratePath[生成访问路径]
+    GeneratePath --&gt; NotifyUpload[通知上传完成]
+    
+    NotifyUpload --&gt; Ready([就绪])
+    
+    style Start fill:#e1f5ff
+    style Ready fill:#d4edda
+    style CheckFile fill:#fff3cd
+    style SaveFile fill:#d1ecf1
+    style GeneratePath fill:#d1ecf1</pre></div>
+<h3 id="4-2-虚拟文件系统">4.2 虚拟文件系统</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #12</div><pre class="mermaid">graph TB
+    VirtualFS[虚拟文件系统]
+    
+    VirtualFS --&gt; MntUserdata[/mnt/user-data]
+    VirtualFS --&gt; MntSkills[/mnt/skills]
+    VirtualFS --&gt; MntWorkspace[/mnt/acp-workspace]
+    
+    MntUserdata --&gt; UserFiles[用户文件]
+    MntUserdata --&gt; Uploads[上传目录]
+    
+    MntSkills --&gt; SkillFiles[Skill 文件]
+    MntSkills --&gt; Templates[模板文件]
+    
+    MntWorkspace --&gt; ProjectFiles[项目文件]
+    MntWorkspace --&gt; Cache[缓存文件]
+    
+    UserFiles --&gt; MapPath[路径映射]
+    Uploads --&gt; MapPath
+    SkillFiles --&gt; MapPath
+    Templates --&gt; MapPath
+    ProjectFiles --&gt; MapPath
+    Cache --&gt; MapPath
+    
+    MapPath --&gt; RealFS[真实文件系统]
+    
+    style VirtualFS fill:#e1f5ff
+    style MntUserdata fill:#d1ecf1
+    style MntSkills fill:#d1ecf1
+    style MntWorkspace fill:#d1ecf1
+    style RealFS fill:#d4edda</pre></div>
+<hr/>
+<h2 id="5-频道系统">5. 频道系统</h2>
+<h3 id="5-1-频道创建与管理">5.1 频道创建与管理</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #13</div><pre class="mermaid">graph TB
+    Start([开始]) --&gt; InitChannel[初始化频道]
+    InitChannel --&gt; CreateMetadata[创建元数据]
+    CreateMetadata --&gt; GenerateID[生成频道 ID]
+    GenerateID --&gt; SaveMetadata[保存元数据]
+    
+    SaveMetadata --&gt; Subscribe[订阅频道]
+    Subscribe --&gt; ConnectWebSocket[建立 WebSocket 连接]
+    ConnectWebSocket --&gt; Ready([就绪])
+    
+    Ready --&gt; ReceiveMessage[接收消息]
+    ReceiveMessage --&gt; ProcessMessage[处理消息]
+    ProcessMessage --&gt; Broadcast[广播消息]
+    Broadcast --&gt; Ready
+    
+    style Start fill:#e1f5ff
+    style Ready fill:#d4edda
+    style InitChannel fill:#fff3cd
+    style ConnectWebSocket fill:#d1ecf1</pre></div>
+<h3 id="5-2-频道消息流转">5.2 频道消息流转</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #14</div><pre class="mermaid">sequenceDiagram
+    participant Client as 客户端
+    participant Channel as 频道服务
+    participant Storage as 存储层
+    participant WebSocket as WebSocket 服务
+    
+    Client-&gt;&gt;Channel: 发送消息
+    Channel-&gt;&gt;Storage: 保存消息
+    Storage--&gt;&gt;Channel: 保存成功
+    Channel-&gt;&gt;Channel: 处理消息
+    Channel-&gt;&gt;WebSocket: 广播消息
+    WebSocket--&gt;&gt;Client: 推送消息
+    Note over Client,WebSocket: 消息实时同步</pre></div>
+<hr/>
+<h2 id="6-模型系统">6. 模型系统</h2>
+<h3 id="6-1-模型选择流程">6.1 模型选择流程</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #15</div><pre class="mermaid">graph TB
+    Start([开始]) --&gt; GetRequest[获取请求]
+    GetRequest --&gt; CheckModel{指定模型}
+    
+    CheckModel --&gt;|已指定 | UseModel[使用指定模型]
+    CheckModel --&gt;|未指定 | AutoSelect[自动选择]
+    
+    AutoSelect --&gt; CheckThread{检查线程历史}
+    CheckThread --&gt;|有历史 | UseThreadModel[使用线程模型]
+    CheckThread --&gt;|无历史 | CheckDefault[检查默认模型]
+    
+    CheckDefault --&gt;|有默认 | UseDefault[使用默认模型]
+    CheckDefault --&gt;|无默认 | SelectBest[选择最佳模型]
+    
+    SelectBest --&gt; CheckContext[检查上下文]
+    CheckContext --&gt; CheckCost[检查成本]
+    CheckCost --&gt; CheckSpeed[检查速度]
+    CheckSpeed --&gt; SelectModel[选择最优模型]
+    
+    UseModel --&gt; ValidateModel{模型验证}
+    UseThreadModel --&gt; ValidateModel
+    UseDefault --&gt; ValidateModel
+    SelectModel --&gt; ValidateModel
+    
+    ValidateModel --&gt;|有效 | Ready([就绪])
+    ValidateModel --&gt;|无效 | SelectModel
+    
+    style Start fill:#e1f5ff
+    style Ready fill:#d4edda
+    style AutoSelect fill:#fff3cd
+    style SelectBest fill:#d1ecf1</pre></div>
+<h3 id="6-2-模型路由">6.2 模型路由</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #16</div><pre class="mermaid">graph LR
+    Request[请求] --&gt; Router[路由器]
+    
+    Router --&gt; ProviderA[提供商 A]
+    Router --&gt; ProviderB[提供商 B]
+    Router --&gt; ProviderC[提供商 C]
+    
+    ProviderA --&gt; ModelA1[模型 A1]
+    ProviderA --&gt; ModelA2[模型 A2]
+    ProviderB --&gt; ModelB1[模型 B1]
+    ProviderB --&gt; ModelB2[模型 B2]
+    ProviderC --&gt; ModelC1[模型 C1]
+    ProviderC --&gt; ModelC2[模型 C2]
+    
+    style Request fill:#e1f5ff
+    style Router fill:#fff3cd
+    style ProviderA fill:#d1ecf1
+    style ProviderB fill:#d1ecf1
+    style ProviderC fill:#d1ecf1</pre></div>
+<hr/>
+<h2 id="7-消息处理系统">7. 消息处理系统</h2>
+<h3 id="7-1-消息处理流程">7.1 消息处理流程</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #17</div><pre class="mermaid">graph TB
+    Start([消息到达]) --&gt; ParseMessage[解析消息]
+    ParseMessage --&gt; ValidateMessage{验证消息}
+    
+    ValidateMessage --&gt;|有效 | ProcessMessage[处理消息]
+    ValidateMessage --&gt;|无效 | RejectMessage[拒绝消息]
+    
+    ProcessMessage --&gt; ExtractContent[提取内容]
+    ExtractContent --&gt; DetectType{检测类型}
+    
+    DetectType --&gt;|文本 | TextProcess[文本处理]
+    DetectType --&gt;|图片 | ImageProcess[图片处理]
+    DetectType --&gt;|文件 | FileProcess[文件处理]
+    DetectType --&gt;|工具调用 | ToolProcess[工具处理]
+    
+    TextProcess --&gt; EnrichMessage[增强消息]
+    ImageProcess --&gt; EnrichMessage
+    FileProcess --&gt; EnrichMessage
+    ToolProcess --&gt; EnrichMessage
+    
+    EnrichMessage --&gt; StoreMessage[存储消息]
+    StoreMessage --&gt; BroadcastMessage[广播消息]
+    BroadcastMessage --&gt; Ready([就绪])
+    
+    style Start fill:#e1f5ff
+    style Ready fill:#d4edda
+    style ProcessMessage fill:#fff3cd
+    style EnrichMessage fill:#d1ecf1
+    style StoreMessage fill:#d1ecf1</pre></div>
+<h3 id="7-2-消息去重与合并">7.2 消息去重与合并</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #18</div><pre class="mermaid">graph TB
+    Start([消息到达]) --&gt; GenerateID[生成消息 ID]
+    GenerateID --&gt; CheckCache{检查缓存}
+    
+    CheckCache --&gt;|新消息 | StoreMessage[存储消息]
+    CheckCache --&gt;|重复 | SkipMessage[跳过消息]
+    CheckCache --&gt;|部分匹配 | MergeMessage[合并消息]
+    
+    StoreMessage --&gt; UpdateCache[更新缓存]
+    SkipMessage --&gt; End([结束])
+    MergeMessage --&gt; UpdateCache
+    
+    UpdateCache --&gt; Notify[通知更新]
+    Notify --&gt; End
+    
+    style Start fill:#e1f5ff
+    style End fill:#d4edda
+    style CheckCache fill:#fff3cd
+    style MergeMessage fill:#d1ecf1</pre></div>
+<hr/>
+<h2 id="8-认证与授权系统">8. 认证与授权系统</h2>
+<h3 id="8-1-认证流程">8.1 认证流程</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #19</div><pre class="mermaid">sequenceDiagram
+    participant Client as 客户端
+    participant Auth as 认证服务
+    participant UserDB as 用户数据库
+    participant Token as Token 服务
+    
+    Client-&gt;&gt;Auth: 提交凭证
+    Auth-&gt;&gt;UserDB: 验证用户
+    UserDB--&gt;&gt;Auth: 返回用户信息
+    Auth-&gt;&gt;Auth: 验证凭证
+    alt 验证成功
+        Auth-&gt;&gt;Token: 生成 Token
+        Token--&gt;&gt;Auth: 返回 Token
+        Auth--&gt;&gt;Client: 返回 Token
+    else 验证失败
+        Auth--&gt;&gt;Client: 返回错误
+    end
+    
+    Note over Client,Token: 认证完成</pre></div>
+<h3 id="8-2-授权流程">8.2 授权流程</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #20</div><pre class="mermaid">graph TB
+    Start([请求到达]) --&gt; ExtractToken[提取 Token]
+    ExtractToken --&gt; ValidateToken{验证 Token}
+    
+    ValidateToken --&gt;|有效 | ExtractClaims[提取声明]
+    ValidateToken --&gt;|无效 | RejectRequest[拒绝请求]
+    
+    ExtractClaims --&gt; CheckPermission{检查权限}
+    CheckPermission --&gt;|有权限 | AllowRequest[允许请求]
+    CheckPermission --&gt;|无权限 | DenyRequest[拒绝请求]
+    
+    AllowRequest --&gt; ProcessRequest[处理请求]
+    DenyRequest --&gt; LogAccess[记录访问]
+    RejectRequest --&gt; LogAccess
+    
+    LogAccess --&gt; End([结束])
+    
+    style Start fill:#e1f5ff
+    style End fill:#d4edda
+    style ValidateToken fill:#fff3cd
+    style CheckPermission fill:#f8d7da
+    style AllowRequest fill:#d4edda</pre></div>
+<hr/>
+<h2 id="9-监控与日志系统">9. 监控与日志系统</h2>
+<h3 id="9-1-日志收集流程">9.1 日志收集流程</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #21</div><pre class="mermaid">graph TB
+    Start([服务运行]) --&gt; GenerateLog[生成日志]
+    GenerateLog --&gt; FormatLog[格式化日志]
+    FormatLog --&gt; TagLog[添加标签]
+    TagLog --&gt; RouteLog{路由日志}
+    
+    RouteLog --&gt;|错误 | ErrorLog[错误日志]
+    RouteLog --&gt;|警告 | WarnLog[警告日志]
+    RouteLog --&gt;|信息 | InfoLog[信息日志]
+    RouteLog --&gt;|调试 | DebugLog[调试日志]
+    
+    ErrorLog --&gt; StoreLog[存储日志]
+    WarnLog --&gt; StoreLog
+    InfoLog --&gt; StoreLog
+    DebugLog --&gt; StoreLog
+    
+    StoreLog --&gt; IndexLog[索引日志]
+    IndexLog --&gt; Ready([就绪])
+    
+    style Start fill:#e1f5ff
+    style Ready fill:#d4edda
+    style GenerateLog fill:#fff3cd
+    style RouteLog fill:#f8d7da
+    style StoreLog fill:#d1ecf1</pre></div>
+<h3 id="9-2-监控指标收集">9.2 监控指标收集</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #22</div><pre class="mermaid">graph LR
+    Collector[监控收集器]
+    
+    Collector --&gt; MetricA[请求指标]
+    Collector --&gt; MetricB[延迟指标]
+    Collector --&gt; MetricC[错误指标]
+    Collector --&gt; MetricD[资源指标]
+    
+    MetricA --&gt; StoreMetrics[存储指标]
+    MetricB --&gt; StoreMetrics
+    MetricC --&gt; StoreMetrics
+    MetricD --&gt; StoreMetrics
+    
+    StoreMetrics --&gt; Dashboard[监控面板]
+    StoreMetrics --&gt; Alerting[告警系统]
+    
+    style Collector fill:#e1f5ff
+    style StoreMetrics fill:#d1ecf1
+    style Dashboard fill:#d4edda
+    style Alerting fill:#fff3cd</pre></div>
+<hr/>
+<h2 id="10-部署架构">10. 部署架构</h2>
+<h3 id="10-1-容器化部署">10.1 容器化部署</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #23</div><pre class="mermaid">graph TB
+    Docker[Docker 容器]
+    
+    Docker --&gt; Backend[后端容器]
+    Docker --&gt; Frontend[前端容器]
+    Docker --&gt; Database[数据库容器]
+    Docker --&gt; Cache[缓存容器]
+    Docker --&gt; Queue[消息队列容器]
+    
+    Backend --&gt; API[API 服务]
+    Backend --&gt; Worker[后台任务]
+    
+    Frontend --&gt; Web[Web 服务]
+    
+    Database --&gt; DBInstance[数据库实例]
+    Cache --&gt; CacheInstance[缓存实例]
+    Queue --&gt; QueueInstance[队列实例]
+    
+    LoadBalancer[负载均衡器]
+    LoadBalancer --&gt; Backend
+    LoadBalancer --&gt; Frontend
+    
+    style Docker fill:#e1f5ff
+    style LoadBalancer fill:#fff3cd
+    style Backend fill:#d1ecf1
+    style Frontend fill:#d1ecf1</pre></div>
+<h3 id="10-2-云原生部署">10.2 云原生部署</h3>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #24</div><pre class="mermaid">graph TB
+    Cloud[云平台]
+    
+    Cloud --&gt; K8s[Kubernetes 集群]
+    Cloud --&gt; Serverless[无服务器函数]
+    Cloud --&gt; ManagedDB[托管数据库]
+    Cloud --&gt; ManagedCache[托管缓存]
+    
+    K8s --&gt; Namespace[命名空间]
+    Namespace --&gt; Deployment[部署]
+    Namespace --&gt; Service[服务]
+    Namespace --&gt; Ingress[入口]
+    
+    Deployment --&gt; Pod[Pod]
+    Pod --&gt; Container[容器]
+    
+    Serverless --&gt; Function[函数]
+    Function --&gt; Event[事件触发]
+    
+    ManagedDB --&gt; DBInstance[数据库实例]
+    ManagedCache --&gt; CacheInstance[缓存实例]
+    
+    style Cloud fill:#e1f5ff
+    style K8s fill:#d1ecf1
+    style Serverless fill:#d1ecf1
+    style ManagedDB fill:#d1ecf1
+    style ManagedCache fill:#d1ecf1</pre></div>
+<hr/>
+<h2 id="总结">总结</h2>
+<p>本章节涵盖了 DeerFlow 项目的补充系统流程图，包括：</p>
+<ol>
+<li><strong>配置系统</strong>：配置加载、结构、热重载机制</li>
+<li><strong>Skills 系统</strong>：加载机制、发现与匹配、生命周期、注册与发现</li>
+<li><strong>工具系统</strong>：注册与发现、调用流程、错误处理</li>
+<li><strong>上传系统</strong>：文件上传流程、虚拟文件系统</li>
+<li><strong>频道系统</strong>：创建与管理、消息流转</li>
+<li><strong>模型系统</strong>：选择流程、路由机制</li>
+<li><strong>消息处理系统</strong>：处理流程、去重与合并</li>
+<li><strong>认证与授权系统</strong>：认证流程、授权流程</li>
+<li><strong>监控与日志系统</strong>：日志收集、指标收集</li>
+<li><strong>部署架构</strong>：容器化部署、云原生部署</li>
+</ol>
+<p>这些流程图与前面的架构、数据流、核心组件等流程图一起，构成了完整的 DeerFlow 项目文档体系。</p>
+      <div id="page-nav"></div>
+    </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose',
+    flowchart: { curve: 'stepAfter', htmlLabels: true, nodeSpacing: 55, rankSpacing: 65, useMaxWidth: true },
+    themeVariables: { darkMode: true, background: '#0d1117', primaryColor: '#1f2937',
+      primaryTextColor: '#e6edf3', primaryBorderColor: '#58a6ff', lineColor: '#9aa4b2',
+      secondaryColor: '#161b22', tertiaryColor: '#1a2029', textColor: '#e6edf3' } });
+  const renderAll = () => mermaid.run({ querySelector: 'pre.mermaid' })
+    .catch(e => console.error('mermaid render error:', e));
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderAll);
+  } else {
+    renderAll();
+  }
+</script>
+</body>
+</html>

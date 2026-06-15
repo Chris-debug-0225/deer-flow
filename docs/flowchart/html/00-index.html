@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>流程图总索引 · DeerFlow 流程图</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+<div class="toc"><div class="toc-title">📖 本页目录</div><ul><li class=""><a href="#文档概览">📋 文档概览</a></li><li class=""><a href="#文档详细目录">📚 文档详细目录</a></li><li class="toc-sub"><a href="#1-系统架构文档-01-architecture-md">1. [系统架构文档](./01-architecture.md)</a></li><li class="toc-sub"><a href="#2-数据流文档-02-data-flow-md">2. [数据流文档](./02-data-flow.md)</a></li><li class="toc-sub"><a href="#3-lead-agent-调用链文档-03-lead-agent-calls-md">3. [Lead Agent 调用链文档](./03-lead-agent-calls.md)</a></li><li class="toc-sub"><a href="#4-子代理执行文档-04-subagent-execution-md">4. [子代理执行文档](./04-subagent-execution.md)</a></li><li class="toc-sub"><a href="#5-sandbox-执行文档-05-sandbox-execution-md">5. [Sandbox 执行文档](./05-sandbox-execution.md)</a></li><li class="toc-sub"><a href="#6-记忆系统文档-06-memory-system-md">6. [记忆系统文档](./06-memory-system.md)</a></li><li class="toc-sub"><a href="#7-前端架构文档-上-07-frontend-architecture-md">7. [前端架构文档（上）](./07-frontend-architecture.md)</a></li><li class="toc-sub"><a href="#8-前端架构文档-下-08-frontend-architecture-md">8. [前端架构文档（下）](./08-frontend-architecture.md)</a></li><li class="toc-sub"><a href="#9-配置与技能工具文档-09-config-skills-tools-md">9. [配置与技能工具文档](./09-config-skills-tools.md)</a></li><li class="toc-sub"><a href="#10-高级特性文档-10-advanced-features-md">10. [高级特性文档](./10-advanced-features.md)</a></li><li class=""><a href="#学习路径建议">🎯 学习路径建议</a></li><li class="toc-sub"><a href="#初学者路径">初学者路径</a></li><li class="toc-sub"><a href="#进阶学习者路径">进阶学习者路径</a></li><li class="toc-sub"><a href="#前端开发者路径">前端开发者路径</a></li><li class="toc-sub"><a href="#系统管理员路径">系统管理员路径</a></li><li class=""><a href="#快速查找指南">🔍 快速查找指南</a></li><li class="toc-sub"><a href="#想了解架构设计">想了解架构设计？</a></li><li class="toc-sub"><a href="#想了解数据如何处理">想了解数据如何处理？</a></li><li class="toc-sub"><a href="#想了解-lead-agent-如何工作">想了解 Lead Agent 如何工作？</a></li><li class="toc-sub"><a href="#想了解子代理机制">想了解子代理机制？</a></li><li class="toc-sub"><a href="#想了解代码如何执行">想了解代码如何执行？</a></li><li class="toc-sub"><a href="#想了解记忆如何工作">想了解记忆如何工作？</a></li><li class="toc-sub"><a href="#想了解前端如何构建">想了解前端如何构建？</a></li><li class="toc-sub"><a href="#想了解配置和部署">想了解配置和部署？</a></li><li class="toc-sub"><a href="#想了解高级特性">想了解高级特性？</a></li><li class=""><a href="#使用说明">🛠️ 使用说明</a></li><li class="toc-sub"><a href="#查看-mermaid-图表">查看 Mermaid 图表</a></li><li class="toc-sub"><a href="#编辑-mermaid-图表">编辑 Mermaid 图表</a></li><li class="toc-sub"><a href="#添加新图表">添加新图表</a></li><li class=""><a href="#图表类型说明">📊 图表类型说明</a></li><li class=""><a href="#版本历史">🔄 版本历史</a></li><li class="toc-sub"><a href="#v1-1-2026-06-15">v1.1 (2026-06-15)</a></li><li class="toc-sub"><a href="#v1-0-2026-06-15">v1.0 (2026-06-15)</a></li><li class=""><a href="#贡献指南">📝 贡献指南</a></li><li class=""><a href="#相关资源">🎓 相关资源</a></li><li class=""><a href="#联系方式">📧 联系方式</a></li></ul></div>
+<div class="page-head"><span class="page-num">00</span><div class="page-stats"><span class="ps-item"><b>0</b> Mermaid 图</span><span class="ps-dot">·</span><span class="ps-item"><b>39</b> 章节</span></div></div><h1 id="deerflow-完整流程图索引">DeerFlow 完整流程图索引</h1>
+<p>本文档是 DeerFlow 项目完整流程图索引，所有流程图均使用 Mermaid 格式编写，便于在支持 Mermaid 的 Markdown 查看器中渲染。</p>
+<hr/>
+<h2 id="文档概览">📋 文档概览</h2>
+<p>DeerFlow 流程图文档体系共包含 <strong>10 个主要文档</strong>，涵盖项目的各个方面：</p>
+<div class="table-wrap"><table><thead><tr><th>编号</th><th>文档名称</th><th>内容</th><th>图表数量</th></tr></thead><tbody><tr><td>01</td><td>系统架构</td><td>整体架构、组件关系、技术栈</td><td>6</td></tr><tr><td>02</td><td>数据流</td><td>请求、响应、状态、文件数据流</td><td>7</td></tr><tr><td>03</td><td>Lead Agent 调用链</td><td>中间件链、工具调用、执行流程</td><td>8</td></tr><tr><td>04</td><td>子代理执行</td><td>生命周期、并发控制、结果处理</td><td>10</td></tr><tr><td>05</td><td>Sandbox 执行</td><td>沙盒系统、文件系统、执行流程</td><td>8</td></tr><tr><td>06</td><td>记忆系统</td><td>记忆提取、检索、更新机制</td><td>8</td></tr><tr><td>07</td><td>前端架构</td><td>页面路由、组件结构、状态管理</td><td>15</td></tr><tr><td>08</td><td>前端架构补充</td><td>输入框、消息处理、命令面板</td><td>15</td></tr><tr><td>09</td><td>配置与技能工具</td><td>配置系统、Skills、工具、上传、频道等</td><td>20+</td></tr><tr><td>10</td><td>高级特性</td><td>MCP、流式处理、并发、安全、CI/CD 等</td><td>20+</td></tr></tbody></table></div>
+<p><strong>总计：约 117 个 Mermaid 图表</strong></p>
+<hr/>
+<h2 id="文档详细目录">📚 文档详细目录</h2>
+<h3 id="1-系统架构文档-01-architecture-md">1. <a href="01-architecture.html">系统架构文档</a></h3>
+<p><strong>核心内容</strong>：</p>
+<ul>
+<li>整体系统架构图</li>
+<li>请求处理流程</li>
+<li>组件依赖关系</li>
+<li>数据流架构</li>
+<li>中间件链执行顺序</li>
+<li>配置系统架构</li>
+</ul>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>快速了解项目整体架构</li>
+<li>理解各组件之间的关系</li>
+<li>掌握系统的数据流向</li>
+</ul>
+<p><strong>推荐阅读顺序</strong>：⭐⭐⭐⭐⭐（必读）</p>
+<hr/>
+<h3 id="2-数据流文档-02-data-flow-md">2. <a href="02-data-flow.html">数据流文档</a></h3>
+<p><strong>核心内容</strong>：</p>
+<ul>
+<li>请求数据流</li>
+<li>流式响应数据流</li>
+<li>状态数据流</li>
+<li>工具调用数据流</li>
+<li>记忆系统数据流</li>
+<li>Sandbox 文件系统数据流</li>
+<li>子代理执行数据流</li>
+</ul>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>深入理解数据在系统中的流动</li>
+<li>追踪特定数据的处理路径</li>
+<li>理解异步操作的流程</li>
+</ul>
+<p><strong>推荐阅读顺序</strong>：⭐⭐⭐⭐⭐（必读）</p>
+<hr/>
+<h3 id="3-lead-agent-调用链文档-03-lead-agent-calls-md">3. <a href="03-lead-agent-calls.html">Lead Agent 调用链文档</a></h3>
+<p><strong>核心内容</strong>：</p>
+<ul>
+<li>Lead Agent 工厂构建</li>
+<li>请求处理流程</li>
+<li>中间件链构建</li>
+<li>条件中间件启用</li>
+<li>LLM 节点处理</li>
+<li>工具调用流程</li>
+<li>子代理工具调用</li>
+<li>错误处理流程</li>
+</ul>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>理解 Lead Agent 的核心逻辑</li>
+<li>掌握中间件链的执行机制</li>
+<li>了解工具调用的完整流程</li>
+</ul>
+<p><strong>推荐阅读顺序</strong>：⭐⭐⭐⭐⭐（必读）</p>
+<hr/>
+<h3 id="4-子代理执行文档-04-subagent-execution-md">4. <a href="04-subagent-execution.html">子代理执行文档</a></h3>
+<p><strong>核心内容</strong>：</p>
+<ul>
+<li>子代理生命周期</li>
+<li>子代理创建流程</li>
+<li>执行引擎架构</li>
+<li>状态流转机制</li>
+<li>并发控制策略</li>
+<li>结果轮询机制</li>
+<li>嵌套子代理调用</li>
+<li>超时控制机制</li>
+<li>清理机制</li>
+<li>完整时序图</li>
+</ul>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>理解子代理的完整生命周期</li>
+<li>掌握并发控制机制</li>
+<li>了解异步任务的处理方式</li>
+</ul>
+<p><strong>推荐阅读顺序</strong>：⭐⭐⭐⭐（重要）</p>
+<hr/>
+<h3 id="5-sandbox-执行文档-05-sandbox-execution-md">5. <a href="05-sandbox-execution.html">Sandbox 执行文档</a></h3>
+<p><strong>核心内容</strong>：</p>
+<ul>
+<li>Sandbox 生命周期</li>
+<li>中间件调用流程</li>
+<li>虚拟文件系统</li>
+<li>执行时序图</li>
+<li>Docker 容器管理</li>
+<li>本地执行环境</li>
+<li>文件系统操作</li>
+<li>资源管理</li>
+</ul>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>理解 Sandbox 沙盒机制</li>
+<li>掌握虚拟文件系统</li>
+<li>了解代码执行的安全隔离</li>
+</ul>
+<p><strong>推荐阅读顺序</strong>：⭐⭐⭐⭐（重要）</p>
+<hr/>
+<h3 id="6-记忆系统文档-06-memory-system-md">6. <a href="06-memory-system.html">记忆系统文档</a></h3>
+<p><strong>核心内容</strong>：</p>
+<ul>
+<li>记忆系统架构</li>
+<li>记忆提取时序</li>
+<li>记忆检索注入</li>
+<li>记忆去重合并</li>
+<li>记忆更新清理</li>
+<li>记忆数据结构</li>
+<li>记忆提示图</li>
+<li>记忆评分机制</li>
+</ul>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>理解跨会话记忆机制</li>
+<li>掌握记忆的管理策略</li>
+<li>了解上下文保留的实现</li>
+</ul>
+<p><strong>推荐阅读顺序</strong>：⭐⭐⭐⭐（重要）</p>
+<hr/>
+<h3 id="7-前端架构文档-上-07-frontend-architecture-md">7. <a href="07-frontend-architecture.html">前端架构文档（上）</a></h3>
+<p><strong>核心内容</strong>：</p>
+<ul>
+<li>前端整体架构</li>
+<li>页面路由结构</li>
+<li>工作区布局结构</li>
+<li>组件层级关系</li>
+<li>API 通信架构</li>
+</ul>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>了解前端技术栈</li>
+<li>理解页面路由结构</li>
+<li>掌握组件层级关系</li>
+</ul>
+<p><strong>推荐阅读顺序</strong>：⭐⭐⭐（重要）</p>
+<hr/>
+<h3 id="8-前端架构文档-下-08-frontend-architecture-md">8. <a href="08-frontend-architecture.html">前端架构文档（下）</a></h3>
+<p><strong>核心内容</strong>：</p>
+<ul>
+<li>输入框组件交互流程</li>
+<li>技能建议系统</li>
+<li>状态管理架构</li>
+<li>消息去重与合并机制</li>
+<li>流式响应处理流程</li>
+<li>消息发送时序</li>
+<li>线程列表管理</li>
+<li>命令面板系统</li>
+<li>消息分组与渲染</li>
+<li>错误处理流程</li>
+</ul>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>深入理解前端核心组件</li>
+<li>掌握状态管理机制</li>
+<li>了解用户交互流程</li>
+</ul>
+<p><strong>推荐阅读顺序</strong>：⭐⭐⭐⭐（重要）</p>
+<hr/>
+<h3 id="9-配置与技能工具文档-09-config-skills-tools-md">9. <a href="09-config-skills-tools.html">配置与技能工具文档</a></h3>
+<p><strong>核心内容</strong>：</p>
+<ul>
+<li>配置系统架构</li>
+<li>配置加载流程</li>
+<li>配置热重载</li>
+<li>Skills 加载机制</li>
+<li>Skill 发现与匹配</li>
+<li>Skill 生命周期</li>
+<li>Skill 注册与发现</li>
+<li>工具注册与发现</li>
+<li>工具调用流程</li>
+<li>工具错误处理</li>
+<li>文件上传流程</li>
+<li>虚拟文件系统</li>
+<li>频道创建与管理</li>
+<li>模型选择流程</li>
+<li>模型路由</li>
+<li>消息处理流程</li>
+<li>消息去重与合并</li>
+<li>认证流程</li>
+<li>授权流程</li>
+<li>日志收集流程</li>
+<li>监控指标收集</li>
+<li>容器化部署</li>
+<li>云原生部署</li>
+</ul>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>了解配置系统</li>
+<li>理解 Skills 和工具系统</li>
+<li>掌握部署架构</li>
+</ul>
+<p><strong>推荐阅读顺序</strong>：⭐⭐⭐（补充）</p>
+<hr/>
+<h3 id="10-高级特性文档-10-advanced-features-md">10. <a href="10-advanced-features.html">高级特性文档</a></h3>
+<p><strong>核心内容</strong>：</p>
+<ul>
+<li>MCP 连接流程</li>
+<li>MCP 资源管理</li>
+<li>MCP 工具调用</li>
+<li>流式响应架构</li>
+<li>SSE 流式传输</li>
+<li>流式状态管理</li>
+<li>并发请求控制</li>
+<li>子代理并发控制</li>
+<li>线程池管理</li>
+<li>缓存策略</li>
+<li>查询优化</li>
+<li>批量处理</li>
+<li>输入验证</li>
+<li>输出过滤</li>
+<li>访问控制</li>
+<li>语言切换流程</li>
+<li>资源加载策略</li>
+<li>主题切换流程</li>
+<li>主题配置结构</li>
+<li>插件加载流程</li>
+<li>插件钩子系统</li>
+<li>测试层级</li>
+<li>测试执行流程</li>
+<li>持续集成流程</li>
+<li>持续部署流程</li>
+</ul>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>了解高级特性</li>
+<li>掌握复杂系统的设计</li>
+<li>理解 DevOps 流程</li>
+</ul>
+<p><strong>推荐阅读顺序</strong>：⭐⭐（进阶）</p>
+<hr/>
+<h2 id="学习路径建议">🎯 学习路径建议</h2>
+<h3 id="初学者路径">初学者路径</h3>
+<ol>
+<li><strong>第一步</strong>：阅读 <a href="01-architecture.html">01-系统架构</a></li>
+</ol>
+<ul>
+<li>了解项目整体架构</li>
+<li>理解核心组件</li>
+</ul>
+<ol>
+<li><strong>第二步</strong>：阅读 <a href="02-data-flow.html">02-数据流</a></li>
+</ol>
+<ul>
+<li>理解数据流动</li>
+<li>掌握处理流程</li>
+</ul>
+<ol>
+<li><strong>第三步</strong>：阅读 <a href="03-lead-agent-calls.html">03-Lead Agent 调用链</a></li>
+</ol>
+<ul>
+<li>深入核心逻辑</li>
+<li>理解中间件机制</li>
+</ul>
+<h3 id="进阶学习者路径">进阶学习者路径</h3>
+<ol>
+<li><strong>第四步</strong>：阅读 <a href="04-subagent-execution.html">04-子代理执行</a></li>
+</ol>
+<ul>
+<li>理解异步任务</li>
+<li>掌握并发控制</li>
+</ul>
+<ol>
+<li><strong>第五步</strong>：阅读 <a href="05-sandbox-execution.html">05-Sandbox 执行</a></li>
+</ol>
+<ul>
+<li>理解沙盒机制</li>
+<li>掌握安全隔离</li>
+</ul>
+<ol>
+<li><strong>第六步</strong>：阅读 <a href="06-memory-system.html">06-记忆系统</a></li>
+</ol>
+<ul>
+<li>理解记忆机制</li>
+<li>掌握上下文管理</li>
+</ul>
+<h3 id="前端开发者路径">前端开发者路径</h3>
+<ol>
+<li><strong>第七步</strong>：阅读 <a href="07-frontend-architecture.html">07-前端架构（上）</a></li>
+</ol>
+<ul>
+<li>了解前端架构</li>
+<li>理解路由结构</li>
+</ul>
+<ol>
+<li><strong>第八步</strong>：阅读 <a href="08-frontend-architecture.html">08-前端架构（下）</a></li>
+</ol>
+<ul>
+<li>深入前端组件</li>
+<li>掌握状态管理</li>
+</ul>
+<h3 id="系统管理员路径">系统管理员路径</h3>
+<ol>
+<li><strong>第九步</strong>：阅读 <a href="09-config-skills-tools.html">09-配置与技能工具</a></li>
+</ol>
+<ul>
+<li>了解配置系统</li>
+<li>掌握部署架构</li>
+</ul>
+<ol>
+<li><strong>第十步</strong>：阅读 <a href="10-advanced-features.html">10-高级特性</a></li>
+</ol>
+<ul>
+<li>了解高级特性</li>
+<li>掌握 DevOps 流程</li>
+</ul>
+<hr/>
+<h2 id="快速查找指南">🔍 快速查找指南</h2>
+<h3 id="想了解架构设计">想了解架构设计？</h3>
+<ul>
+<li>查看 <a href="01-architecture.html">01-系统架构</a></li>
+</ul>
+<h3 id="想了解数据如何处理">想了解数据如何处理？</h3>
+<ul>
+<li>查看 <a href="02-data-flow.html">02-数据流</a></li>
+</ul>
+<h3 id="想了解-lead-agent-如何工作">想了解 Lead Agent 如何工作？</h3>
+<ul>
+<li>查看 <a href="03-lead-agent-calls.html">03-Lead Agent 调用链</a></li>
+</ul>
+<h3 id="想了解子代理机制">想了解子代理机制？</h3>
+<ul>
+<li>查看 <a href="04-subagent-execution.html">04-子代理执行</a></li>
+</ul>
+<h3 id="想了解代码如何执行">想了解代码如何执行？</h3>
+<ul>
+<li>查看 <a href="05-sandbox-execution.html">05-Sandbox 执行</a></li>
+</ul>
+<h3 id="想了解记忆如何工作">想了解记忆如何工作？</h3>
+<ul>
+<li>查看 <a href="06-memory-system.html">06-记忆系统</a></li>
+</ul>
+<h3 id="想了解前端如何构建">想了解前端如何构建？</h3>
+<ul>
+<li>查看 <a href="07-frontend-architecture.html">07-前端架构（上）</a> 和 <a href="08-frontend-architecture.html">08-前端架构（下）</a></li>
+</ul>
+<h3 id="想了解配置和部署">想了解配置和部署？</h3>
+<ul>
+<li>查看 <a href="09-config-skills-tools.html">09-配置与技能工具</a></li>
+</ul>
+<h3 id="想了解高级特性">想了解高级特性？</h3>
+<ul>
+<li>查看 <a href="10-advanced-features.html">10-高级特性</a></li>
+</ul>
+<hr/>
+<h2 id="使用说明">🛠️ 使用说明</h2>
+<h3 id="查看-mermaid-图表">查看 Mermaid 图表</h3>
+<p>所有图表均使用 Mermaid 语法编写，可以通过以下方式查看：</p>
+<ol>
+<li><strong>GitHub/GitLab</strong>：自动渲染 Mermaid 图表</li>
+<li><strong>VS Code</strong>：安装 Mermaid 插件预览</li>
+<li><strong>Markdown 编辑器</strong>：大多数现代编辑器支持 Mermaid</li>
+<li><strong>在线渲染器</strong>：使用 <a href="https://mermaid.live/">Mermaid Live Editor</a></li>
+</ol>
+<h3 id="编辑-mermaid-图表">编辑 Mermaid 图表</h3>
+<ol>
+<li>使用文本编辑器打开 <code>.md</code> 文件</li>
+<li>找到 <code> </code>`<code>mermaid </code> 标记的代码块</li>
+<li>编辑图表定义</li>
+<li>保存并预览</li>
+</ol>
+<h3 id="添加新图表">添加新图表</h3>
+<p>在现有文档中添加新图表：</p>
+<ol>
+<li>打开目标文档</li>
+<li>找到合适的位置</li>
+<li>添加新的 mermaid 代码块</li>
+<li>更新文档索引</li>
+</ol>
+<hr/>
+<h2 id="图表类型说明">📊 图表类型说明</h2>
+<p>本文档集中的 Mermaid 图表包括以下类型：</p>
+<ul>
+<li><strong>graph</strong>：流程图、架构图</li>
+<li><strong>sequenceDiagram</strong>：时序图</li>
+<li><strong>stateDiagram-v2</strong>：状态图</li>
+<li><strong>erDiagram</strong>：ER 图（数据模型）</li>
+</ul>
+<hr/>
+<h2 id="版本历史">🔄 版本历史</h2>
+<h3 id="v1-1-2026-06-15">v1.1 (2026-06-15)</h3>
+<ul>
+<li>基于代码核对修正多处事实性偏差</li>
+<li>修正内容：API 端点、流式协议（SSE 而非 WebSocket）、中间件完整清单、子代理状态机、超时与轮询参数、删除虚构组件（Redis/速率限制/嵌套子代理等）</li>
+<li>注：本项目仍处于活跃开发阶段，部分能力（如 PostgreSQL 生产后端、Redis Stream Bridge）为可配置项而非默认实现，请以代码为准</li>
+</ul>
+<h3 id="v1-0-2026-06-15">v1.0 (2026-06-15)</h3>
+<ul>
+<li>初始版本</li>
+<li>包含 10 个内容文档（01~10）+ 本索引（00），约 117 个图表</li>
+<li>覆盖项目完整架构和实现细节</li>
+</ul>
+<hr/>
+<h2 id="贡献指南">📝 贡献指南</h2>
+<p>欢迎贡献新的流程图或改进现有图表：</p>
+<ol>
+<li>保持图表简洁清晰</li>
+<li>使用一致的样式和颜色</li>
+<li>添加详细的图例说明</li>
+<li>确保图表准确反映代码实现</li>
+<li>更新本索引文档</li>
+</ol>
+<hr/>
+<h2 id="相关资源">🎓 相关资源</h2>
+<ul>
+<li><a href="../README.md">DeerFlow 官方文档</a></li>
+<li><a href="../../backend/README.md">后端文档</a></li>
+<li><a href="../../frontend/README.md">前端文档</a></li>
+<li><a href="https://github.com/bytedance/deer-flow">代码仓库</a></li>
+</ul>
+<hr/>
+<h2 id="联系方式">📧 联系方式</h2>
+<p>如有问题或建议，请：</p>
+<ul>
+<li>提交 Issue</li>
+<li>发起 Pull Request</li>
+<li>联系维护团队</li>
+</ul>
+<hr/>
+<p><strong>最后更新</strong>：2026-06-15 <strong>文档维护者</strong>：DeerFlow Team <strong>许可证</strong>：MIT</p>
+      <div id="page-nav"></div>
+    </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose',
+    flowchart: { curve: 'stepAfter', htmlLabels: true, nodeSpacing: 55, rankSpacing: 65, useMaxWidth: true },
+    themeVariables: { darkMode: true, background: '#0d1117', primaryColor: '#1f2937',
+      primaryTextColor: '#e6edf3', primaryBorderColor: '#58a6ff', lineColor: '#9aa4b2',
+      secondaryColor: '#161b22', tertiaryColor: '#1a2029', textColor: '#e6edf3' } });
+  const renderAll = () => mermaid.run({ querySelector: 'pre.mermaid' })
+    .catch(e => console.error('mermaid render error:', e));
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderAll);
+  } else {
+    renderAll();
+  }
+</script>
+</body>
+</html>

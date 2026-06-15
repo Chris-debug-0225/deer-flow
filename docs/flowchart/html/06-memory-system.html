@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>记忆系统 · DeerFlow 流程图</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+<div class="toc"><div class="toc-title">📖 本页目录</div><ul><li class=""><a href="#1-memory-系统架构图">1. Memory 系统架构图</a></li><li class=""><a href="#2-记忆提取流程时序图">2. 记忆提取流程时序图</a></li><li class=""><a href="#3-记忆检索与注入图">3. 记忆检索与注入图</a></li><li class=""><a href="#4-记忆去重与合并图">4. 记忆去重与合并图</a></li><li class=""><a href="#5-记忆更新与清理图">5. 记忆更新与清理图</a></li><li class=""><a href="#6-记忆数据结构图">6. 记忆数据结构图</a></li><li class=""><a href="#7-记忆提取-llm-提示图">7. 记忆提取 LLM 提示图</a></li><li class=""><a href="#8-记忆检索评分图">8. 记忆检索评分图</a></li><li class=""><a href="#图表说明">图表说明</a></li><li class="toc-sub"><a href="#记忆生命周期">记忆生命周期</a></li><li class="toc-sub"><a href="#记忆提取">记忆提取</a></li><li class="toc-sub"><a href="#检索机制">检索机制</a></li><li class="toc-sub"><a href="#去重策略">去重策略</a></li><li class="toc-sub"><a href="#配置参数">配置参数</a></li><li class="toc-sub"><a href="#数据结构">数据结构</a></li><li class="toc-sub"><a href="#使用场景">使用场景</a></li><li class="toc-sub"><a href="#性能优化">性能优化</a></li></ul></div>
+<div class="page-head"><span class="page-num">06</span><div class="page-stats"><span class="ps-item"><b>8</b> Mermaid 图</span><span class="ps-dot">·</span><span class="ps-item"><b>18</b> 章节</span></div></div><h1 id="deerflow-memory-系统流程图">DeerFlow Memory 系统流程图</h1>
+<p>本文档包含 Memory 记忆系统的完整 Mermaid 流程图，展示记忆的提取、存储、检索和更新机制。</p>
+<h2 id="1-memory-系统架构图">1. Memory 系统架构图</h2>
+<p>展示 Memory 系统的整体架构和组件关系。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #1</div><pre class="mermaid">graph TB
+    subgraph "输入层"
+        Conversation[对话完成] --&gt; MessageFilter[消息过滤器]
+        MessageFilter --&gt; UserMsg[用户消息]
+        MessageFilter --&gt; AIResp[AI 响应]
+    end
+    
+    subgraph "记忆队列"
+        UserMsg --&gt; MemoryQueue[记忆队列]
+        AIResp --&gt; MemoryQueue
+        
+        MemoryQueue --&gt; QueueProcessor[队列处理器]
+        QueueProcessor --&gt; BatchExtract[批量提取]
+    end
+    
+    subgraph "记忆提取"
+        BatchExtract --&gt; LLMExtract[LLM 提取器]
+        LLMExtract --&gt; ExtractSummary[生成摘要]
+        ExtractSummary --&gt; ExtractKeyInfo[提取关键信息]
+        ExtractKeyInfo --&gt; ExtractEntities[提取实体]
+        ExtractKeyInfo --&gt; ExtractActions[提取行动项]
+    end
+    
+    subgraph "记忆处理"
+        ExtractSummary --&gt; MemoryObj[创建记忆对象]
+        ExtractKeyInfo --&gt; MemoryObj
+        ExtractEntities --&gt; MemoryObj
+        ExtractActions --&gt; MemoryObj
+        
+        MemoryObj --&gt; DedupCheck[去重检查]
+        DedupCheck --&gt; Similarity[相似度计算]
+        Similarity --&gt; MergeDecision{需要合并？}
+    end
+    
+    subgraph "记忆存储"
+        MergeDecision --&gt;|是 | MergeMem[合并记忆]
+        MergeDecision --&gt;|否 | DirectStore[直接存储]
+        
+        MergeMem --&gt; StoreMem[存储到数据库]
+        DirectStore --&gt; StoreMem
+        
+        StoreMem --&gt; UpdateIndex[更新索引]
+        UpdateIndex --&gt; CreateEmbedding[创建嵌入向量]
+        CreateEmbedding --&gt; VectorStore[向量存储]
+    end
+    
+    subgraph "记忆检索"
+        NewQuery[新查询] --&gt; RetrieveQuery[检索查询]
+        RetrieveQuery --&gt; VectorSearch[向量搜索]
+        VectorSearch --&gt; TopK[Top-K 结果]
+        TopK --&gt; RankResult[排序结果]
+        RankResult --&gt; SelectMem[选择相关记忆]
+    end
+    
+    subgraph "上下文注入"
+        SelectMem --&gt; InjectCtx[注入上下文]
+        InjectCtx --&gt; BuildPrompt[构建提示词]
+        BuildPrompt --&gt; LLMCall[LLM 调用]
+    end
+    
+    subgraph "记忆更新"
+        StoreMem --&gt; PeriodicUpdate[定期更新]
+        PeriodicUpdate --&gt; MergeSimilar[合并相似记忆]
+        MergeSimilar --&gt; PruneOld[清理过期记忆]
+        PruneOld --&gt; StoreMem
+    end
+    
+    style Conversation fill:#e1f5ff
+    style LLMCall fill:#fff4e1
+    style StoreMem fill:#e1ffe1
+    style VectorStore fill:#f0e1ff</pre></div>
+<h2 id="2-记忆提取流程时序图">2. 记忆提取流程时序图</h2>
+<p>展示记忆从对话到存储的完整时序。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #2</div><pre class="mermaid">sequenceDiagram
+    participant Thread as 线程
+    participant Queue as 记忆队列
+    participant Extractor as 提取器
+    participant LLM as LLM API
+    participant Dedup as 去重模块
+    participant Storage as 存储
+    
+    Thread-&gt;&gt;Queue: 添加消息到队列
+    
+    loop 队列处理
+        Queue-&gt;&gt;Extractor: 获取批次
+        
+        alt 有足够消息
+            Extractor-&gt;&gt;LLM: 请求记忆提取
+            LLM--&gt;&gt;Extractor: 返回提取结果
+            
+            Extractor-&gt;&gt;Extractor: 解析提取结果
+            Extractor-&gt;&gt;Dedup: 检查重复
+            
+            alt 新记忆
+                Dedup--&gt;&gt;Extractor: 唯一
+                Extractor-&gt;&gt;Storage: 保存记忆
+                Storage--&gt;&gt;Extractor: 保存成功
+            else 相似记忆
+                Dedup--&gt;&gt;Extractor: 相似 ID
+                Extractor-&gt;&gt;Storage: 更新记忆
+                Storage--&gt;&gt;Extractor: 更新成功
+            end
+            
+            Extractor-&gt;&gt;Queue: 标记处理完成
+        else 消息不足
+            Queue-&gt;&gt;Queue: 等待更多消息
+        end
+    end
+    
+    Thread-&gt;&gt;Thread: 继续对话</pre></div>
+<h2 id="3-记忆检索与注入图">3. 记忆检索与注入图</h2>
+<p>展示记忆检索和注入到 LLM 上下文的流程。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #3</div><pre class="mermaid">graph TB
+    subgraph "查询准备"
+        Start[新线程开始] --&gt; GetContext[获取上下文]
+        GetContext --&gt; GetThreadInfo[获取线程信息]
+        GetThreadInfo --&gt; GetConfig[获取记忆配置]
+        GetConfig --&gt; BuildQuery[构建检索查询]
+    end
+    
+    subgraph "向量检索"
+        BuildQuery --&gt; CreateEmbedding[创建查询嵌入]
+        CreateEmbedding --&gt; VectorSearch[向量相似度搜索]
+        VectorSearch --&gt; SimilarityScore[计算相似度]
+        SimilarityScore --&gt; FilterMem[过滤低分记忆]
+    end
+    
+    subgraph "结果排序"
+        FilterMem --&gt; RankByRecency[按时间排序]
+        RankByRecency --&gt; RankByRelevance[按相关性排序]
+        RankByRelevance --&gt; RankByImportance[按重要性排序]
+        RankByImportance --&gt; FinalRank[最终排序]
+    end
+    
+    subgraph "记忆选择"
+        FinalRank --&gt; SelectTopK[选择 Top-K]
+        SelectTopK --&gt; CheckLimit{超过限制？}
+        CheckLimit --&gt;|是 | TrimMem[裁剪记忆]
+        CheckLimit --&gt;|否 | UseMem[使用记忆]
+        
+        TrimMem --&gt; UseMem
+    end
+    
+    subgraph "上下文构建"
+        UseMem --&gt; FormatMem[格式化记忆]
+        FormatMem --&gt; AddMetadata[添加元数据]
+        AddMetadata --&gt; BuildPromptSection[构建提示部分]
+        BuildPromptSection --&gt; InjectCtx[注入上下文]
+    end
+    
+    subgraph "LLM 调用"
+        InjectCtx --&gt; CombinePrompt[组合提示词]
+        CombinePrompt --&gt; AddSystem[添加系统提示]
+        AddSystem --&gt; AddHistory[添加对话历史]
+        AddHistory --&gt; LLMCall[调用 LLM]
+        LLMCall --&gt; GenerateResp[生成响应]
+    end
+    
+    style Start fill:#e1f5ff
+    style GenerateResp fill:#e1ffe1
+    style VectorSearch fill:#fff4e1
+    style FinalRank fill:#f0e1ff
+    style LLMCall fill:#fff4e1</pre></div>
+<h2 id="4-记忆去重与合并图">4. 记忆去重与合并图</h2>
+<p>展示记忆去重和相似记忆合并的逻辑。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #4</div><pre class="mermaid">graph TB
+    subgraph "新记忆输入"
+        Start[新记忆对象] --&gt; Normalize[标准化处理]
+        Normalize --&gt; ExtractFeatures[提取特征]
+        ExtractFeatures --&gt; GetContent[内容特征]
+        ExtractFeatures --&gt; GetTime[时间特征]
+        ExtractFeatures --&gt; GetEntities[实体特征]
+    end
+    
+    subgraph "相似度计算"
+        GetContent --&gt; ContentSim[内容相似度]
+        GetTime --&gt; TimeSim[时间相似度]
+        GetEntities --&gt; EntitySim[实体相似度]
+        
+        ContentSim --&gt; WeightSum[加权求和]
+        TimeSim --&gt; WeightSum
+        EntitySim --&gt; WeightSum
+        
+        WeightSum --&gt; FinalScore[最终相似度]
+    end
+    
+    subgraph "去重判断"
+        FinalScore --&gt; CheckThreshold{超过阈值？}
+        CheckThreshold --&gt;|是 | IsDuplicate[判定为重复]
+        CheckThreshold --&gt;|否 | IsUnique[判定为唯一]
+        
+        IsDuplicate --&gt; GetOriginal[获取原始记忆]
+        GetOriginal --&gt; MergeStrategy[选择合并策略]
+    end
+    
+    subgraph "合并策略"
+        MergeStrategy --&gt; TimeBased[基于时间]
+        MergeStrategy --&gt; ContentBased[基于内容]
+        MergeStrategy --&gt; Hybrid[混合策略]
+        
+        TimeBased --&gt; KeepRecent[保留最近的]
+        ContentBased --&gt; MergeContent[合并内容]
+        Hybrid --&gt; SmartMerge[智能合并]
+    end
+    
+    subgraph "合并执行"
+        KeepRecent --&gt; UpdateOriginal[更新原始记忆]
+        MergeContent --&gt; UpdateOriginal
+        SmartMerge --&gt; UpdateOriginal
+        
+        UpdateOriginal --&gt; RecalculateEmbedding[重新计算嵌入]
+        RecalculateEmbedding --&gt; UpdateStorage[更新存储]
+        UpdateStorage --&gt; Done[完成]
+    end
+    
+    subgraph "唯一记忆"
+        IsUnique --&gt; CreateNew[创建新记忆]
+        CreateNew --&gt; EmbedNew[创建嵌入向量]
+        EmbedNew --&gt; StoreNew[存储到数据库]
+        StoreNew --&gt; UpdateIndex[更新索引]
+        UpdateIndex --&gt; Done
+    end
+    
+    style Start fill:#e1f5ff
+    style Done fill:#e1ffe1
+    style WeightSum fill:#fff4e1
+    style SmartMerge fill:#f0e1ff
+    style UpdateStorage fill:#e1ffe1</pre></div>
+<h2 id="5-记忆更新与清理图">5. 记忆更新与清理图</h2>
+<p>展示记忆的定期更新和过期清理机制。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #5</div><pre class="mermaid">graph TB
+    subgraph "定期任务"
+        Start[定时触发] --&gt; CheckUpdate{更新检查？}
+        CheckUpdate --&gt;|是 | FindUpdateMem
+        CheckUpdate --&gt;|否 | CheckPrune
+    end
+    
+    subgraph "记忆更新"
+        FindUpdateMem[查找可更新记忆] --&gt; AnalyzeMem[分析记忆]
+        AnalyzeMem --&gt; CheckStaleness{过时？}
+        CheckStaleness --&gt;|是 | MarkUpdate
+        CheckStaleness --&gt;|否 | CheckPrune
+        
+        MarkUpdate[标记为待更新] --&gt; FindRelated[查找相关对话]
+        FindRelated --&gt; ReExtract[重新提取]
+        ReExtract --&gt; UpdateMem[更新记忆]
+        UpdateMem --&gt; RecalculateEmbedding[重新计算嵌入]
+        RecalculateEmbedding --&gt; StoreUpdate[更新存储]
+    end
+    
+    subgraph "记忆清理"
+        CheckPrune{清理检查？} --&gt;|是 | FindPruneMem
+        CheckPrune --&gt;|否 | Done[完成]
+        
+        FindPruneMem[查找可清理记忆] --&gt; CheckAge{年龄检查}
+        CheckAge --&gt;|过期 | MarkPrune
+        CheckAge --&gt;|未过期 | Done
+        
+        MarkPrune[标记为待删除] --&gt; CheckRef{有引用？}
+        CheckRef --&gt;|有 | KeepMem
+        CheckRef --&gt;|无 | DeleteMem[删除记忆]
+    end
+    
+    subgraph "删除执行"
+        DeleteMem --&gt; RemoveDB[从数据库删除]
+        RemoveDB --&gt; RemoveVector[从向量库删除]
+        RemoveVector --&gt; UpdateIndex[更新索引]
+        UpdateIndex --&gt; Done
+    end
+    
+    subgraph "合并执行"
+        KeepMem[保留记忆] --&gt; Done
+        StoreUpdate --&gt; Done
+    end
+    
+    style Start fill:#e1f5ff
+    style Done fill:#e1ffe1
+    style ReExtract fill:#fff4e1
+    style MarkPrune fill:#ffe1e1
+    style StoreUpdate fill:#e1ffe1</pre></div>
+<h2 id="6-记忆数据结构图">6. 记忆数据结构图</h2>
+<p>展示记忆对象的数据结构和字段定义。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #6</div><pre class="mermaid">classDiagram
+    class Memory {
+        +str id
+        +str thread_id
+        +str content
+        +str summary
+        +list entities
+        +list actions
+        +float importance
+        +datetime created_at
+        +datetime updated_at
+        +dict metadata
+        +vector embedding
+        +retrieve()
+        +update()
+        +delete()
+    }
+    
+    class MemoryQueueItem {
+        +str message_id
+        +str thread_id
+        +str role
+        +str content
+        +datetime added_at
+        +process()
+    }
+    
+    class MemoryRetrievalResult {
+        +list memories
+        +list scores
+        +int total_count
+        +dict metadata
+        +format_for_prompt()
+    }
+    
+    class MemoryConfig {
+        +int max_memories
+        +float similarity_threshold
+        +int retrieval_top_k
+        +bool enabled
+        +dict extraction_config
+        +validate()
+        +update()
+    }
+    
+    Memory --&gt; MemoryQueueItem : 从队列创建
+    Memory --&gt; MemoryRetrievalResult : 检索返回
+    MemoryConfig ..&gt; Memory : 配置
+    
+    note for Memory "核心记忆对象&lt;br/&gt;包含所有记忆数据"
+    note for MemoryQueueItem "队列中的临时项&lt;br/&gt;等待提取"
+    note for MemoryRetrievalResult "检索结果包装&lt;br/&gt;用于上下文注入"
+    note for MemoryConfig "记忆系统配置&lt;br/&gt;控制行为"</pre></div>
+<h2 id="7-记忆提取-llm-提示图">7. 记忆提取 LLM 提示图</h2>
+<p>展示用于记忆提取的 LLM 提示结构。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #7</div><pre class="mermaid">graph TB
+    subgraph "系统提示"
+        Start[系统提示] --&gt; DefineRole[定义角色]
+        DefineRole --&gt; ExplainTask[解释任务]
+        ExplainTask --&gt; OutputFormat[定义输出格式]
+    end
+    
+    subgraph "用户消息"
+        OutputFormat --&gt; AddContext[添加上下文]
+        AddContext --&gt; AddConversation[添加对话片段]
+        AddConversation --&gt; AddExamples[添加示例]
+    end
+    
+    subgraph "对话分析"
+        AddExamples --&gt; AnalyzeContent[分析内容]
+        AnalyzeContent --&gt; IdentifyKey[识别关键点]
+        IdentifyKey --&gt; ExtractInfo[提取信息]
+    end
+    
+    subgraph "提取目标"
+        ExtractInfo --&gt; Summary[对话摘要]
+        ExtractInfo --&gt; KeyPoints[关键要点]
+        ExtractInfo --&gt; Entities[实体识别]
+        ExtractInfo --&gt; Actions[行动项]
+        ExtractInfo --&gt; Preferences[用户偏好]
+        ExtractInfo --&gt; Context[上下文信息]
+    end
+    
+    subgraph "输出格式"
+        Summary --&gt; FormatJSON[JSON 格式]
+        KeyPoints --&gt; FormatJSON
+        Entities --&gt; FormatJSON
+        Actions --&gt; FormatJSON
+        Preferences --&gt; FormatJSON
+        Context --&gt; FormatJSON
+        
+        FormatJSON --&gt; ValidateJSON[验证 JSON]
+        ValidateJSON --&gt; ReturnResult[返回结果]
+    end
+    
+    subgraph "质量检查"
+        ReturnResult --&gt; CheckQuality[质量检查]
+        CheckQuality --&gt; Valid{有效？}
+        Valid --&gt;|是 | StoreMem
+        Valid --&gt;|否 | RetryExtract[重新提取]
+        
+        RetryExtract --&gt; ExtractInfo
+        StoreMem[存储记忆]
+    end
+    
+    style Start fill:#e1f5ff
+    style StoreMem fill:#e1ffe1
+    style DefineRole fill:#fff4e1
+    style FormatJSON fill:#f0e1ff
+    style CheckQuality fill:#ffe1e1</pre></div>
+<h2 id="8-记忆检索评分图">8. 记忆检索评分图</h2>
+<p>展示记忆检索的评分和排序机制。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #8</div><pre class="mermaid">graph TB
+    subgraph "初始评分"
+        Start[检索查询] --&gt; VectorScore[向量相似度]
+        VectorScore --&gt; NormalizeScore[归一化分数]
+    end
+    
+    subgraph "时间衰减"
+        NormalizeScore --&gt; GetTime[获取时间差]
+        GetTime --&gt; CalcDecay[计算衰减]
+        CalcDecay --&gt; TimeScore[时间分数]
+    end
+    
+    subgraph "重要性加权"
+        TimeScore --&gt; GetImportance[获取重要性]
+        GetImportance --&gt; ApplyWeight[应用权重]
+        ApplyWeight --&gt; WeightedScore[加权分数]
+    end
+    
+    subgraph "多样性调整"
+        WeightedScore --&gt; CheckSimilarity[检查相似度]
+        CheckSimilarity --&gt; Diversify[多样性调整]
+        Diversify --&gt; FinalScore[最终分数]
+    end
+    
+    subgraph "排序过滤"
+        FinalScore --&gt; SortScores[排序分数]
+        SortScores --&gt; FilterLow[过滤低分]
+        FilterLow --&gt; SelectTop[选择 Top-K]
+    end
+    
+    subgraph "分数计算"
+        VectorScore --&gt; VectorFormula["Vector = cosine_similarity"]
+        TimeScore --&gt; TimeFormula["Time = exp(-decay * days_old)"]
+        WeightedScore --&gt; WeightFormula["Weighted = Vector * (1 + importance_factor)"]
+        FinalScore --&gt; DiversityFormula["Final = Weighted * diversity_factor"]
+    end
+    
+    style Start fill:#e1f5ff
+    style SelectTop fill:#e1ffe1
+    style VectorScore fill:#fff4e1
+    style Diversify fill:#f0e1ff
+    style FilterLow fill:#ffe1e1</pre></div>
+<h2 id="图表说明">图表说明</h2>
+<h3 id="记忆生命周期">记忆生命周期</h3>
+<ol>
+<li><strong>创建</strong>: 从对话消息提取</li>
+<li><strong>存储</strong>: 保存到数据库和向量库</li>
+<li><strong>检索</strong>: 根据查询检索相关记忆</li>
+<li><strong>更新</strong>: 定期更新过时记忆</li>
+<li><strong>清理</strong>: 删除过期记忆</li>
+</ol>
+<h3 id="记忆提取">记忆提取</h3>
+<ul>
+<li><strong>摘要生成</strong>: 生成对话摘要</li>
+<li><strong>关键信息</strong>: 提取关键点</li>
+<li><strong>实体识别</strong>: 识别人名、地点、组织等</li>
+<li><strong>行动项</strong>: 提取待办事项</li>
+<li><strong>偏好</strong>: 识别用户偏好</li>
+</ul>
+<h3 id="检索机制">检索机制</h3>
+<ul>
+<li><strong>向量搜索</strong>: 基于嵌入向量相似度</li>
+<li><strong>时间衰减</strong>: 旧记忆分数降低</li>
+<li><strong>重要性加权</strong>: 重要记忆权重增加</li>
+<li><strong>多样性</strong>: 避免相似记忆重复</li>
+</ul>
+<h3 id="去重策略">去重策略</h3>
+<ul>
+<li><strong>相似度阈值</strong>: 超过阈值视为重复</li>
+<li><strong>时间窗口</strong>: 短时间内的相似记忆</li>
+<li><strong>内容重叠</strong>: 内容重叠度检查</li>
+<li><strong>智能合并</strong>: 合并相似记忆内容</li>
+</ul>
+<h3 id="配置参数">配置参数</h3>
+<ul>
+<li><strong>max_memories</strong>: 最大记忆数量</li>
+<li><strong>similarity_threshold</strong>: 去重相似度阈值</li>
+<li><strong>retrieval_top_k</strong>: 检索 Top-K 数量</li>
+<li><strong>enabled</strong>: 是否启用记忆</li>
+<li><strong>extraction_config</strong>: 提取配置</li>
+</ul>
+<h3 id="数据结构">数据结构</h3>
+<ul>
+<li><strong>id</strong>: 记忆唯一标识</li>
+<li><strong>thread_id</strong>: 所属线程</li>
+<li><strong>content</strong>: 记忆内容</li>
+<li><strong>summary</strong>: 摘要</li>
+<li><strong>entities</strong>: 实体列表</li>
+<li><strong>actions</strong>: 行动项</li>
+<li><strong>importance</strong>: 重要性分数</li>
+<li><strong>embedding</strong>: 嵌入向量</li>
+</ul>
+<h3 id="使用场景">使用场景</h3>
+<ul>
+<li>跨会话上下文保留</li>
+<li>用户偏好学习</li>
+<li>对话历史摘要</li>
+<li>任务跟踪和提醒</li>
+<li>个性化响应</li>
+</ul>
+<h3 id="性能优化">性能优化</h3>
+<ol>
+<li><strong>批量处理</strong>: 队列批量提取</li>
+<li><strong>异步执行</strong>: 非阻塞提取</li>
+<li><strong>向量索引</strong>: 高效相似度搜索</li>
+<li><strong>缓存机制</strong>: 减少重复计算</li>
+<li><strong>定期清理</strong>: 控制存储大小</li>
+</ol>
+      <div id="page-nav"></div>
+    </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose',
+    flowchart: { curve: 'stepAfter', htmlLabels: true, nodeSpacing: 55, rankSpacing: 65, useMaxWidth: true },
+    themeVariables: { darkMode: true, background: '#0d1117', primaryColor: '#1f2937',
+      primaryTextColor: '#e6edf3', primaryBorderColor: '#58a6ff', lineColor: '#9aa4b2',
+      secondaryColor: '#161b22', tertiaryColor: '#1a2029', textColor: '#e6edf3' } });
+  const renderAll = () => mermaid.run({ querySelector: 'pre.mermaid' })
+    .catch(e => console.error('mermaid render error:', e));
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderAll);
+  } else {
+    renderAll();
+  }
+</script>
+</body>
+</html>

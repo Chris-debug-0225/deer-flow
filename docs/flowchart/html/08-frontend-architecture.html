@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>前端架构（下） · DeerFlow 流程图</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+<div class="toc"><div class="toc-title">📖 本页目录</div><ul><li class=""><a href="#1-前端整体架构">1. 前端整体架构</a></li><li class=""><a href="#2-页面路由结构">2. 页面路由结构</a></li><li class=""><a href="#3-工作区布局结构">3. 工作区布局结构</a></li><li class=""><a href="#4-输入框组件交互流程">4. 输入框组件交互流程</a></li><li class=""><a href="#5-技能建议系统">5. 技能建议系统</a></li><li class=""><a href="#6-状态管理架构-react-query">6. 状态管理架构（React Query）</a></li><li class=""><a href="#7-消息去重与合并机制">7. 消息去重与合并机制</a></li><li class=""><a href="#8-流式响应处理流程">8. 流式响应处理流程</a></li><li class=""><a href="#9-消息发送流程">9. 消息发送流程</a></li><li class=""><a href="#10-线程列表管理">10. 线程列表管理</a></li><li class=""><a href="#11-命令面板系统">11. 命令面板系统</a></li><li class=""><a href="#12-消息分组与渲染">12. 消息分组与渲染</a></li><li class=""><a href="#13-组件层级关系">13. 组件层级关系</a></li><li class=""><a href="#14-api-通信架构">14. API 通信架构</a></li><li class=""><a href="#15-错误处理流程">15. 错误处理流程</a></li></ul></div>
+<div class="page-head"><span class="page-num">08</span><div class="page-stats"><span class="ps-item"><b>15</b> Mermaid 图</span><span class="ps-dot">·</span><span class="ps-item"><b>16</b> 章节</span></div></div><h1 id="deerflow-前端架构与组件交互">DeerFlow 前端架构与组件交互</h1>
+<p>本文档包含 DeerFlow 前端系统的完整流程图，展示页面路由、组件交互、状态管理等核心机制。</p>
+<h2 id="1-前端整体架构">1. 前端整体架构</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #1</div><pre class="mermaid">graph TB
+    subgraph "前端应用架构"
+        A[Next.js 16 应用] --&gt; B[React 19 组件系统]
+        A --&gt; C[Tailwind CSS 4 样式]
+        A --&gt; D[Shadcn UI 组件库]
+        A --&gt; E[TypeScript 类型系统]
+        
+        B --&gt; F[页面层 pages]
+        B --&gt; G[组件层 components]
+        B --&gt; H[核心层 core]
+        B --&gt; I[工具层 utils]
+        
+        F --&gt; F1[着陆页 page.tsx]
+        F --&gt; F2[工作区 workspace/]
+        F --&gt; F3[聊天页面 chats/]
+        
+        G --&gt; G1[workspace 组件]
+        G --&gt; G2[ai-elements 组件]
+        G --&gt; G3[ui 基础组件]
+        
+        H --&gt; H1[threads 状态管理]
+        H --&gt; H2[messages 消息处理]
+        H --&gt; H3[memory 记忆系统]
+        H --&gt; H4[skills 技能系统]
+        H --&gt; H5[uploads 文件上传]
+        H --&gt; H6[channels 通道管理]
+        
+        style A fill:#e1f5ff
+        style F fill:#fff3e0
+        style G fill:#f3e5f5
+        style H fill:#e8f5e9
+        style I fill:#ffebee
+    end</pre></div>
+<h2 id="2-页面路由结构">2. 页面路由结构</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #2</div><pre class="mermaid">graph TB
+    subgraph "Next.js 路由系统"
+        A[应用入口] --&gt; B[/page.tsx - 着陆页]
+        A --&gt; C[/workspace - 工作区重定向]
+        A --&gt; D["/workspace/chats/[thread_id] - 聊天页面"]
+        
+        B --&gt; B1[LandingPage 组件]
+        B --&gt; B2[Header 头部]
+        B --&gt; B3[Hero 展示区]
+        B --&gt; B4[CaseStudySection 案例]
+        B --&gt; B5[FeaturesSection 特性]
+        B --&gt; B6[Footer 页脚]
+        
+        C --&gt; C1[静态重定向逻辑]
+        C1 --&gt; C2[有线程？跳转到第一个]
+        C1 --&gt; C3[无线程？新建聊天]
+        
+        D --&gt; D1[WorkspaceContainer 容器]
+        D --&gt; D2[useThreadStream Hook]
+        D --&gt; D3[流式响应处理]
+        
+        style A fill:#e1f5ff
+        style B fill:#fff3e0
+        style C fill:#f3e5f5
+        style D fill:#e8f5e9
+    end</pre></div>
+<h2 id="3-工作区布局结构">3. 工作区布局结构</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #3</div><pre class="mermaid">graph TB
+    subgraph "WorkspaceContainer 工作区容器"
+        A[WorkspaceContainer] --&gt; B[WorkspaceHeader 顶部栏]
+        A --&gt; C[WorkspaceSidebar 侧边栏]
+        A --&gt; D[WorkspaceMain 主内容区]
+        
+        B --&gt; B1[Logo 和品牌]
+        B --&gt; B2[模型选择器]
+        B --&gt; B3[工具按钮组]
+        B --&gt; B4[WorkspaceNavMenu 导航菜单]
+        
+        C --&gt; C1[WorkspaceNavChatList 聊天列表]
+        C --&gt; C2[RecentChatList 最近聊天]
+        C --&gt; C3[NewChatButton 新建按钮]
+        
+        D --&gt; D1[ThreadTitle 线程标题]
+        D --&gt; D2[MessageList 消息列表]
+        D --&gt; D3[InputBox 输入框]
+        
+        style A fill:#e1f5ff
+        style B fill:#fff3e0
+        style C fill:#f3e5f5
+        style D fill:#e8f5e9
+    end</pre></div>
+<h2 id="4-输入框组件交互流程">4. 输入框组件交互流程</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #4</div><pre class="mermaid">graph TB
+    subgraph "InputBox 输入框组件"
+        A[InputBox 组件] --&gt; B[用户输入处理]
+        A --&gt; C[模式选择]
+        A --&gt; D[模型选择]
+        A --&gt; E[技能建议]
+        
+        B --&gt; B1[handleSubmit 提交处理]
+        B1 --&gt; B2[检查流式状态]
+        B2 --&gt; B3[文件上传检查]
+        B3 --&gt; B4[调用 sendMessage]
+        
+        C --&gt; C1[四种模式：flash/thinking/pro/ultra]
+        C1 --&gt; C2[handleModeSelect]
+        C2 --&gt; C3[关联 reasoning_effort]
+        
+        D --&gt; D1[handleModelSelect]
+        D1 --&gt; D2[自动调整模式]
+        D2 --&gt; D3[同步模型能力]
+        
+        E --&gt; E1[/ 触发技能搜索]
+        E1 --&gt; E2[getMatchingSkillSuggestions]
+        E2 --&gt; E3[显示技能建议列表]
+        E3 --&gt; E4[键盘导航：上下箭头/Enter/Tab/Esc]
+        
+        style A fill:#e1f5ff
+        style B fill:#fff3e0
+        style C fill:#f3e5f5
+        style D fill:#e8f5e9
+        style E fill:#ffebee
+    end</pre></div>
+<h2 id="5-技能建议系统">5. 技能建议系统</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #5</div><pre class="mermaid">graph TB
+    subgraph "技能建议系统"
+        A[用户输入] --&gt; B{包含 / 前缀？}
+        
+        B --&gt;|是 | C[触发技能搜索]
+        B --&gt;|否 | D[隐藏建议列表]
+        
+        C --&gt; E[getMatchingSkillSuggestions]
+        E --&gt; F[匹配 skills 列表]
+        F --&gt; G[过滤和排序]
+        G --&gt; H[显示建议列表]
+        
+        H --&gt; I{用户操作}
+        I --&gt;|点击技能 | J[applySkillSuggestion]
+        I --&gt;|键盘选择 | K[键盘导航]
+        I --&gt;|Esc| D
+        
+        J --&gt; L[设置光标位置]
+        J --&gt; M[插入技能文本]
+        L --&gt; N[聚焦输入框]
+        
+        style A fill:#e1f5ff
+        style C fill:#fff3e0
+        style E fill:#f3e5f5
+        style H fill:#e8f5e9
+        style J fill:#ffebee
+    end</pre></div>
+<h2 id="6-状态管理架构-react-query">6. 状态管理架构（React Query）</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #6</div><pre class="mermaid">graph TB
+    subgraph "React Query 状态管理"
+        A[React Query 缓存] --&gt; B[Query Keys]
+        B --&gt; B1[threads]
+        B --&gt; B2[threads/:id]
+        B --&gt; B3[messages/:id]
+        B --&gt; B4[memory]
+        B --&gt; B5[skills]
+        B --&gt; B6[models]
+        B --&gt; B7[channels]
+        
+        A --&gt; C[Hooks 层]
+        C --&gt; C1[useThreads - 线程列表]
+        C --&gt; C2[useThreadHistory - 历史消息]
+        C --&gt; C3[useThreadStream - 流式响应]
+        C --&gt; C4[useDeleteThread - 删除]
+        C --&gt; C5[useRenameThread - 重命名]
+        C --&gt; C6[useMemory - 记忆系统]
+        C --&gt; C7[useSkills - 技能系统]
+        
+        A --&gt; D[优化层]
+        D --&gt; D1[乐观更新]
+        D --&gt; D2[错误重试]
+        D --&gt; D3[后台刷新]
+        D --&gt; D4[请求去重]
+        
+        style A fill:#e1f5ff
+        style B fill:#fff3e0
+        style C fill:#f3e5f5
+        style D fill:#e8f5e9
+    end</pre></div>
+<h2 id="7-消息去重与合并机制">7. 消息去重与合并机制</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #7</div><pre class="mermaid">graph TB
+    subgraph "消息去重与合并"
+        A[消息来源] --&gt; B[消息 ID 生成]
+        
+        B --&gt; B1[messageIdentity 函数]
+        B1 --&gt; B2{生成唯一标识}
+        B2 --&gt; B3[author + content + id]
+        
+        A --&gt; C[消息去重]
+        C --&gt; C1[dedupeMessagesByIdentity]
+        C1 --&gt; C2[基于 identity 去重]
+        C2 --&gt; C3[保留可见消息]
+        
+        A --&gt; D[消息合并]
+        D --&gt; D1[mergeMessages 函数]
+        D1 --&gt; D2[合并历史消息]
+        D1 --&gt; D3[合并流式消息]
+        D1 --&gt; D4[合并乐观消息]
+        
+        D2 --&gt; E{消息匹配}
+        E --&gt;|identity 匹配 | F[更新内容]
+        E --&gt;|新消息 | G[添加消息]
+        
+        F --&gt; H[保留可见状态]
+        G --&gt; H
+        
+        style A fill:#e1f5ff
+        style B fill:#fff3e0
+        style C fill:#f3e5f5
+        style D fill:#e8f5e9
+        style F fill:#ffebee
+    end</pre></div>
+<h2 id="8-流式响应处理流程">8. 流式响应处理流程</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #8</div><pre class="mermaid">graph TB
+    subgraph "流式响应处理"
+        A[useThreadStream Hook] --&gt; B[LangGraph SDK]
+        
+        B --&gt; C[onCreated 回调]
+        C --&gt; C1[更新线程缓存]
+        C1 --&gt; C2[创建新线程]
+        
+        B --&gt; D[onLangChainEvent 回调]
+        D --&gt; D1[处理流式事件]
+        D1 --&gt; D2[更新消息状态]
+        
+        B --&gt; E[onUpdateEvent 回调]
+        E --&gt; E1[更新线程状态]
+        E1 --&gt; E2[触发组件重渲染]
+        
+        B --&gt; F[onCustomEvent 回调]
+        F --&gt; F1[task_running 事件]
+        F --&gt; F2[llm_retry 事件]
+        F1 --&gt; F3[更新子代理状态]
+        F2 --&gt; F4[处理 LLM 重试]
+        
+        B --&gt; G[onError 回调]
+        G --&gt; G1[捕获错误]
+        G1 --&gt; G2[显示错误提示]
+        
+        B --&gt; H[onFinish 回调]
+        H --&gt; H1[流式结束]
+        H1 --&gt; H2[获取后续问题建议]
+        H2 --&gt; H3[调用 followup API]
+        
+        style A fill:#e1f5ff
+        style C fill:#fff3e0
+        style D fill:#f3e5f5
+        style F fill:#e8f5e9
+        style H fill:#ffebee
+    end</pre></div>
+<h2 id="9-消息发送流程">9. 消息发送流程</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #9</div><pre class="mermaid">sequenceDiagram
+    participant User as 用户
+    participant InputBox as InputBox 组件
+    participant Hooks as hooks.ts
+    participant API as API Client
+    participant Server as 后端服务器
+    participant Cache as React Query 缓存
+    
+    User-&gt;&gt;InputBox: 输入消息并发送
+    InputBox-&gt;&gt;Hooks: sendMessage()
+    Hooks-&gt;&gt;Hooks: 检查文件上传
+    Hooks-&gt;&gt;Hooks: 创建乐观消息
+    Hooks-&gt;&gt;Cache: 乐观更新 UI
+    Hooks-&gt;&gt;API: 提交消息到服务器
+    API-&gt;&gt;Server: POST /messages
+    Server-&gt;&gt;Server: 处理消息流
+    Server--&gt;&gt;API: 流式响应
+    API--&gt;&gt;Hooks: 流式事件回调
+    Hooks-&gt;&gt;Hooks: onLangChainEvent 处理
+    Hooks-&gt;&gt;Cache: 更新消息状态
+    Hooks-&gt;&gt;InputBox: 触发重渲染
+    Hooks-&gt;&gt;Hooks: 流式结束
+    Hooks-&gt;&gt;API: 获取后续问题建议
+    API-&gt;&gt;Server: GET /followup
+    Server--&gt;&gt;API: 返回建议列表
+    API--&gt;&gt;Hooks: 返回建议
+    Hooks-&gt;&gt;Cache: 缓存建议数据
+    Hooks--&gt;&gt;InputBox: 显示建议</pre></div>
+<h2 id="10-线程列表管理">10. 线程列表管理</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #10</div><pre class="mermaid">graph TB
+    subgraph "线程列表管理"
+        A[线程列表组件] --&gt; B[useThreads Hook]
+        A --&gt; C[useInfiniteThreads Hook]
+        
+        B --&gt; B1[搜索线程列表]
+        B1 --&gt; B2[过滤和排序]
+        B2 --&gt; B3[更新缓存]
+        
+        C --&gt; C1[无限滚动加载]
+        C1 --&gt; C2[IntersectionObserver]
+        C2 --&gt; C3[分页加载]
+        
+        C3 --&gt; C4{加载更多？}
+        C4 --&gt;|是 | C5[loadMoreHistory]
+        C4 --&gt;|否 | C6[显示完成]
+        
+        C5 --&gt; C7[节流控制 1200ms]
+        C7 --&gt; C8[加载更多历史]
+        
+        A --&gt; D[线程操作]
+        D --&gt; D1[删除线程]
+        D --&gt; D2[重命名线程]
+        D --&gt; D3[导出线程]
+        
+        style A fill:#e1f5ff
+        style B fill:#fff3e0
+        style C fill:#f3e5f5
+        style D fill:#e8f5e9
+    end</pre></div>
+<h2 id="11-命令面板系统">11. 命令面板系统</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #11</div><pre class="mermaid">graph TB
+    subgraph "Command Palette 命令面板"
+        A[CommandPalette 组件] --&gt; B[快捷键触发]
+        
+        B --&gt; B1[Cmd+K / Ctrl+K]
+        B1 --&gt; B2[打开命令面板]
+        
+        B --&gt; B3[Cmd+Shift+N]
+        B3 --&gt; B4[新建聊天]
+        
+        B --&gt; B5[Cmd+,]
+        B5 --&gt; B6[打开设置]
+        
+        B --&gt; B7[Cmd+/]
+        B7 --&gt; B8[显示快捷键]
+        
+        A --&gt; C[命令搜索]
+        C --&gt; C1[CommandInput 输入]
+        C1 --&gt; C2[过滤命令列表]
+        C2 --&gt; C3[显示匹配项]
+        
+        A --&gt; D[命令执行]
+        D --&gt; D1[导航到聊天]
+        D --&gt; D2[打开设置对话框]
+        D --&gt; D3[显示快捷键对话框]
+        
+        style A fill:#e1f5ff
+        style B fill:#fff3e0
+        style C fill:#f3e5f5
+        style D fill:#e8f5e9
+    end</pre></div>
+<h2 id="12-消息分组与渲染">12. 消息分组与渲染</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #12</div><pre class="mermaid">graph TB
+    subgraph "消息分组与渲染"
+        A[消息列表] --&gt; B[getMessageGroups]
+        
+        B --&gt; B1{消息类型判断}
+        B1 --&gt;|human| C[人类消息组]
+        B1 --&gt;|tool:ask_clarification| D[澄清工具组]
+        B1 --&gt;|tool:present_files| E[文件展示组]
+        B1 --&gt;|tool:task| F[子代理组]
+        B1 --&gt;|ai:reasoning| G[处理中组]
+        B1 --&gt;|ai:content| H[助手消息组]
+        
+        C --&gt; I[MessageListItem]
+        D --&gt; J[MarkdownContent]
+        E --&gt; K[ArtifactFileList]
+        F --&gt; L[SubtaskCard]
+        G --&gt; M[MessageGroup]
+        H --&gt; I
+        
+        B --&gt; N[过滤隐藏消息]
+        N --&gt; N1[hide_from_ui 标记]
+        N --&gt; N2[内部标记标签]
+        N --&gt; N3[上传文件标签]
+        
+        style A fill:#e1f5ff
+        style B fill:#fff3e0
+        style C fill:#f3e5f5
+        style F fill:#e8f5e9
+        style K fill:#ffebee
+    end</pre></div>
+<h2 id="13-组件层级关系">13. 组件层级关系</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #13</div><pre class="mermaid">graph TB
+    subgraph "组件层级结构"
+        A[App Root] --&gt; B[Next.js Layout]
+        B --&gt; C[WorkspaceContainer]
+        
+        C --&gt; D[WorkspaceHeader]
+        C --&gt; E[WorkspaceSidebar]
+        C --&gt; F[WorkspaceMain]
+        
+        D --&gt; D1[Logo]
+        D --&gt; D2[ModelSelector]
+        D --&gt; D3[Toolbar]
+        D --&gt; D4[WorkspaceNavMenu]
+        
+        E --&gt; E1[WorkspaceNavChatList]
+        E --&gt; E2[RecentChatList]
+        E --&gt; E3[NewChatButton]
+        
+        F --&gt; F1[ThreadTitle]
+        F --&gt; F2[MessageList]
+        F --&gt; F3[InputBox]
+        
+        F2 --&gt; F21[Conversation]
+        F2 --&gt; F22[ConversationContent]
+        F2 --&gt; F23[MessageGroup]
+        F2 --&gt; F24[MessageListItem]
+        F2 --&gt; F25[SubtaskCard]
+        F2 --&gt; F26[ArtifactFileList]
+        
+        style A fill:#e1f5ff
+        style C fill:#fff3e0
+        style D fill:#f3e5f5
+        style E fill:#e8f5e9
+        style F fill:#ffebee
+        style F2 fill:#f0f4c3
+    end</pre></div>
+<h2 id="14-api-通信架构">14. API 通信架构</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #14</div><pre class="mermaid">graph TB
+    subgraph "API 通信层"
+        A[API Client] --&gt; B[API Endpoints]
+        
+        B --&gt; B1[Threads API]
+        B1 --&gt; B11[GET /threads]
+        B1 --&gt; B12[POST /threads]
+        B1 --&gt; B13[DELETE /threads/:id]
+        B1 --&gt; B14[PATCH /threads/:id]
+        
+        B --&gt; B2[Messages API]
+        B2 --&gt; B21[POST /messages]
+        B2 --&gt; B22[GET /messages/:id]
+        
+        B --&gt; B3[Memory API]
+        B3 --&gt; B31[GET /memory]
+        B3 --&gt; B32[POST /memory]
+        B3 --&gt; B33[DELETE /memory]
+        
+        B --&gt; B4[Skills API]
+        B4 --&gt; B41[GET /skills]
+        B4 --&gt; B42[POST /skills]
+        
+        B --&gt; B5[Models API]
+        B5 --&gt; B51[GET /models]
+        
+        B --&gt; B6[Uploads API]
+        B6 --&gt; B61[POST /uploads]
+        
+        B --&gt; B7[Channels API]
+        B7 --&gt; B71[GET /channels]
+        B7 --&gt; B72[POST /channels/:id/connect]
+        
+        A --&gt; C[流式处理]
+        C --&gt; C1[useStream Hook]
+        C1 --&gt; C2[LangGraph SDK]
+        C2 --&gt; C3[事件监听]
+        
+        style A fill:#e1f5ff
+        style B fill:#fff3e0
+        style B1 fill:#f3e5f5
+        style B2 fill:#e8f5e9
+        style C fill:#ffebee
+    end</pre></div>
+<h2 id="15-错误处理流程">15. 错误处理流程</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #15</div><pre class="mermaid">graph TB
+    subgraph "错误处理机制"
+        A[错误发生] --&gt; B{错误类型}
+        
+        B --&gt;|网络错误 | C[Network Error]
+        B --&gt;|服务器错误 | D[Server Error]
+        B --&gt;|验证错误 | E[Validation Error]
+        B --&gt;|认证错误 | F[Auth Error]
+        
+        C --&gt; C1[React Query 自动重试]
+        C1 --&gt; C2[指数退避策略]
+        C2 --&gt; C3[显示重试提示]
+        
+        D --&gt; D1[onError 回调]
+        D1 --&gt; D2[显示错误 Toast]
+        D2 --&gt; D3[记录错误日志]
+        
+        E --&gt; E1[表单验证错误]
+        E1 --&gt; E2[显示字段错误]
+        
+        F --&gt; F1[清除认证状态]
+        F1 --&gt; F2[跳转到登录页]
+        
+        A --&gt; G[全局错误边界]
+        G --&gt; G1[捕获 React 错误]
+        G1 --&gt; G2[显示错误 UI]
+        G2 --&gt; G3[提供重试选项]
+        
+        style A fill:#e1f5ff
+        style C fill:#fff3e0
+        style D fill:#f3e5f5
+        style G fill:#e8f5e9
+    end</pre></div>
+<hr/>
+<p><strong>文档说明</strong>：</p>
+<ul>
+<li>本文档完整展示了 DeerFlow 前端架构的各个关键方面</li>
+<li>所有流程图均使用 Mermaid 语法编写，可在支持 Mermaid 的 Markdown 查看器中渲染</li>
+<li>重点展示了 React Query 状态管理、流式响应处理、消息去重合并等核心机制</li>
+<li>组件层级关系清晰展示了从 App Root 到具体 UI 组件的完整调用链</li>
+</ul>
+      <div id="page-nav"></div>
+    </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose',
+    flowchart: { curve: 'stepAfter', htmlLabels: true, nodeSpacing: 55, rankSpacing: 65, useMaxWidth: true },
+    themeVariables: { darkMode: true, background: '#0d1117', primaryColor: '#1f2937',
+      primaryTextColor: '#e6edf3', primaryBorderColor: '#58a6ff', lineColor: '#9aa4b2',
+      secondaryColor: '#161b22', tertiaryColor: '#1a2029', textColor: '#e6edf3' } });
+  const renderAll = () => mermaid.run({ querySelector: 'pre.mermaid' })
+    .catch(e => console.error('mermaid render error:', e));
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderAll);
+  } else {
+    renderAll();
+  }
+</script>
+</body>
+</html>

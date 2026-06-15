@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sandbox 执行 · DeerFlow 流程图</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+<div class="toc"><div class="toc-title">📖 本页目录</div><ul><li class=""><a href="#1-sandbox-生命周期图">1. Sandbox 生命周期图</a></li><li class=""><a href="#2-sandbox-中间件调用图">2. Sandbox 中间件调用图</a></li><li class=""><a href="#3-虚拟文件系统映射图">3. 虚拟文件系统映射图</a></li><li class=""><a href="#4-sandbox-执行流程时序图">4. Sandbox 执行流程时序图</a></li><li class=""><a href="#5-docker-容器管理图">5. Docker 容器管理图</a></li><li class=""><a href="#6-本地执行环境图">6. 本地执行环境图</a></li><li class=""><a href="#7-文件系统操作图">7. 文件系统操作图</a></li><li class=""><a href="#8-资源管理图">8. 资源管理图</a></li><li class=""><a href="#图表说明">图表说明</a></li><li class="toc-sub"><a href="#生命周期状态">生命周期状态</a></li><li class="toc-sub"><a href="#执行模式">执行模式</a></li><li class="toc-sub"><a href="#虚拟路径映射">虚拟路径映射</a></li><li class="toc-sub"><a href="#资源限制">资源限制</a></li><li class="toc-sub"><a href="#安全特性">安全特性</a></li><li class="toc-sub"><a href="#中间件钩子">中间件钩子</a></li><li class="toc-sub"><a href="#使用场景">使用场景</a></li></ul></div>
+<div class="page-head"><span class="page-num">05</span><div class="page-stats"><span class="ps-item"><b>8</b> Mermaid 图</span><span class="ps-dot">·</span><span class="ps-item"><b>17</b> 章节</span></div></div><h1 id="deerflow-sandbox-执行流程图">DeerFlow Sandbox 执行流程图</h1>
+<p>本文档包含 Sandbox 沙盒系统的完整 Mermaid 流程图，展示沙盒的初始化、执行、文件系统和资源管理。</p>
+<h2 id="1-sandbox-生命周期图">1. Sandbox 生命周期图</h2>
+<p>展示 Sandbox 从创建到销毁的完整生命周期。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #1</div><pre class="mermaid">stateDiagram-v2
+    direction TB
+    
+    [*] --&gt; CREATED: 沙盒创建
+    CREATED --&gt; IDLE: 初始化完成
+    
+    IDLE --&gt; BUSY: 执行工具
+    BUSY --&gt; IDLE: 完成任务
+    
+    state BUSY {
+        [*] --&gt; EXECUTING: 执行中
+        EXECUTING --&gt; ERROR: 执行错误
+        EXECUTING --&gt; COMPLETED: 执行完成
+    }
+    
+    state DESTROYING {
+        [*] --&gt; CLEANUP: 清理资源
+        CLEANUP --&gt; [*]: 清理完成
+    }
+    
+    IDLE --&gt; DESTROYING: 超时/手动销毁
+    BUSY --&gt; DESTROYING: 强制销毁
+    
+    note right of CREATED
+        分配沙盒 ID
+        创建虚拟文件系统
+        准备执行环境
+    end note
+    
+    note right of IDLE
+        等待工具调用
+        保持运行状态
+        超时自动销毁
+    end note
+    
+    note right of BUSY
+        执行 Python 代码
+        访问虚拟文件
+        隔离执行环境
+    end note
+    
+    note right of DESTROYING
+        清理临时文件
+        释放资源
+        清除状态
+    end note</pre></div>
+<h2 id="2-sandbox-中间件调用图">2. Sandbox 中间件调用图</h2>
+<p>展示 SandboxMiddleware 在中间件链中的调用流程。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #2</div><pre class="mermaid">graph TB
+    subgraph "Before-Agent 阶段"
+        Start[before_agent 钩子] --&gt; CheckSandbox{沙盒已存在？}
+        CheckSandbox --&gt;|是 | LoadSandbox[加载已有沙盒]
+        CheckSandbox --&gt;|否 | CreateSandbox
+    end
+    
+    subgraph "沙盒创建"
+        CreateSandbox[创建沙盒实例] --&gt; GenSandboxID[生成沙盒 ID]
+        GenSandboxID --&gt; InitFS[初始化虚拟文件系统]
+        InitFS --&gt; MapPaths[映射虚拟路径]
+        MapPaths --&gt; CreateContainer{使用 Docker?}
+    end
+    
+    subgraph "Docker 模式"
+        CreateContainer --&gt;|是 | InitDocker[初始化 Docker 容器]
+        InitDocker --&gt; MountVolumes[挂载卷]
+        MountVolumes --&gt; StartContainer[启动容器]
+        StartContainer --&gt; CopySkills[复制 skills]
+        CopySkills --&gt; SaveSandboxID
+    end
+    
+    subgraph "本地模式"
+        CreateContainer --&gt;|否 | InitLocal[初始化本地环境]
+        InitLocal --&gt; CreateDir[创建临时目录]
+        CreateDir --&gt; SetupEnv[设置执行环境]
+        SetupEnv --&gt; SaveSandboxID
+    end
+    
+    subgraph "保存状态"
+        SaveSandboxID[保存沙盒 ID 到状态] --&gt; WrapTools[包装工具]
+        WrapTools --&gt; ReturnState
+    end
+    
+    subgraph "After-Agent 阶段"
+        ReturnState[返回状态] --&gt; after_agent[after_agent 钩子]
+        after_agent --&gt; CheckDestroy{需要销毁？}
+        CheckDestroy --&gt;|是 | DestroySandbox
+        CheckDestroy --&gt;|否 | KeepAlive
+    end
+    
+    subgraph "沙盒销毁"
+        DestroySandbox[销毁沙盒] --&gt; CleanupFS[清理文件系统]
+        CleanupFS --&gt; CleanupContainer{Docker?}
+        CleanupContainer --&gt;|是 | StopContainer[停止容器]
+        CleanupContainer --&gt;|否 | CleanupDir[清理目录]
+        StopContainer --&gt; ClearState
+        CleanupDir --&gt; ClearState
+        ClearState[清除状态] --&gt; Done[完成]
+    end
+    
+    subgraph "保持活跃"
+        KeepAlive[保持沙盒活跃] --&gt; KeepTimer[启动保持计时器]
+        KeepTimer --&gt; IdleCheck{空闲超时？}
+        IdleCheck --&gt;|是 | DestroySandbox
+        IdleCheck --&gt;|否 | KeepAlive
+    end
+    
+    style Start fill:#e1f5ff
+    style Done fill:#e1ffe1
+    style CreateSandbox fill:#fff4e1
+    style InitDocker fill:#f0e1ff
+    style InitLocal fill:#f0e1ff</pre></div>
+<h2 id="3-虚拟文件系统映射图">3. 虚拟文件系统映射图</h2>
+<p>展示虚拟路径到真实路径的映射关系。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #3</div><pre class="mermaid">graph TB
+    subgraph "虚拟路径层"
+        UserPath[/mnt/user-data/]
+        SkillsPath[/mnt/skills/]
+        WorkspacePath[/mnt/acp-workspace/]
+        TempPath[/mnt/temp/]
+    end
+    
+    subgraph "映射规则"
+        UserPath --&gt; MapRule1[映射规则 1]
+        SkillsPath --&gt; MapRule2[映射规则 2]
+        WorkspacePath --&gt; MapRule3[映射规则 3]
+        TempPath --&gt; MapRule4[映射规则 4]
+    end
+    
+    subgraph "真实路径层"
+        MapRule1 --&gt; RealUser[用户数据目录]
+        MapRule2 --&gt; RealSkills[Skills 目录]
+        MapRule3 --&gt; RealWS[工作区目录]
+        MapRule4 --&gt; RealTemp[临时目录]
+    end
+    
+    subgraph "访问控制"
+        RealUser --&gt; AccessControl1[权限控制 1]
+        RealSkills --&gt; AccessControl2[权限控制 2]
+        RealWS --&gt; AccessControl3[权限控制 3]
+        RealTemp --&gt; AccessControl4[权限控制 4]
+    end
+    
+    subgraph "安全隔离"
+        AccessControl1 --&gt; SandboxFS[Sandbox 文件系统]
+        AccessControl2 --&gt; SandboxFS
+        AccessControl3 --&gt; SandboxFS
+        AccessControl4 --&gt; SandboxFS
+        
+        SandboxFS --&gt; Isolate[隔离执行]
+    end
+    
+    subgraph "路径操作"
+        Isolate --&gt; ReadOps[读操作]
+        Isolate --&gt; WriteOps[写操作]
+        Isolate --&gt; DeleteOps[删除操作]
+    end
+    
+    subgraph "操作审计"
+        ReadOps --&gt; AuditLog[审计日志]
+        WriteOps --&gt; AuditLog
+        DeleteOps --&gt; AuditLog
+        
+        AuditLog --&gt; TrackAccess[跟踪访问]
+        TrackAccess --&gt; SecurityCheck[安全检查]
+    end
+    
+    style UserPath fill:#e1f5ff
+    style SkillsPath fill:#fff4e1
+    style WorkspacePath fill:#f0e1ff
+    style RealUser fill:#e1ffe1
+    style RealSkills fill:#e1ffe1
+    style RealWS fill:#e1ffe1
+    style SecurityCheck fill:#ffe1e1</pre></div>
+<h2 id="4-sandbox-执行流程时序图">4. Sandbox 执行流程时序图</h2>
+<p>展示工具调用时 Sandbox 的执行时序。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #4</div><pre class="mermaid">sequenceDiagram
+    participant Middleware as SandboxMiddleware
+    participant Sandbox as Sandbox 实例
+    participant FS as 虚拟文件系统
+    participant Executor as 代码执行器
+    participant Container as Docker 容器
+    participant Storage as 状态存储
+    
+    Middleware-&gt;&gt;Sandbox: before_agent(state)
+    
+    alt 沙盒已存在
+        Storage--&gt;&gt;Middleware: 加载沙盒 ID
+        Middleware-&gt;&gt;Sandbox: 恢复沙盒
+        Sandbox--&gt;&gt;Middleware: 返回沙盒实例
+    else 沙盒不存在
+        Middleware-&gt;&gt;Sandbox: 创建新沙盒
+        Sandbox-&gt;&gt;Sandbox: 生成沙盒 ID
+        Sandbox-&gt;&gt;FS: 初始化虚拟文件系统
+        FS--&gt;&gt;Sandbox: 返回文件系统
+        Sandbox-&gt;&gt;Sandbox: 映射虚拟路径
+        Sandbox-&gt;&gt;Storage: 保存沙盒 ID 到状态
+        Sandbox--&gt;&gt;Middleware: 返回沙盒实例
+    end
+    
+    Middleware-&gt;&gt;Middleware: 包装工具调用
+    
+    loop 工具执行
+        Middleware-&gt;&gt;Sandbox: 执行工具 call
+        Sandbox-&gt;&gt;Sandbox: 更新活跃状态
+        
+        alt Docker 模式
+            Sandbox-&gt;&gt;Container: 发送到容器
+            Container-&gt;&gt;FS: 访问虚拟文件
+            FS--&gt;&gt;Container: 返回文件内容
+            Container-&gt;&gt;Executor: 执行代码
+            Executor--&gt;&gt;Container: 返回结果
+            Container--&gt;&gt;Sandbox: 返回执行结果
+        else 本地模式
+            Sandbox-&gt;&gt;FS: 访问虚拟文件
+            FS--&gt;&gt;Sandbox: 返回文件内容
+            Sandbox-&gt;&gt;Executor: 执行代码
+            Executor--&gt;&gt;Sandbox: 返回结果
+        end
+        
+        Sandbox-&gt;&gt;Sandbox: 更新活跃状态
+        Sandbox--&gt;&gt;Middleware: 返回工具结果
+    end
+    
+    Middleware-&gt;&gt;Sandbox: after_agent(state)
+    Sandbox-&gt;&gt;Sandbox: 更新空闲时间
+    Sandbox-&gt;&gt;Sandbox: 检查销毁条件
+    
+    alt 需要销毁
+        Sandbox-&gt;&gt;FS: 清理文件系统
+        alt Docker 模式
+            Sandbox-&gt;&gt;Container: 停止容器
+            Container--&gt;&gt;Sandbox: 确认停止
+        end
+        Sandbox-&gt;&gt;Storage: 清除沙盒 ID
+        Sandbox--&gt;&gt;Middleware: 销毁完成
+    else 保持活跃
+        Sandbox-&gt;&gt;Sandbox: 启动保持计时器
+        Sandbox--&gt;&gt;Middleware: 保持活跃
+    end</pre></div>
+<h2 id="5-docker-容器管理图">5. Docker 容器管理图</h2>
+<p>展示 Docker 容器模式下的沙盒管理流程。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #5</div><pre class="mermaid">graph TB
+    subgraph "容器初始化"
+        Start[创建 Docker 沙盒] --&gt; CheckDocker{Docker 可用？}
+        CheckDocker --&gt;|是 | PullImage[拉取镜像]
+        CheckDocker --&gt;|否 | Error[返回错误]
+    end
+    
+    subgraph "容器创建"
+        PullImage --&gt; CreateContainer[创建容器]
+        CreateContainer --&gt; ConfigContainer[配置容器]
+        ConfigContainer --&gt; SetEnv[设置环境变量]
+        SetEnv --&gt; SetResources[设置资源限制]
+        SetResources --&gt; MountVolumes[挂载卷]
+    end
+    
+    subgraph "卷挂载"
+        MountVolumes --&gt; MountUser[/mnt/user-data: 用户目录]
+        MountVolumes --&gt; MountSkills[/mnt/skills: skills 目录]
+        MountVolumes --&gt; MountWS[/mnt/acp-workspace: 工作区]
+        MountVolumes --&gt; MountTemp[/mnt/temp: 临时目录]
+    end
+    
+    subgraph "容器启动"
+        MountVolumes --&gt; StartContainer[启动容器]
+        StartContainer --&gt; VerifyContainer[验证容器状态]
+        VerifyContainer --&gt; CopySkills[复制 skills 到容器]
+        CopySkills --&gt; SetupEnv[设置执行环境]
+        SetupEnv --&gt; Ready[容器就绪]
+    end
+    
+    subgraph "执行工具"
+        Ready --&gt; ExecuteTool[执行工具调用]
+        ExecuteTool --&gt; ExecInContainer[在容器内执行]
+        ExecInContainer --&gt; AccessFS[访问虚拟文件系统]
+        AccessFS --&gt; GetResult[获取执行结果]
+    end
+    
+    subgraph "容器清理"
+        GetResult --&gt; CleanupContainer[清理容器]
+        CleanupContainer --&gt; StopContainer[停止容器]
+        StopContainer --&gt; RemoveContainer[删除容器]
+        RemoveContainer --&gt; ClearState[清除状态]
+    end
+    
+    subgraph "资源管理"
+        SetResources --&gt; CPU[CPU 限制]
+        SetResources --&gt; Memory[内存限制]
+        SetResources --&gt; Network[网络隔离]
+        SetResources --&gt; Timeout[执行超时]
+    end
+    
+    style Start fill:#e1f5ff
+    style Ready fill:#e1ffe1
+    style PullImage fill:#fff4e1
+    style MountVolumes fill:#f0e1ff
+    style StopContainer fill:#ffe1e1</pre></div>
+<h2 id="6-本地执行环境图">6. 本地执行环境图</h2>
+<p>展示本地模式下的沙盒执行环境设置。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #6</div><pre class="mermaid">graph TB
+    subgraph "环境创建"
+        Start[创建本地沙盒] --&gt; GenTempDir[生成临时目录]
+        GenTempDir --&gt; CreateDir[创建目录结构]
+        CreateDir --&gt; SetupIsolation[设置隔离]
+    end
+    
+    subgraph "目录结构"
+        SetupIsolation --&gt; DirUser[/mnt/user-data]
+        SetupIsolation --&gt; DirSkills[/mnt/skills]
+        SetupIsolation --&gt; DirWS[/mnt/acp-workspace]
+        SetupIsolation --&gt; DirTemp[/mnt/temp]
+        SetupIsolation --&gt; DirWork[工作目录]
+    end
+    
+    subgraph "路径映射"
+        DirUser --&gt; MapUser[映射到真实用户目录]
+        DirSkills --&gt; MapSkills[映射到真实 skills 目录]
+        DirWS --&gt; MapWS[映射到真实工作区]
+        DirTemp --&gt; MapTemp[映射到临时目录]
+    end
+    
+    subgraph "环境配置"
+        MapTemp --&gt; ConfigEnv[配置执行环境]
+        ConfigEnv --&gt; SetPython[设置 Python 路径]
+        SetPython --&gt; InstallDeps[安装依赖]
+        InstallDeps --&gt; CopySkills[复制 skills]
+    end
+    
+    subgraph "安全隔离"
+        CopySkills --&gt; EnableIsolation[启用隔离]
+        EnableIsolation --&gt; NetworkIsolate[网络隔离]
+        NetworkIsolate --&gt; ResourceLimit[资源限制]
+        ResourceLimit --&gt; FileIsolate[文件隔离]
+    end
+    
+    subgraph "执行工具"
+        FileIsolate --&gt; ExecuteTool[执行工具]
+        ExecuteTool --&gt; RunInWork[在工作目录运行]
+        RunInWork --&gt; AccessMapped[访问映射路径]
+        AccessMapped --&gt; GetResult[获取执行结果]
+    end
+    
+    subgraph "环境清理"
+        GetResult --&gt; CleanupTemp[清理临时目录]
+        CleanupTemp --&gt; RemoveDir[删除目录树]
+        RemoveDir --&gt; ClearCache[清除缓存]
+        ClearCache --&gt; Done[完成]
+    end
+    
+    style Start fill:#e1f5ff
+    style Done fill:#e1ffe1
+    style CreateDir fill:#fff4e1
+    style EnableIsolation fill:#f0e1ff
+    style CleanupTemp fill:#ffe1e1</pre></div>
+<h2 id="7-文件系统操作图">7. 文件系统操作图</h2>
+<p>展示 Sandbox 文件系统的读写操作流程。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #7</div><pre class="mermaid">graph TB
+    subgraph "文件读取"
+        Start[读取文件] --&gt; ParsePath[解析路径]
+        ParsePath --&gt; CheckVirtual{虚拟路径？}
+        CheckVirtual --&gt;|是 | MapToReal
+        CheckVirtual --&gt;|否 | Error[路径错误]
+        
+        MapToReal[映射到真实路径] --&gt; CheckPerm[检查权限]
+        CheckPerm --&gt;|允许 | ReadFile[读取文件]
+        CheckPerm --&gt;|拒绝 | Deny[拒绝访问]
+        
+        ReadFile --&gt; ReturnContent[返回内容]
+        Deny --&gt; ReturnError[返回错误]
+    end
+    
+    subgraph "文件写入"
+        Start --&gt; WritePath[写入路径]
+        WritePath --&gt; ParsePath2[解析路径]
+        ParsePath2 --&gt; CheckWritePerm[检查写入权限]
+        CheckWritePerm --&gt;|允许 | CreateDir[创建目录]
+        CheckWritePerm --&gt;|拒绝 | Deny2[拒绝访问]
+        
+        CreateDir --&gt; WriteContent[写入内容]
+        WriteContent --&gt; ValidateWrite[验证写入]
+        ValidateWrite --&gt; SaveFile[保存文件]
+        SaveFile --&gt; UpdateMeta[更新元数据]
+        UpdateMeta --&gt; ReturnSuccess[返回成功]
+    end
+    
+    subgraph "文件删除"
+        Start --&gt; DeletePath[删除路径]
+        DeletePath --&gt; ParsePath3[解析路径]
+        ParsePath3 --&gt; CheckDeletePerm[检查删除权限]
+        CheckDeletePerm --&gt;|允许 | DeleteFile[删除文件]
+        CheckDeletePerm --&gt;|拒绝 | Deny3[拒绝访问]
+        
+        DeleteFile --&gt; UpdateMeta2[更新元数据]
+        UpdateMeta2 --&gt; ReturnSuccess
+    end
+    
+    subgraph "路径验证"
+        ParsePath --&gt; ValidatePath[验证路径格式]
+        ValidatePath --&gt; CheckSandbox{在沙盒内？}
+        CheckSandbox --&gt;|是 | NormalizePath
+        CheckSandbox --&gt;|否 | Reject[拒绝]
+        
+        NormalizePath[规范化路径] --&gt; ResolvePath[解析真实路径]
+        ResolvePath --&gt; CheckExists{存在？}
+        CheckExists --&gt;|是 | AllowAccess[允许访问]
+        CheckExists --&gt;|否 | NotFound[返回不存在]
+    end
+    
+    style Start fill:#e1f5ff
+    style ReturnSuccess fill:#e1ffe1
+    style ReadFile fill:#fff4e1
+    style WriteContent fill:#fff4e1
+    style Deny fill:#ffe1e1
+    style Reject fill:#ffe1e1</pre></div>
+<h2 id="8-资源管理图">8. 资源管理图</h2>
+<p>展示 Sandbox 的资源分配和限制管理。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #8</div><pre class="mermaid">graph TB
+    subgraph "资源分配"
+        Start[沙盒创建] --&gt; AllocResources[分配资源]
+        AllocResources --&gt; AllocFS[文件系统空间]
+        AllocResources --&gt; AllocCPU[CPU 时间片]
+        AllocResources --&gt; AllocMemory[内存配额]
+        AllocResources --&gt; AllocNetwork[网络配额]
+    end
+    
+    subgraph "文件系统限制"
+        AllocFS --&gt; FSQuota[配额限制]
+        FSQuota --&gt; FSCount[文件数量限制]
+        FSCount --&gt; FSSize[单个文件大小]
+        FSSize --&gt; FSTotal[总存储空间]
+    end
+    
+    subgraph "CPU 限制"
+        AllocCPU --&gt; CPULimit[CPU 使用率上限]
+        CPULimit --&gt; CPUQuota[时间配额]
+        CPUQuota --&gt; CPUPeriod[时间周期]
+        CPUPeriod --&gt; CPUThrottle[节流机制]
+    end
+    
+    subgraph "内存限制"
+        AllocMemory --&gt; MemLimit[内存上限]
+        MemLimit --&gt; MemSoft[软限制]
+        MemSoft --&gt; MemHard[硬限制]
+        MemHard --&gt; OOMKill[OOM 杀手]
+    end
+    
+    subgraph "网络限制"
+        AllocNetwork --&gt; NetLimit[网络带宽]
+        NetLimit --&gt; NetOut[出站限制]
+        NetOut --&gt; NetIn[入站限制]
+        NetIn --&gt; NetIsolate[网络隔离]
+    end
+    
+    subgraph "资源监控"
+        CPUThrottle --&gt; Monitor[实时监控]
+        OOMKill --&gt; Monitor
+        NetIsolate --&gt; Monitor
+        
+        Monitor --&gt; TrackUsage[跟踪使用情况]
+        TrackUsage --&gt; CheckLimits{超限？}
+        CheckLimits --&gt;|是 | ApplyThrottle[应用节流]
+        CheckLimits --&gt;|否 | Monitor
+        
+        ApplyThrottle --&gt; Warn[警告用户]
+        Warn --&gt; Terminate[终止执行]
+    end
+    
+    subgraph "资源释放"
+        Terminate --&gt; ReleaseAll[释放所有资源]
+        ReleaseAll --&gt; FreeFS[释放文件系统]
+        ReleaseAll --&gt; FreeCPU[释放 CPU]
+        ReleaseAll --&gt; FreeMemory[释放内存]
+        ReleaseAll --&gt; FreeNetwork[释放网络]
+        
+        FreeFS --&gt; Done[完成]
+        FreeCPU --&gt; Done
+        FreeMemory --&gt; Done
+        FreeNetwork --&gt; Done
+    end
+    
+    style Start fill:#e1f5ff
+    style Done fill:#e1ffe1
+    style AllocResources fill:#fff4e1
+    style Monitor fill:#f0e1ff
+    style Terminate fill:#ffe1e1</pre></div>
+<h2 id="图表说明">图表说明</h2>
+<h3 id="生命周期状态">生命周期状态</h3>
+<ul>
+<li><strong>CREATED</strong>: 沙盒已创建，正在初始化</li>
+<li><strong>IDLE</strong>: 沙盒空闲，等待工具调用</li>
+<li><strong>BUSY</strong>: 沙盒正在执行工具</li>
+<li><strong>DESTROYING</strong>: 沙盒正在清理销毁</li>
+</ul>
+<h3 id="执行模式">执行模式</h3>
+<ol>
+<li><strong>Docker 模式</strong>: 使用 Docker 容器提供完全隔离</li>
+<li><strong>本地模式</strong>: 使用本地临时目录和隔离机制</li>
+</ol>
+<h3 id="虚拟路径映射">虚拟路径映射</h3>
+<ul>
+<li><code>/mnt/user-data/*</code> → 用户数据目录</li>
+<li><code>/mnt/skills/*</code> → Skills 目录</li>
+<li><code>/mnt/acp-workspace/*</code> → 工作区目录</li>
+<li><code>/mnt/temp/*</code> → 临时目录</li>
+</ul>
+<h3 id="资源限制">资源限制</h3>
+<ul>
+<li><strong>CPU</strong>: 使用率上限和时间配额</li>
+<li><strong>内存</strong>: 软限制和硬限制，OOM 保护</li>
+<li><strong>文件系统</strong>: 存储空间和文件数量限制</li>
+<li><strong>网络</strong>: 带宽限制和网络隔离</li>
+</ul>
+<h3 id="安全特性">安全特性</h3>
+<ol>
+<li><strong>路径隔离</strong>: 虚拟路径映射防止越权访问</li>
+<li><strong>权限控制</strong>: 读写删除操作都需要权限验证</li>
+<li><strong>审计日志</strong>: 所有文件操作都有审计记录</li>
+<li><strong>资源隔离</strong>: CPU、内存、网络多重隔离</li>
+<li><strong>超时保护</strong>: 执行超时自动终止</li>
+</ol>
+<h3 id="中间件钩子">中间件钩子</h3>
+<ul>
+<li><strong>before_agent</strong>: 初始化或恢复沙盒，包装工具调用</li>
+<li><strong>after_agent</strong>: 更新空闲时间，检查销毁条件</li>
+</ul>
+<h3 id="使用场景">使用场景</h3>
+<ul>
+<li>执行用户提供的 Python 代码</li>
+<li>运行需要文件系统的工具</li>
+<li>隔离执行不可信代码</li>
+<li>提供一致的执行环境</li>
+</ul>
+      <div id="page-nav"></div>
+    </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose',
+    flowchart: { curve: 'stepAfter', htmlLabels: true, nodeSpacing: 55, rankSpacing: 65, useMaxWidth: true },
+    themeVariables: { darkMode: true, background: '#0d1117', primaryColor: '#1f2937',
+      primaryTextColor: '#e6edf3', primaryBorderColor: '#58a6ff', lineColor: '#9aa4b2',
+      secondaryColor: '#161b22', tertiaryColor: '#1a2029', textColor: '#e6edf3' } });
+  const renderAll = () => mermaid.run({ querySelector: 'pre.mermaid' })
+    .catch(e => console.error('mermaid render error:', e));
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderAll);
+  } else {
+    renderAll();
+  }
+</script>
+</body>
+</html>

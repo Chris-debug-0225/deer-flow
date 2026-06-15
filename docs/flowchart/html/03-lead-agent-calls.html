@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Agent 调用链 · DeerFlow 流程图</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+<div class="toc"><div class="toc-title">📖 本页目录</div><ul><li class=""><a href="#1-lead-agent-构建图">1. Lead Agent 构建图</a></li><li class=""><a href="#2-请求处理调用链图">2. 请求处理调用链图</a></li><li class=""><a href="#3-中间件链调用顺序图">3. 中间件链调用顺序图</a></li><li class=""><a href="#4-条件中间件启用图">4. 条件中间件启用图</a></li><li class=""><a href="#5-llm-节点调用图">5. LLM 节点调用图</a></li><li class=""><a href="#6-工具调用处理图">6. 工具调用处理图</a></li><li class=""><a href="#7-子代理工具调用图">7. 子代理工具调用图</a></li><li class=""><a href="#8-错误处理调用图">8. 错误处理调用图</a></li><li class=""><a href="#图表说明">图表说明</a></li><li class="toc-sub"><a href="#组件颜色图例">组件颜色图例</a></li><li class="toc-sub"><a href="#关键调用链">关键调用链</a></li><li class="toc-sub"><a href="#设计模式">设计模式</a></li><li class="toc-sub"><a href="#扩展性设计">扩展性设计</a></li></ul></div>
+<div class="page-head"><span class="page-num">03</span><div class="page-stats"><span class="ps-item"><b>8</b> Mermaid 图</span><span class="ps-dot">·</span><span class="ps-item"><b>14</b> 章节</span></div></div><h1 id="deerflow-lead-agent-调用链图">DeerFlow Lead Agent 调用链图</h1>
+<p>本文档包含 Lead Agent 的完整调用链 Mermaid 流程图，展示从请求入口到最终响应的完整调用关系。</p>
+<h2 id="1-lead-agent-构建图">1. Lead Agent 构建图</h2>
+<blockquote><strong>重要修正</strong>：代码中<strong>不存在</strong> <code>LeadAgentFactory</code> 工厂类。Lead Agent 由模块级函数 <code>make_lead_agent(config)</code>（<code>agent.py:402</code>）构建，内部调用 <code>build_middlewares(...)</code>（<code>agent.py:270</code>）装配中间件链，最终交给 LangChain <code>create_react_agent</code> / <code>create_agent</code> 编译为可执行图。</blockquote>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #1</div><pre class="mermaid">graph TB
+    subgraph "入口函数"
+        Entry[make_lead_agent&amp;#40;config&amp;#41;&lt;br/&gt;LangGraph 图工厂入口] --&gt; ParseCfg[解析 RunnableConfig]
+    end
+    
+    subgraph "配置解析"
+        ParseCfg --&gt; AppCfg[get_app_config]
+        AppCfg --&gt; ModelCfg[模型配置]
+        AppCfg --&gt; SkillsCfg[可用技能集合]
+        ParseCfg --&gt; RuntimeCfg[运行时配置&lt;br/&gt;is_plan_mode / subagent_enabled]
+    end
+    
+    subgraph "中间件装配"
+        RuntimeCfg --&gt; BuildChain[build_middlewares&lt;br/&gt;两阶段条件构建]
+        ModelCfg --&gt; BuildChain
+        BuildChain --&gt; Runtime[build_lead_runtime_middlewares&lt;br/&gt;阶段1: 固定基础链]
+        Runtime --&gt; Append[阶段2: 条件性追加]
+        SkillsCfg --&gt; Append
+    end
+    
+    subgraph "Agent 编译"
+        Append --&gt; MakeTools[装配工具&lt;br/&gt;内置/MCP/task]
+        MakeTools --&gt; CreateAgent[create_agent&lt;br/&gt;LangChain]
+        CreateAgent --&gt; Compile[编译为可执行图]
+        Compile --&gt; Agent[Lead Agent 实例]
+    end
+    
+    style Entry fill:#e1f5ff
+    style Agent fill:#e1ffe1
+    style BuildChain fill:#fff4e1
+    style Runtime fill:#f0e1ff</pre></div>
+<h2 id="2-请求处理调用链图">2. 请求处理调用链图</h2>
+<p>展示单个请求从 API 到响应的完整调用链。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #2</div><pre class="mermaid">graph TB
+    subgraph "API 层"
+        API[API Endpoint&lt;br/&gt;/api/runs] --&gt; Controller[RunsController]
+        Controller --&gt; Validate[验证请求]
+        Validate --&gt; CreateRun[创建 Run 对象]
+        CreateRun --&gt; Stream[启动流式器]
+    end
+    
+    subgraph "Agent 运行时"
+        Stream --&gt; Invoke[Agent.invoke&lt;br/&gt;异步]
+        Invoke --&gt; Execute[执行图节点]
+        Execute --&gt; State[获取 ThreadState]
+    end
+    
+    subgraph "中间件链执行"
+        State --&gt; BeforeMiddleware[before_model 中间件链]
+        
+        BeforeMiddleware --&gt; M1[ToolOutputBudget&lt;br/&gt;before_model]
+        M1 --&gt; M2[ThreadDataMiddleware&lt;br/&gt;before_model]
+        M2 --&gt; M3[UploadsMiddleware&lt;br/&gt;before_model]
+        M3 --&gt; M4[SandboxMiddleware&lt;br/&gt;before_model]
+        M4 --&gt; M5[DanglingToolCall&lt;br/&gt;before_model]
+        M5 --&gt; M6[DynamicContext&lt;br/&gt;before_model]
+        M6 --&gt; M7[SkillActivation&lt;br/&gt;before_model]
+        M7 --&gt; M8[Clarification&lt;br/&gt;总在最后]
+        
+        M8 --&gt; CallAgent[调用 LLM 节点]
+    end
+    
+    subgraph "LLM 执行"
+        CallAgent --&gt; BuildPrompt[构建提示词]
+        BuildPrompt --&gt; AddContext[添加上下文]
+        AddContext --&gt; LLMAPI[LLM API 调用]
+        LLMAPI --&gt; Response[获取响应]
+        Response --&gt; Parse[解析响应]
+    end
+    
+    subgraph "工具执行"
+        Parse --&gt; ToolCheck{工具调用？}
+        ToolCheck --&gt;|是 | ToolExec[执行工具]
+        ToolCheck --&gt;|否 | Format[格式化输出]
+        
+        ToolExec --&gt; ToolResult[工具结果]
+        ToolResult --&gt; UpdateState[更新状态]
+        UpdateState --&gt; CallAgent
+    end
+    
+    subgraph "After 中间件"
+        Format --&gt; AfterMiddleware[after_model 中间件链 逆序]
+        
+        AfterMiddleware --&gt; M9[Clarification&lt;br/&gt;after_model 先触发]
+        M9 --&gt; M10[LoopDetection&lt;br/&gt;after_model]
+        M10 --&gt; M11[SubagentLimit&lt;br/&gt;after_model]
+        M11 --&gt; M12[Memory&lt;br/&gt;after_model]
+        M12 --&gt; M13[Title&lt;br/&gt;after_model]
+        M13 --&gt; M14[ToolErrorHandling&lt;br/&gt;after_model 后触发]
+    end
+    
+    subgraph "完成"
+        M14 --&gt; Yield[Yield 完成]
+        Yield --&gt; FinalState[返回最终状态]
+        FinalState --&gt; Persist[持久化]
+        Persist --&gt; SSE[SSE 完成事件]
+    end
+    
+    style API fill:#e1f5ff
+    style CallAgent fill:#fff4e1
+    style ToolExec fill:#f0e1ff
+    style Persist fill:#e1ffe1
+    style SSE fill:#e1f5ff</pre></div>
+<h2 id="3-中间件链调用顺序图">3. 中间件链调用顺序图</h2>
+<blockquote><strong>修正说明</strong>：实际为两阶段条件构建，最多 22 个中间件。<code>before_model</code> 按注册顺序触发，<code>after_model</code> 按注册逆序触发。下图展示典型完整链的钩子触发顺序（省略部分条件性中间件）。</blockquote>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #3</div><pre class="mermaid">sequenceDiagram
+    participant Caller as 调用者
+    participant Chain as 中间件链
+    participant M1 as ToolOutputBudget
+    participant M2 as ThreadData
+    participant M3 as Sandbox
+    participant M4 as DanglingToolCall
+    participant M5 as LLMErrorHandling
+    participant M6 as ToolErrorHandling
+    participant M7 as DynamicContext
+    participant M8 as SkillActivation
+    participant M9 as Summarization
+    participant M10 as Title
+    participant M11 as Memory
+    participant M12 as Clarification
+    participant Agent as LLM 节点
+    
+    Note over Caller,Agent: before_model 阶段（正序触发）
+    Caller-&gt;&gt;Chain: 进入链
+    Chain-&gt;&gt;M1: before_model
+    M1--&gt;&gt;Chain: 返回状态
+    Chain-&gt;&gt;M2: before_model
+    M2--&gt;&gt;Chain: 返回状态
+    Chain-&gt;&gt;M3: before_model
+    M3--&gt;&gt;Chain: 返回状态
+    Chain-&gt;&gt;M4: before_model
+    M4--&gt;&gt;Chain: 返回状态
+    Chain-&gt;&gt;M5: before_model
+    M5--&gt;&gt;Chain: 返回状态
+    Chain-&gt;&gt;M6: before_model
+    M6--&gt;&gt;Chain: 返回状态
+    Chain-&gt;&gt;M7: before_model
+    M7--&gt;&gt;Chain: 注入日期/记忆
+    Chain-&gt;&gt;M8: before_model
+    M8--&gt;&gt;Chain: 激活技能
+    Chain-&gt;&gt;M9: before_model
+    M9--&gt;&gt;Chain: 准备摘要
+    Chain-&gt;&gt;M10: before_model
+    M10--&gt;&gt;Chain: 返回状态
+    Chain-&gt;&gt;M11: before_model
+    M11--&gt;&gt;Chain: 返回状态
+    Chain-&gt;&gt;M12: before_model
+    M12--&gt;&gt;Chain: 返回状态
+    
+    Chain-&gt;&gt;Agent: 调用 LLM
+    Agent--&gt;&gt;Chain: 返回响应
+    
+    Note over Caller,Agent: after_model 阶段（逆序触发）
+    Chain-&gt;&gt;M12: after_model
+    M12--&gt;&gt;Chain: 处理澄清
+    Chain-&gt;&gt;M11: after_model
+    M11--&gt;&gt;Chain: 保存记忆
+    Chain-&gt;&gt;M10: after_model
+    M10--&gt;&gt;Chain: 生成标题
+    Chain-&gt;&gt;M9: after_model
+    M9--&gt;&gt;Chain: 返回状态
+    Chain-&gt;&gt;M8: after_model
+    M8--&gt;&gt;Chain: 返回状态
+    Chain-&gt;&gt;M7: after_model
+    M7--&gt;&gt;Chain: 返回状态
+    Chain-&gt;&gt;M6: after_model
+    M6--&gt;&gt;Chain: 处理错误
+    Chain-&gt;&gt;M5: after_model
+    M5--&gt;&gt;Chain: 返回状态
+    Chain-&gt;&gt;M4: after_model
+    M4--&gt;&gt;Chain: 返回状态
+    Chain-&gt;&gt;M3: after_model
+    M3--&gt;&gt;Chain: 返回状态
+    Chain-&gt;&gt;M2: after_model
+    M2--&gt;&gt;Chain: 返回状态
+    Chain-&gt;&gt;M1: after_model
+    M1--&gt;&gt;Chain: 返回状态
+    
+    Chain--&gt;&gt;Caller: 返回最终状态</pre></div>
+<h2 id="4-条件中间件启用图">4. 条件中间件启用图</h2>
+<blockquote><strong>修正说明</strong>：旧版"有工具？/有沙盒？/需要澄清？"等判断多数是臆造的。下图依据 <code>build_middlewares()</code>（<code>agent.py:270-377</code>）的真实条件编写。注意 <code>ClarificationMiddleware</code> <strong>总是最后注册</strong>（无任何条件），并非旧版画的"需要澄清才启用"。</blockquote>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #4</div><pre class="mermaid">graph TD
+    Start[build_lead_runtime_middlewares&lt;br/&gt;阶段1 固定基础链] --&gt; Base[固定注册:&lt;br/&gt;ToolOutputBudget→ThreadData→Uploads→Sandbox&lt;br/&gt;→DanglingToolCall→LLMErrorHandling→SandboxAudit→ToolErrorHandling]
+    
+    Base --&gt; Guardrail{guardrails.enabled?}
+    Guardrail --&gt;|是| AddGuardrail[插入 GuardrailMiddleware]
+    Guardrail --&gt;|否| DynCtx
+    
+    AddGuardrail --&gt; DynCtx[DynamicContextMiddleware 总是注册]
+    DynCtx --&gt; Skill[SkillActivationMiddleware 总是注册]
+    
+    Skill --&gt; Q1{summarization.enabled?}
+    Q1 --&gt;|是| AddSum[SummarizationMiddleware]
+    Q1 --&gt;|否| Q2
+    AddSum --&gt; Q2{is_plan_mode?}
+    
+    Q2 --&gt;|是| AddTodo[TodoMiddleware]
+    Q2 --&gt;|否| Q3
+    AddTodo --&gt; Q3{token_usage.enabled?}
+    
+    Q3 --&gt;|是| AddToken[TokenUsageMiddleware]
+    Q3 --&gt;|否| Title
+    AddToken --&gt; Title[TitleMiddleware 总是注册]
+    
+    Title --&gt; Memory[MemoryMiddleware 总是注册]
+    Memory --&gt; Q4{model.supports_vision?}
+    Q4 --&gt;|是| AddView[ViewImageMiddleware]
+    Q4 --&gt;|否| Q5
+    AddView --&gt; Q5{deferred_setup 非空?}
+    
+    Q5 --&gt;|有 deferred 工具| AddDeferred[DeferredToolFilterMiddleware]
+    Q5 --&gt;|否| Q6
+    AddDeferred --&gt; Q6{subagent_enabled?}
+    
+    Q6 --&gt;|是| AddSubLimit[SubagentLimitMiddleware max=3]
+    Q6 --&gt;|否| Q7
+    AddSubLimit --&gt; Q7{loop_detection.enabled?}
+    
+    Q7 --&gt;|是| AddLoop[LoopDetectionMiddleware]
+    Q7 --&gt;|否| Custom
+    AddLoop --&gt; Custom[custom_middlewares 注入点]
+    
+    Custom --&gt; Q8{safety_finish_reason.enabled?}
+    Q8 --&gt;|是| AddSafety[SafetyFinishReasonMiddleware]
+    Q8 --&gt;|否| Clarify
+    AddSafety --&gt; Clarify[ClarificationMiddleware 总在最后]
+    
+    Clarify --&gt; End[返回完整中间件链]
+    
+    style Start fill:#e1f5ff
+    style End fill:#e1ffe1
+    style Base fill:#fff4e1
+    style Clarify fill:#f0e1ff</pre></div>
+<p><strong>真实启用条件速查表</strong>：</p>
+<div class="table-wrap"><table><thead><tr><th>中间件</th><th>启用条件</th><th>代码位置</th></tr></thead><tbody><tr><td>ThreadData / Sandbox / Title / Memory</td><td>总是注册</td><td>agent.py</td></tr><tr><td>Summarization</td><td><code>summarization.enabled</code></td><td>agent.py:316</td></tr><tr><td>Todo</td><td><code>is_plan_mode == True</code></td><td>agent.py:322</td></tr><tr><td>TokenUsage</td><td><code>token_usage.enabled</code></td><td>agent.py:328</td></tr><tr><td>ViewImage</td><td><code>model_config.supports_vision</code></td><td>agent.py:340</td></tr><tr><td>SubagentLimit</td><td><code>subagent_enabled</code>，max 默认 3</td><td>agent.py:352</td></tr><tr><td>LoopDetection</td><td><code>loop_detection.enabled</code></td><td>agent.py:359</td></tr><tr><td>Guardrail</td><td><code>guardrails_config.enabled</code></td><td>tool_error_handling_middleware.py</td></tr><tr><td>SafetyFinishReason</td><td><code>safety_finish_reason.enabled</code></td><td>agent.py:372</td></tr><tr><td>Clarification</td><td><strong>总是注册，必为最后</strong></td><td>agent.py:376</td></tr></tbody></table></div>
+<h2 id="5-llm-节点调用图">5. LLM 节点调用图</h2>
+<p>展示 LLM 节点内部的详细调用流程。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #5</div><pre class="mermaid">graph TB
+    subgraph "输入处理"
+        State[ThreadState] --&gt; ExtractMsg[提取消息]
+        ExtractMsg --&gt; BuildHistory[构建历史]
+        BuildHistory --&gt; AddSystem[添加系统提示]
+        AddSystem --&gt; AddContext[添加上下文]
+    end
+    
+    subgraph "上下文增强"
+        AddContext --&gt; MemoryRetrieval[检索记忆]
+        MemoryRetrieval --&gt; AddMemoryCtx[添加记忆到提示]
+        
+        AddContext --&gt; ThreadInfo[线程信息]
+        ThreadInfo --&gt; AddThreadCtx[添加线程数据]
+        
+        AddContext --&gt; TodoList[待办列表]
+        TodoList --&gt; AddTodoCtx[添加待办到提示]
+        
+        AddContext --&gt; Summary[对话摘要]
+        Summary --&gt; AddSummaryCtx[添加摘要到提示]
+    end
+    
+    subgraph "模型配置"
+        BuildHistory --&gt; ModelSelect[选择模型]
+        ModelSelect --&gt; ConfigParams[配置参数]
+        ConfigParams --&gt; Temperature[温度]
+        ConfigParams --&gt; MaxTokens[最大 token]
+        ConfigParams --&gt; TopP[Top P]
+    end
+    
+    subgraph "API 调用"
+        ConfigParams --&gt; PrepareRequest[准备请求]
+        PrepareRequest --&gt; Stream{流式？}
+        Stream --&gt;|是 | StreamCall[流式 API 调用]
+        Stream --&gt;|否 | NormalCall[普通 API 调用]
+    end
+    
+    subgraph "响应处理"
+        StreamCall --&gt; ParseStream[解析流式响应]
+        NormalCall --&gt; ParseStream
+        
+        ParseStream --&gt; CheckContent{有内容？}
+        CheckContent --&gt;|是 | ExtractContent[提取内容]
+        CheckContent --&gt;|工具调用 | ExtractTool[提取工具调用]
+        
+        ExtractContent --&gt; CreateMessage[创建 AI 消息]
+        ExtractTool --&gt; CreateToolMessage[创建工具消息]
+        
+        CreateMessage --&gt; ReturnState[返回状态]
+        CreateToolMessage --&gt; ReturnState
+    end
+    
+    style State fill:#e1f5ff
+    style ReturnState fill:#e1ffe1
+    style StreamCall fill:#fff4e1
+    style ExtractTool fill:#f0e1ff</pre></div>
+<h2 id="6-工具调用处理图">6. 工具调用处理图</h2>
+<p>展示工具调用的完整处理流程。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #6</div><pre class="mermaid">graph TB
+    subgraph "工具检测"
+        Response[LLM 响应] --&gt; ParseTool[解析工具调用]
+        ParseTool --&gt; CheckTools{有工具？}
+        CheckTools --&gt;|是 | CreateToolMsg
+        CheckTools --&gt;|否 | SkipTool
+    end
+    
+    subgraph "工具执行"
+        CreateToolMsg[创建工具消息] --&gt; GetTool[获取工具]
+        GetTool --&gt; ValidateArgs[验证参数]
+        ValidateArgs --&gt; ExecTool[执行工具]
+        ExecTool --&gt; ToolResult[工具结果]
+    end
+    
+    subgraph "工具类型"
+        ExecTool --&gt; ToolType{工具类型？}
+        ToolType --&gt;|内置 | BuiltInExec[内置工具执行]
+        ToolType --&gt;|MCP | MCPExec[MCP 工具执行]
+        ToolType --&gt;|子代理 | SubAgentExec[子代理执行]
+    end
+    
+    subgraph "结果处理"
+        BuiltInExec --&gt; FormatResult[格式化结果]
+        MCPExec --&gt; FormatResult
+        SubAgentExec --&gt; FormatResult
+    end
+    
+    subgraph "循环继续"
+        FormatResult --&gt; AddToHistory[添加到历史]
+        AddToHistory --&gt; LLMAgain[再次调用 LLM]
+        LLMAgain --&gt; CheckAgain{继续？}
+        CheckAgain --&gt;|是 | ParseTool
+        CheckAgain --&gt;|否 | FinalResp[最终响应]
+    end
+    
+    SkipTool[跳过工具] --&gt; FinalResp
+    
+    style Response fill:#e1f5ff
+    style FinalResp fill:#e1ffe1
+    style ExecTool fill:#fff4e1
+    style SubAgentExec fill:#f0e1ff
+    style MCPExec fill:#ffe1e1</pre></div>
+<h2 id="7-子代理工具调用图">7. 子代理工具调用图</h2>
+<p>展示子代理工具 <code>task_tool</code> 的完整调用链。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #7</div><pre class="mermaid">graph TB
+    subgraph "工具触发"
+        LLM[LLM 决定] --&gt; CallTaskTool[调用 task 工具&lt;br/&gt;tool 名为 task]
+        CallTaskTool --&gt; ValidateTask[验证参数与 subagent_type]
+        ValidateTask --&gt; CreateTaskObj[创建任务对象]
+    end
+    
+    subgraph "任务创建"
+        CreateTaskObj --&gt; AssignTaskID[分配任务 ID]
+        AssignTaskID --&gt; InitSubagent[初始化子代理]
+        InitSubagent --&gt; CopyConfig[复制配置]
+        CopyConfig --&gt; SetParent[设置父线程]
+    end
+    
+    subgraph "异步执行"
+        SetParent --&gt; StartExec[启动异步执行]
+        StartExec --&gt; IsolatedLoop[独立事件循环]
+        IsolatedLoop --&gt; SubagentChain[子代理中间件链]
+        SubagentChain --&gt; SubagentLLM[子代理 LLM]
+    end
+    
+    subgraph "状态轮询"
+        StartExec --&gt; PollLoop[每 5 秒轮询一次]
+        PollLoop --&gt; CheckStatus{检查状态}
+        CheckStatus --&gt;|PENDING | Wait[继续等待]
+        CheckStatus --&gt;|RUNNING | UpdateStatus[更新状态]
+        CheckStatus --&gt;|COMPLETED | GetResult[获取结果]
+        CheckStatus --&gt;|FAILED | HandleError[处理错误]
+        CheckStatus --&gt;|TIMED_OUT | HandleTimeout[处理超时]
+        CheckStatus --&gt;|CANCELLED | HandleCancel[处理取消]
+    end
+    
+    subgraph "结果处理"
+        GetResult --&gt; FormatSubagentResult[格式化结果]
+        FormatSubagentResult --&gt; ReturnResult[返回结果]
+        
+        HandleError --&gt; ErrorHandler[错误处理]
+        ErrorHandler --&gt; ReturnResult
+        
+        HandleTimeout --&gt; TimeoutMsg[超时消息]
+        TimeoutMsg --&gt; ReturnResult
+        
+        HandleCancel --&gt; CancelMsg[取消消息]
+        CancelMsg --&gt; ReturnResult
+    end
+    
+    subgraph "清理"
+        ReturnResult --&gt; DelayCleanup[延迟清理]
+        DelayCleanup --&gt; RemoveTask[移除任务]
+        RemoveTask --&gt; Done[完成]
+    end
+    
+    style LLM fill:#e1f5ff
+    style Done fill:#e1ffe1
+    style IsolatedLoop fill:#fff4e1
+    style SubagentLLM fill:#f0e1ff</pre></div>
+<h2 id="8-错误处理调用图">8. 错误处理调用图</h2>
+<p>展示整个系统中的错误处理流程。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #8</div><pre class="mermaid">graph TB
+    subgraph "错误来源"
+        LLMError[LLM API 错误]
+        ToolError[工具执行错误]
+        SandboxError[Sandbox 错误]
+        SubagentError[子代理错误]
+        MiddlewareError[中间件错误]
+    end
+    
+    subgraph "捕获层"
+        LLMError --&gt; TryCatch[Try-Catch]
+        ToolError --&gt; TryCatch
+        SandboxError --&gt; TryCatch
+        SubagentError --&gt; TryCatch
+        MiddlewareError --&gt; TryCatch
+    end
+    
+    subgraph "ToolErrorHandling 中间件"
+        TryCatch --&gt; Middleware[ToolErrorHandlingMiddleware]
+        Middleware --&gt; Categorize[分类错误]
+        Categorize --&gt; BudgetError{预算错误？}
+        Categorize --&gt; ToolErrCheck{工具错误？}
+        Categorize --&gt; SystemError{系统错误？}
+    end
+    
+    subgraph "错误处理策略"
+        BudgetError --&gt; BudgetHandler[预算处理]
+        BudgetHandler --&gt; Warn[警告用户]
+        Warn --&gt; Limit[限制输出]
+        
+        ToolErrCheck --&gt; ToolHandler[工具处理]
+        ToolHandler --&gt; Retry{可重试？}
+        Retry --&gt;|是 | RetryExec[重试执行]
+        Retry --&gt;|否 | ReportError[报告错误]
+        
+        SystemError --&gt; SystemHandler[系统处理]
+        SystemHandler --&gt; SafeMode[安全模式]
+        SafeMode --&gt; Fallback[降级处理]
+    end
+    
+    subgraph "用户反馈"
+        Limit --&gt; UserMsg1[用户消息]
+        ReportError --&gt; UserMsg2[用户消息]
+        Fallback --&gt; UserMsg3[用户消息]
+        
+        UserMsg1 --&gt; FormatError[格式化错误]
+        UserMsg2 --&gt; FormatError
+        UserMsg3 --&gt; FormatError
+    end
+    
+    subgraph "继续执行"
+        FormatError --&gt; Continue[继续执行]
+        Continue --&gt; LLMAgain2[再次调用 LLM]
+        LLMAgain2 --&gt; Final[最终响应]
+    end
+    
+    style LLMError fill:#ffe1e1
+    style Final fill:#e1ffe1
+    style RetryExec fill:#fff4e1
+    style Fallback fill:#f0e1ff</pre></div>
+<h2 id="图表说明">图表说明</h2>
+<h3 id="组件颜色图例">组件颜色图例</h3>
+<ul>
+<li><code>#e1f5ff</code> (蓝色): 输入/起始状态</li>
+<li><code>#fff4e1</code> (黄色): 处理/执行状态</li>
+<li><code>#f0e1ff</code> (紫色): 特殊功能/子代理</li>
+<li><code>#e1ffe1</code> (绿色): 完成/输出状态</li>
+<li><code>#ffe1e1</code> (红色): 错误/异常状态</li>
+</ul>
+<h3 id="关键调用链">关键调用链</h3>
+<ol>
+<li><strong>请求处理链</strong>: API → Agent → before_model 链 → LLM → 工具 → after_model 链 → 响应</li>
+<li><strong>中间件链</strong>: 最多 22 个中间件，两阶段条件构建，before_model 正序、after_model 逆序触发</li>
+<li><strong>工具执行链</strong>: 检测 → 验证 → 执行 → 结果 → 循环</li>
+<li><strong>子代理链</strong>: 触发（task 工具）→ 创建 → ThreadPoolExecutor 异步执行 → 每 5 秒轮询 → 结果 → 清理</li>
+</ol>
+<h3 id="设计模式">设计模式</h3>
+<ol>
+<li><strong>图工厂模式</strong>: <code>make_lead_agent</code> 作为 LangGraph 图工厂函数构建 Lead Agent（非工厂类）</li>
+<li><strong>责任链模式</strong>: 中间件链通过顺序调用实现关注点分离</li>
+<li><strong>策略模式</strong>: 不同工具类型使用不同的执行策略</li>
+<li><strong>异步模式</strong>: 子代理（ThreadPoolExecutor + 独立事件循环）和记忆提取使用异步执行</li>
+<li><strong>状态模式</strong>: ThreadState 管理所有运行时状态</li>
+</ol>
+<h3 id="扩展性设计">扩展性设计</h3>
+<ul>
+<li>中间件可插拔，通过条件启用控制</li>
+<li>工具系统支持内置、MCP、子代理等多种类型</li>
+<li>模型配置可动态选择</li>
+<li>错误处理策略可配置</li>
+</ul>
+      <div id="page-nav"></div>
+    </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose',
+    flowchart: { curve: 'stepAfter', htmlLabels: true, nodeSpacing: 55, rankSpacing: 65, useMaxWidth: true },
+    themeVariables: { darkMode: true, background: '#0d1117', primaryColor: '#1f2937',
+      primaryTextColor: '#e6edf3', primaryBorderColor: '#58a6ff', lineColor: '#9aa4b2',
+      secondaryColor: '#161b22', tertiaryColor: '#1a2029', textColor: '#e6edf3' } });
+  const renderAll = () => mermaid.run({ querySelector: 'pre.mermaid' })
+    .catch(e => console.error('mermaid render error:', e));
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderAll);
+  } else {
+    renderAll();
+  }
+</script>
+</body>
+</html>

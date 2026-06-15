@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>前端架构（上） · DeerFlow 流程图</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+<div class="toc"><div class="toc-title">📖 本页目录</div><ul><li class=""><a href="#目录">目录</a></li><li class=""><a href="#1-前端整体架构图">1. 前端整体架构图</a></li><li class=""><a href="#2-页面路由结构图">2. 页面路由结构图</a></li><li class=""><a href="#3-工作区布局组件图">3. 工作区布局组件图</a></li><li class=""><a href="#4-输入框组件交互图">4. 输入框组件交互图</a></li><li class=""><a href="#5-消息渲染组件图">5. 消息渲染组件图</a></li><li class=""><a href="#6-状态管理架构">6. 状态管理架构</a></li><li class=""><a href="#7-流式响应处理流程">7. 流式响应处理流程</a></li><li class=""><a href="#8-线程生命周期管理">8. 线程生命周期管理</a></li><li class=""><a href="#9-文件上传流程">9. 文件上传流程</a></li><li class=""><a href="#10-技能建议系统">10. 技能建议系统</a></li><li class=""><a href="#11-组件依赖关系图">11. 组件依赖关系图</a></li><li class=""><a href="#技术栈总结">技术栈总结</a></li><li class=""><a href="#关键设计模式">关键设计模式</a></li></ul></div>
+<div class="page-head"><span class="page-num">07</span><div class="page-stats"><span class="ps-item"><b>11</b> Mermaid 图</span><span class="ps-dot">·</span><span class="ps-item"><b>15</b> 章节</span></div></div><h1 id="deerflow-前端架构与交互流程图">DeerFlow 前端架构与交互流程图</h1>
+<p>本文档包含 DeerFlow 前端系统的完整流程图，展示页面路由、组件架构、状态管理和用户交互流程。</p>
+<hr/>
+<h2 id="目录">目录</h2>
+<ol>
+<li><a href="#1-前端整体架构图">前端整体架构图</a></li>
+<li><a href="#2-页面路由结构图">页面路由结构图</a></li>
+<li><a href="#3-工作区布局组件图">工作区布局组件图</a></li>
+<li><a href="#4-输入框组件交互图">输入框组件交互图</a></li>
+<li><a href="#5-消息渲染组件图">消息渲染组件图</a></li>
+<li><a href="#6-状态管理架构">状态管理架构</a></li>
+<li><a href="#7-流式响应处理流程">流式响应处理流程</a></li>
+<li><a href="#8-线程生命周期管理">线程生命周期管理</a></li>
+<li><a href="#9-文件上传流程">文件上传流程</a></li>
+<li><a href="#10-技能建议系统">技能建议系统</a></li>
+<li><a href="#11-组件依赖关系图">组件依赖关系图</a></li>
+</ol>
+<hr/>
+<h2 id="1-前端整体架构图">1. 前端整体架构图</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #1</div><pre class="mermaid">graph TB
+    subgraph "前端应用层"
+        A[Next.js 16 应用]
+        A --&gt; B[着陆页面 LandingPage]
+        A --&gt; C[工作区 Workspace]
+        A --&gt; D[设置页面 Settings]
+    end
+
+    subgraph "核心组件层"
+        B --&gt; E[Landing 组件]
+        C --&gt; F[Workspace 组件]
+        D --&gt; G[Settings 组件]
+        
+        E --&gt; E1[Header]
+        E --&gt; E2[Hero]
+        E --&gt; E3[CaseStudySection]
+        
+        F --&gt; F1[WorkspaceContainer]
+        F --&gt; F2[WorkspaceSidebar]
+        F --&gt; F3[WorkspaceHeader]
+        F --&gt; F4[WorkspaceBody]
+    end
+
+    subgraph "功能组件层"
+        F4 --&gt; H[InputBox 输入框]
+        F4 --&gt; I[Messages 消息列表]
+        F4 --&gt; J[Artifacts 工件展示]
+        F4 --&gt; K[TodoList 待办列表]
+        F4 --&gt; L[Channels 频道选择]
+    end
+
+    subgraph "UI 组件库"
+        H --&gt; M[Shadcn UI]
+        I --&gt; M
+        J --&gt; M
+        K --&gt; M
+        L --&gt; M
+    end
+
+    subgraph "核心服务层"
+        N[React Query 状态管理]
+        O[API 客户端]
+        P[i18n 国际化]
+        Q[主题提供者]
+    end
+
+    F --&gt; N
+    F --&gt; O
+    F --&gt; P
+    F --&gt; Q
+    H --&gt; N
+    I --&gt; N</pre></div>
+<p><strong>图例说明:</strong></p>
+<ul>
+<li><strong>前端应用层</strong>: Next.js 16 构建的多页面应用，包含着陆页、工作区和设置页</li>
+<li><strong>核心组件层</strong>: 各页面的主要布局组件</li>
+<li><strong>功能组件层</strong>: 工作区内的核心功能组件</li>
+<li><strong>UI 组件库</strong>: 基于 Shadcn UI 的组件系统</li>
+<li><strong>核心服务层</strong>: 状态管理、API 调用、国际化等公共服务</li>
+</ul>
+<hr/>
+<h2 id="2-页面路由结构图">2. 页面路由结构图</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #2</div><pre class="mermaid">graph LR
+    A[/] --&gt; B[LandingPage]
+    A --&gt; C[Workspace 重定向]
+    
+    C --&gt; D{是否有历史线程？}
+    D --&gt;|是 | E["/workspace/chats/[thread_id]"]
+    D --&gt;|否 | F["/workspace/chats?new=true"]
+    
+    E --&gt; G[ChatPage]
+    F --&gt; G
+    
+    H[/settings] --&gt; I[SettingsPage]
+    J[/docs] --&gt; K[DocsPage]
+    
+    style A fill:#e1f5ff
+    style B fill:#fff3e0
+    style C fill:#fff3e0
+    style D fill:#ffe0b2
+    style E fill:#e8f5e9
+    style F fill:#e8f5e9
+    style G fill:#e8f5e9
+    style H fill:#f3e5f5
+    style I fill:#f3e5f5
+    style J fill:#fce4ec
+    style K fill:#fce4ec</pre></div>
+<p><strong>路由说明:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>路由</th><th>组件</th><th>功能</th></tr></thead><tbody><tr><td><code>/</code></td><td><code>LandingPage</code></td><td>着陆页面，展示产品介绍和案例研究</td></tr><tr><td><code>/workspace</code></td><td>重定向组件</td><td>根据历史线程重定向到聊天页或新建聊天</td></tr><tr><td><code>/workspace/chats/[thread_id]</code></td><td><code>ChatPage</code></td><td>聊天工作区核心页面</td></tr><tr><td><code>/workspace/chats?new=true</code></td><td><code>ChatPage</code></td><td>新建聊天入口</td></tr><tr><td><code>/settings</code></td><td><code>SettingsPage</code></td><td>用户设置页面</td></tr><tr><td><code>/docs</code></td><td><code>DocsPage</code></td><td>文档页面</td></tr></tbody></table></div>
+<hr/>
+<h2 id="3-工作区布局组件图">3. 工作区布局组件图</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #3</div><pre class="mermaid">graph TB
+    subgraph "WorkspaceContainer 根容器"
+        A[WorkspaceContainer&lt;br/&gt;flex h-screen flex-col]
+        
+        A --&gt; B[WorkspaceHeader&lt;br/&gt;h-16 面包屑 + GitHub 链接]
+        A --&gt; C[WorkspaceBody&lt;br/&gt;flex-1 主内容区]
+    end
+
+    subgraph "WorkspaceBody 内部结构"
+        C --&gt; D[Sidebar 侧边栏]
+        C --&gt; E[MainContent 主内容区]
+    end
+
+    subgraph "Sidebar 侧边栏"
+        D --&gt; D1[RecentChatList&lt;br/&gt;最近聊天列表]
+        D --&gt; D2[NavMenu&lt;br/&gt;导航菜单]
+        D --&gt; D3[ThreadChannelSource&lt;br/&gt;频道数据源]
+    end
+
+    subgraph "MainContent 主内容区"
+        E --&gt; E1[Messages 消息列表]
+        E --&gt; E2[InputBox 输入框]
+        E --&gt; E3[Artifacts 工件展示]
+        E --&gt; E4[TodoList 待办列表]
+    end
+
+    subgraph "Shared 共享组件"
+        F[Tooltip 提示]
+        G[CopyButton 复制按钮]
+        H[StreamingIndicator&lt;br/&gt;流式指示器]
+        I[TokenUsageIndicator&lt;br/&gt;Token 使用指示器]
+    end
+
+    E1 --&gt; F
+    E2 --&gt; F
+    E1 --&gt; H
+    E1 --&gt; G
+    E --&gt; I</pre></div>
+<p><strong>组件职责:</strong></p>
+<ul>
+<li><strong>WorkspaceContainer</strong>: 全屏 flex 布局容器，包含 header 和 body</li>
+<li><strong>WorkspaceHeader</strong>: 顶部导航栏，显示面包屑导航和 GitHub 链接</li>
+<li><strong>WorkspaceBody</strong>: 主内容区域，分为侧边栏和主内容区</li>
+<li><strong>Sidebar</strong>: 左侧边栏，显示最近聊天列表和导航菜单</li>
+<li><strong>MainContent</strong>: 主内容区，包含消息列表、输入框、工件和待办列表</li>
+</ul>
+<hr/>
+<h2 id="4-输入框组件交互图">4. 输入框组件交互图</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #4</div><pre class="mermaid">sequenceDiagram
+    participant U as 用户
+    participant IB as InputBox 组件
+    participant S as Skills 服务
+    participant API as Backend API
+    participant LG as LangGraph SDK
+    
+    U-&gt;&gt;IB: 输入文本"/python"
+    IB-&gt;&gt;IB: getMatchingSkillSuggestions 匹配技能
+    IB--&gt;&gt;U: 显示技能建议列表
+    
+    U-&gt;&gt;IB: 选择模式"pro"
+    IB-&gt;&gt;IB: handleModeSelect 设置 mode 和 reasoning_effort
+    IB--&gt;&gt;U: 更新 UI 显示选中模式
+    
+    U-&gt;&gt;IB: 选择模型"gpt-4o"
+    IB-&gt;&gt;IB: handleModelSelect 检查模型能力
+    IB-&gt;&gt;IB: 自动调整模式为 ultra
+    IB--&gt;&gt;U: 更新模型和模式
+    
+    U-&gt;&gt;IB: 点击发送按钮
+    IB-&gt;&gt;IB: handleSubmit 检查流式状态
+    IB-&gt;&gt;IB: 创建 optimistic messages
+    IB-&gt;&gt;IB: 上传文件 (如果有)
+    IB-&gt;&gt;API: uploadFiles 上传文件
+    
+    API--&gt;&gt;IB: 返回上传结果 (virtual_path)
+    IB-&gt;&gt;IB: 更新 optimistic messages 为 uploaded 状态
+    
+    IB-&gt;&gt;API: POST /runs (包含消息和 context)
+    API-&gt;&gt;LG: thread.submit()
+    LG--&gt;&gt;API: 开始流式响应
+    
+    API--&gt;&gt;IB: streamSubgraphs=true 流式事件
+    
+    loop 流式事件处理
+        IB-&gt;&gt;IB: onLangChainEvent 处理工具调用
+        IB-&gt;&gt;IB: onUpdateEvent 处理状态更新
+        IB-&gt;&gt;IB: onCustomEvent 处理 task_running/llm_retry
+        IB-&gt;&gt;IB: 更新 messages 状态
+        IB--&gt;&gt;U: 实时显示 AI 回复
+    end
+    
+    API--&gt;&gt;IB: onFinish 流式完成
+    IB-&gt;&gt;API: 获取后续问题建议 API
+    API--&gt;&gt;IB: 返回 followup suggestions
+    IB--&gt;&gt;U: 显示后续问题建议
+    
+    U-&gt;&gt;IB: 点击后续问题
+    IB-&gt;&gt;IB: handleFollowupClick
+    IB-&gt;&gt;IB: 替换或追加到输入框
+    IB--&gt;&gt;U: 更新输入框内容</pre></div>
+<p><strong>关键交互流程:</strong></p>
+<ol>
+<li><strong>技能建议</strong>: 用户输入 <code>/</code> 触发技能建议匹配</li>
+<li><strong>模式选择</strong>: 支持 flash/thinking/pro/ultra 四种模式</li>
+<li><strong>模型选择</strong>: 根据模型能力自动调整模式</li>
+<li><strong>消息发送</strong>: 创建乐观消息 → 上传文件 → 提交 API → 流式响应</li>
+<li><strong>流式处理</strong>: 实时显示 AI 回复，处理工具调用和状态更新</li>
+<li><strong>后续建议</strong>: 流式完成后获取并显示后续问题建议</li>
+</ol>
+<hr/>
+<h2 id="5-消息渲染组件图">5. 消息渲染组件图</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #5</div><pre class="mermaid">graph TB
+    A[Messages 列表容器] --&gt; B[MessageItem 消息项]
+    
+    B --&gt; C{消息类型}
+    C --&gt;|human| D[UserMessage 用户消息]
+    C --&gt;|ai| E[AIMessage AI 消息]
+    C --&gt;|system| F[SystemMessage 系统消息]
+    C --&gt;|tool| G[ToolMessage 工具消息]
+    
+    D --&gt; D1[TextContent 文本内容]
+    D --&gt; D2[FileContent 文件内容]
+    
+    E --&gt; E1[ThinkingBlock 思考块]
+    E --&gt; E2[TextContent 文本内容]
+    E --&gt; E3[CodeBlock 代码块]
+    E --&gt; E4[Artifact 工件展示]
+    
+    G --&gt; G1[ToolCall 工具调用]
+    G --&gt; G2[ToolResult 工具结果]
+    
+    subgraph "消息工具"
+        H[CopyButton 复制按钮]
+        I[ThumbDown 反馈按钮]
+        J[Citation 引用展示]
+    end
+    
+    D --&gt; H
+    E --&gt; H
+    E --&gt; I
+    G --&gt; J</pre></div>
+<p><strong>消息类型说明:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>消息类型</th><th>组件</th><th>功能</th></tr></thead><tbody><tr><td>human</td><td><code>UserMessage</code></td><td>用户输入的消息，包含文本和文件</td></tr><tr><td>ai</td><td><code>AIMessage</code></td><td>AI 回复，包含思考块、文本、代码和工件</td></tr><tr><td>system</td><td><code>SystemMessage</code></td><td>系统消息，通常隐藏显示</td></tr><tr><td>tool</td><td><code>ToolMessage</code></td><td>工具调用结果消息</td></tr></tbody></table></div>
+<hr/>
+<h2 id="6-状态管理架构">6. 状态管理架构</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #6</div><pre class="mermaid">graph TB
+    subgraph "React Query 状态管理"
+        A[TanStack Query 核心]
+        
+        A --&gt; B[Thread Queries]
+        A --&gt; C[Run Queries]
+        A --&gt; D[Token Usage]
+        A --&gt; E[Search Cache]
+    end
+
+    subgraph "Hooks 层"
+        B --&gt; F[useThreads 线程搜索]
+        B --&gt; G[useInfiniteThreads 无限滚动]
+        B --&gt; H[useThreadHistory 历史加载]
+        B --&gt; I[useThreadStream 流式响应]
+        
+        C --&gt; J[useThreadRuns 运行列表]
+        C --&gt; K[useRunDetail 运行详情]
+        
+        D --&gt; L[useThreadTokenUsage Token 使用]
+        
+        B --&gt; M[useDeleteThread 删除线程]
+        B --&gt; N[useRenameThread 重命名]
+    end
+
+    subgraph "状态数据"
+        O[AgentThread 线程对象]
+        P[Run 运行对象]
+        Q[Message 消息数组]
+        R[ThreadState 线程状态]
+    end
+
+    subgraph "缓存管理"
+        S[Search Cache 搜索缓存]
+        T[Infinite Cache 无限滚动缓存]
+        U[Optimistic Messages 乐观消息]
+    end
+
+    F --&gt; O
+    G --&gt; O
+    H --&gt; O
+    I --&gt; O
+    
+    J --&gt; P
+    K --&gt; P
+    
+    H --&gt; Q
+    I --&gt; Q
+    
+    I --&gt; R
+    
+    I --&gt; U
+    F --&gt; S
+    G --&gt; T</pre></div>
+<p><strong>状态管理特点:</strong></p>
+<ul>
+<li><strong>React Query</strong>: 使用 TanStack Query 进行服务端状态管理</li>
+<li><strong>Hooks 分层</strong>: 提供多个专用 hooks 处理不同场景</li>
+<li><strong>缓存优化</strong>: 搜索缓存和无限滚动缓存协同工作</li>
+<li><strong>乐观更新</strong>: 在服务器响应前显示乐观消息提升体验</li>
+</ul>
+<hr/>
+<h2 id="7-流式响应处理流程">7. 流式响应处理流程</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #7</div><pre class="mermaid">sequenceDiagram
+    participant FE as Frontend Hooks
+    participant LG as LangGraph SDK
+    participant BE as Backend Server
+    participant DB as Database
+    
+    FE-&gt;&gt;LG: useStream({threadId, assistantId})
+    LG-&gt;&gt;BE: 建立 SSE 连接
+    
+    alt 新线程
+        BE-&gt;&gt;DB: 创建新 thread
+        DB--&gt;&gt;BE: thread_id
+        BE--&gt;&gt;FE: onCreated(meta)
+        FE-&gt;&gt;FE: upsertThreadInSearchCache
+        FE-&gt;&gt;FE: upsertThreadInInfiniteCache
+    end
+    
+    FE-&gt;&gt;LG: thread.submit(messages)
+    LG-&gt;&gt;BE: POST /runs (streamSubgraphs=true)
+    
+    loop 流式事件循环
+        BE--&gt;&gt;FE: LangChainEvent (on_tool_start)
+        FE-&gt;&gt;FE: onLangChainEvent 处理工具调用
+        FE-&gt;&gt;FE: 更新 UI 显示工具执行
+        
+        BE--&gt;&gt;FE: UpdateEvent (state update)
+        FE-&gt;&gt;FE: onUpdateEvent 处理状态更新
+        FE-&gt;&gt;FE: 提取 summarization 消息
+        FE-&gt;&gt;FE: appendMessages 追加消息
+        
+        BE--&gt;&gt;FE: CustomEvent (task_running)
+        FE-&gt;&gt;FE: onCustomEvent 更新 subtask
+        FE-&gt;&gt;FE: 显示任务进度
+        
+        BE--&gt;&gt;FE: CustomEvent (llm_retry)
+        FE-&gt;&gt;FE: onCustomEvent 显示重试提示
+    end
+    
+    BE--&gt;&gt;FE: onFinish(state)
+    FE-&gt;&gt;FE: listeners.onFinish 调用回调
+    FE-&gt;&gt;FE: queryClient.invalidateQueries
+    FE-&gt;&gt;FE: 清理 optimistic messages
+    
+    FE-&gt;&gt;BE: 获取后续问题建议
+    BE--&gt;&gt;FE: 返回 followup suggestions
+    FE-&gt;&gt;FE: 显示建议按钮</pre></div>
+<p><strong>流式处理关键点:</strong></p>
+<ol>
+<li><strong>连接建立</strong>: 使用 LangGraph SDK 的 <code>useStream</code> Hook 建立 SSE 连接</li>
+<li><strong>事件处理</strong>: 处理 LangChainEvent、UpdateEvent、CustomEvent 三种事件</li>
+<li><strong>消息合并</strong>: 合并历史消息、流式消息和乐观消息</li>
+<li><strong>去重机制</strong>: 基于 <code>messageIdentity</code> 进行消息去重</li>
+<li><strong>缓存更新</strong>: 流式完成后 invalidation 查询缓存</li>
+</ol>
+<hr/>
+<h2 id="8-线程生命周期管理">8. 线程生命周期管理</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #8</div><pre class="mermaid">stateDiagram-v2
+    [*] --&gt; New: 用户进入 workspace
+    New --&gt; Loading: 加载历史线程
+    Loading --&gt; Active: 加载完成
+    
+    Active --&gt; Streaming: 发送消息
+    Streaming --&gt; Processing: 服务器处理中
+    Processing --&gt; Active: 流式完成
+    
+    Active --&gt; Deleting: 删除线程
+    Deleting --&gt; [*]: 删除成功
+    
+    Active --&gt; Renaming: 重命名线程
+    Renaming --&gt; Active: 重命名完成
+    
+    Streaming --&gt; Error: 发生错误
+    Error --&gt; Active: 错误处理
+    
+    note right of New
+        创建新的线程对象
+        optimisticThreadId = null
+    end note
+    
+    note right of Loading
+        调用 useThreadHistory
+        分页加载消息历史
+    end note
+    
+    note right of Active
+        显示消息列表
+        监听流式事件
+    end note
+    
+    note right of Streaming
+        创建 optimistic messages
+        上传文件
+        提交到服务器
+    end note
+    
+    note right of Error
+        清空 optimistic messages
+        显示错误提示
+        清理状态
+    end note</pre></div>
+<p><strong>线程状态:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>状态</th><th>描述</th><th>关键操作</th></tr></thead><tbody><tr><td>New</td><td>新建线程</td><td>创建线程对象，准备发送消息</td></tr><tr><td>Loading</td><td>加载历史</td><td>分页加载消息历史</td></tr><tr><td>Active</td><td>活跃状态</td><td>显示消息，监听事件</td></tr><tr><td>Streaming</td><td>流式发送</td><td>上传文件，提交 API</td></tr><tr><td>Processing</td><td>处理中</td><td>服务器处理，流式返回</td></tr><tr><td>Error</td><td>错误状态</td><td>错误提示，状态清理</td></tr><tr><td>Deleting</td><td>删除中</td><td>删除线程，清理缓存</td></tr><tr><td>Renaming</td><td>重命名中</td><td>更新线程标题</td></tr></tbody></table></div>
+<hr/>
+<h2 id="9-文件上传流程">9. 文件上传流程</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #9</div><pre class="mermaid">sequenceDiagram
+    participant U as 用户
+    participant IB as InputBox
+    participant FS as File System
+    participant API as Upload API
+    participant BE as Backend
+    
+    U-&gt;&gt;IB: 选择文件
+    IB-&gt;&gt;IB: 创建 PromptInputFilePart
+    IB-&gt;&gt;IB: 设置 uploading 状态
+    
+    IB-&gt;&gt;IB: handleSubmit 触发上传
+    IB-&gt;&gt;FS: 转换 FilePart 为 File 对象
+    FS--&gt;&gt;IB: 返回 File 对象
+    
+    loop 上传每个文件
+        IB-&gt;&gt;API: POST /uploads (file)
+        API-&gt;&gt;BE: 接收文件
+        BE-&gt;&gt;BE: 保存到临时目录
+        BE-&gt;&gt;BE: 创建虚拟路径 /mnt/user-data/xxx
+        API--&gt;&gt;IB: 返回 UploadedFileInfo
+        
+        IB-&gt;&gt;IB: 更新 optimistic message
+        IB-&gt;&gt;IB: 状态改为 uploaded
+        IB-&gt;&gt;IB: 添加 virtual_path
+    end
+    
+    IB-&gt;&gt;BE: POST /runs (包含 files metadata)
+    BE-&gt;&gt;BE: 验证文件路径
+    BE-&gt;&gt;BE: 映射到 Sandbox 路径
+    BE--&gt;&gt;IB: 开始流式处理</pre></div>
+<p><strong>文件上传步骤:</strong></p>
+<ol>
+<li><strong>选择文件</strong>: 用户选择文件，创建 <code>PromptInputFilePart</code></li>
+<li><strong>转换文件</strong>: 将 FilePart 转换为浏览器 File 对象</li>
+<li><strong>上传文件</strong>: 调用 Upload API，返回 <code>UploadedFileInfo</code></li>
+<li><strong>更新状态</strong>: 将文件状态从 <code>uploading</code> 改为 <code>uploaded</code></li>
+<li><strong>提交消息</strong>: 将文件 metadata 包含在消息中提交</li>
+<li><strong>后端处理</strong>: 后端验证并映射到 Sandbox 虚拟路径</li>
+</ol>
+<hr/>
+<h2 id="10-技能建议系统">10. 技能建议系统</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #10</div><pre class="mermaid">graph TB
+    A[用户输入框] --&gt; B{输入检测}
+    
+    B --&gt;|输入 '/' | C[触发技能搜索]
+    B --&gt;|输入其他 | D[隐藏技能列表]
+    
+    C --&gt; E[getMatchingSkillSuggestions]
+    E --&gt; F{匹配模式}
+    
+    F --&gt;|精确匹配 | G[显示匹配技能]
+    F --&gt;|前缀匹配 | H[显示相关技能]
+    F --&gt;|无匹配 | I[显示所有技能]
+    
+    G --&gt; J[渲染技能列表]
+    H --&gt; J
+    I --&gt; J
+    
+    J --&gt; K{用户操作}
+    
+    K --&gt;|点击技能 | L[applySkillSuggestion]
+    K --&gt;|键盘上下 | M[高亮选中]
+    K --&gt;|Enter/Tab | N[应用技能]
+    K --&gt;|Escape | O[关闭列表]
+    
+    L --&gt; P[设置光标位置]
+    L --&gt; Q[插入技能文本]
+    L --&gt; R[关闭技能列表]
+    
+    M --&gt; S[更新 selectedIndex]
+    S --&gt; J
+    
+    N --&gt; L
+    O --&gt; D
+    
+    style A fill:#e1f5ff
+    style C fill:#fff3e0
+    style J fill:#e8f5e9
+    style L fill:#fce4ec</pre></div>
+<p><strong>技能建议功能:</strong></p>
+<ul>
+<li><strong>触发机制</strong>: 输入 <code>/</code> 触发技能搜索</li>
+<li><strong>匹配模式</strong>: 支持精确匹配、前缀匹配和全量显示</li>
+<li><strong>键盘导航</strong>: 支持上下箭头选择，Enter/Tab 应用，Escape 关闭</li>
+<li><strong>光标定位</strong>: 应用技能后自动定位光标到合适位置</li>
+<li><strong>实时过滤</strong>: 根据输入实时过滤技能列表</li>
+</ul>
+<hr/>
+<h2 id="11-组件依赖关系图">11. 组件依赖关系图</h2>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #11</div><pre class="mermaid">graph TB
+    subgraph "页面层"
+        A[LandingPage]
+        B[ChatPage]
+        C[SettingsPage]
+    end
+    
+    subgraph "布局组件"
+        D[WorkspaceContainer]
+        E[WorkspaceHeader]
+        F[WorkspaceBody]
+        G[WorkspaceSidebar]
+    end
+    
+    subgraph "核心功能组件"
+        H[InputBox]
+        I[Messages]
+        J[Artifacts]
+        K[TodoList]
+        L[Channels]
+    end
+    
+    subgraph "消息子组件"
+        M[UserMessage]
+        N[AIMessage]
+        O[ToolMessage]
+        P[ThinkingBlock]
+        Q[CodeBlock]
+    end
+    
+    subgraph "UI 组件"
+        R[Button]
+        S[DropdownMenu]
+        T[Dialog]
+        U[Tooltip]
+        V[Badge]
+    end
+    
+    subgraph "Hooks 层"
+        W[useThreadStream]
+        X[useThreadHistory]
+        Y[useThreads]
+        Z[useDeleteThread]
+    end
+    
+    A --&gt; D
+    B --&gt; D
+    C --&gt; D
+    D --&gt; E
+    D --&gt; F
+    F --&gt; G
+    F --&gt; H
+    F --&gt; I
+    F --&gt; J
+    F --&gt; K
+    F --&gt; L
+
+    I --&gt; M
+    I --&gt; N
+    I --&gt; O
+    N --&gt; P
+    N --&gt; Q
+
+    H --&gt; R
+    H --&gt; S
+    C --&gt; T
+    I --&gt; U
+    J --&gt; V
+    
+    H --&gt; W
+    I --&gt; W
+    I --&gt; X
+    G --&gt; Y
+    G --&gt; Z
+    
+    style A fill:#e1f5ff
+    style B fill:#e1f5ff
+    style C fill:#e1f5ff
+    style D fill:#fff3e0
+    style H fill:#e8f5e9
+    style I fill:#e8f5e9
+    style W fill:#fce4ec</pre></div>
+<p><strong>组件依赖说明:</strong></p>
+<ul>
+<li><strong>页面层</strong>: 顶层页面组件，作为应用入口</li>
+<li><strong>布局组件</strong>: 提供整体布局结构</li>
+<li><strong>核心功能组件</strong>: 工作区的核心功能实现</li>
+<li><strong>消息子组件</strong>: 消息类型的细分组件</li>
+<li><strong>UI 组件</strong>: 基础 UI 组件库</li>
+<li><strong>Hooks 层</strong>: 状态管理和数据获取</li>
+</ul>
+<hr/>
+<h2 id="技术栈总结">技术栈总结</h2>
+<div class="table-wrap"><table><thead><tr><th>层级</th><th>技术</th><th>版本</th></tr></thead><tbody><tr><td>框架</td><td>Next.js</td><td>16</td></tr><tr><td>运行时</td><td>React</td><td>19</td></tr><tr><td>样式</td><td>Tailwind CSS</td><td>4</td></tr><tr><td>UI 组件</td><td>Shadcn UI</td><td>最新</td></tr><tr><td>状态管理</td><td>TanStack Query</td><td>最新</td></tr><tr><td>语言</td><td>TypeScript</td><td>最新</td></tr><tr><td>国际化</td><td>next-intl</td><td>最新</td></tr><tr><td>客户端</td><td>LangGraph SDK</td><td>最新</td></tr></tbody></table></div>
+<hr/>
+<h2 id="关键设计模式">关键设计模式</h2>
+<ol>
+<li><strong>乐观更新模式</strong>: 在服务器响应前显示用户输入</li>
+<li><strong>消息去重机制</strong>: 基于 <code>messageIdentity</code> 的唯一性识别</li>
+<li><strong>流式响应处理</strong>: 使用 LangGraph SDK 的 <code>useStream</code> Hook</li>
+<li><strong>无限滚动加载</strong>: 使用 React Query 的无限查询</li>
+<li><strong>技能建议系统</strong>: 基于输入触发的实时建议</li>
+<li><strong>文件上传优化</strong>: 上传前显示乐观状态，完成后更新路径</li>
+</ol>
+      <div id="page-nav"></div>
+    </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose',
+    flowchart: { curve: 'stepAfter', htmlLabels: true, nodeSpacing: 55, rankSpacing: 65, useMaxWidth: true },
+    themeVariables: { darkMode: true, background: '#0d1117', primaryColor: '#1f2937',
+      primaryTextColor: '#e6edf3', primaryBorderColor: '#58a6ff', lineColor: '#9aa4b2',
+      secondaryColor: '#161b22', tertiaryColor: '#1a2029', textColor: '#e6edf3' } });
+  const renderAll = () => mermaid.run({ querySelector: 'pre.mermaid' })
+    .catch(e => console.error('mermaid render error:', e));
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderAll);
+  } else {
+    renderAll();
+  }
+</script>
+</body>
+</html>

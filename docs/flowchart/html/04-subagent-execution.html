@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>子代理执行 · DeerFlow 流程图</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle">☰</button>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+    <div class="content">
+<div class="toc"><div class="toc-title">📖 本页目录</div><ul><li class=""><a href="#1-子代理生命周期图">1. 子代理生命周期图</a></li><li class=""><a href="#2-子代理创建流程图">2. 子代理创建流程图</a></li><li class=""><a href="#3-子代理执行引擎图">3. 子代理执行引擎图</a></li><li class=""><a href="#4-子代理状态流转图">4. 子代理状态流转图</a></li><li class=""><a href="#5-子代理并发控制图">5. 子代理并发控制图</a></li><li class=""><a href="#6-子代理结果轮询图">6. 子代理结果轮询图</a></li><li class=""><a href="#7-子代理嵌套调用图-嵌套被禁止">7. 子代理嵌套调用图（嵌套被禁止）</a></li><li class=""><a href="#8-子代理超时控制图">8. 子代理超时控制图</a></li><li class=""><a href="#9-子代理清理机制图">9. 子代理清理机制图</a></li><li class=""><a href="#10-子代理工具调用时序图">10. 子代理工具调用时序图</a></li><li class=""><a href="#图表说明">图表说明</a></li><li class="toc-sub"><a href="#状态图例">状态图例</a></li><li class="toc-sub"><a href="#关键参数">关键参数</a></li><li class="toc-sub"><a href="#设计特点">设计特点</a></li><li class="toc-sub"><a href="#使用场景">使用场景</a></li></ul></div>
+<div class="page-head"><span class="page-num">04</span><div class="page-stats"><span class="ps-item"><b>10</b> Mermaid 图</span><span class="ps-dot">·</span><span class="ps-item"><b>16</b> 章节</span></div></div><h1 id="deerflow-子代理执行流程图">DeerFlow 子代理执行流程图</h1>
+<p>本文档包含子代理系统的完整 Mermaid 流程图，展示子代理的创建、执行、状态管理和结果处理。</p>
+<h2 id="1-子代理生命周期图">1. 子代理生命周期图</h2>
+<p>展示子代理从创建到完成的完整生命周期。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #1</div><pre class="mermaid">stateDiagram-v2
+    [*] --&gt; PENDING: 任务创建
+    PENDING --&gt; RUNNING: 开始执行（分配执行器）
+    RUNNING --&gt; COMPLETED: 任务完成
+    RUNNING --&gt; FAILED: 执行失败
+    RUNNING --&gt; TIMED_OUT: 超时（仅 timeout_seconds=900s 一种）
+    RUNNING --&gt; CANCELLED: 用户取消
+    
+    COMPLETED --&gt; [*]: 返回结果
+    FAILED --&gt; [*]: 返回错误
+    TIMED_OUT --&gt; [*]: 返回超时
+    CANCELLED --&gt; [*]: 返回取消
+    
+    note right of PENDING
+        等待 ThreadPoolExecutor 空闲槽位
+        (max_workers=3)
+    end note
+    
+    note right of RUNNING
+        SubagentExecutor 分配执行器
+        启动独立事件循环
+        执行 LLM 循环（含工具调用）
+    end note
+    
+    note right of COMPLETED
+        收集所有工具结果
+        生成最终响应
+        清理临时资源
+    end note</pre></div>
+<blockquote><strong>修正说明</strong>：旧版含虚构的 <code>EXECUTING</code> 子状态与 <code>TIMEOUT</code> 状态名。实际 <code>SubagentStatus</code> 枚举为 <code>PENDING / RUNNING / COMPLETED / FAILED / CANCELLED / TIMED_OUT</code>（<code>executor.py:47-55</code>），无 <code>EXECUTING</code>，<code>RUNNING</code> 直接覆盖整个执行阶段。</blockquote>
+<h2 id="2-子代理创建流程图">2. 子代理创建流程图</h2>
+<p>展示子代理创建的完整流程。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #2</div><pre class="mermaid">graph TB
+    subgraph "触发阶段"
+        Start[LLM 调用 task_tool] --&gt; ParseArgs[解析参数]
+        ParseArgs --&gt; Validate{参数有效？}
+        Validate --&gt;|是 | CreateTask[创建任务对象]
+        Validate --&gt;|否 | Error[返回错误]
+    end
+    
+    subgraph "任务对象创建"
+        CreateTask --&gt; GenTaskID[生成任务 ID]
+        GenTaskID --&gt; InitState[初始化状态]
+        InitState --&gt; SetParent[设置父线程信息]
+        SetParent --&gt; CopyConfig[复制配置]
+    end
+    
+    subgraph "配置复制"
+        CopyConfig --&gt; CopyModel[复制模型配置]
+        CopyConfig --&gt; CopyTools[复制工具列表]
+        CopyConfig --&gt; CopyMiddleware[复制中间件配置]
+        CopyConfig --&gt; SetTimeout[设置超时时间]
+    end
+    
+    subgraph "资源分配"
+        SetTimeout --&gt; SubmitPool[_scheduler_pool.submit&lt;br/&gt;ThreadPoolExecutor max_workers=3]
+        SubmitPool --&gt; CheckSlot{有空闲 worker？}
+        CheckSlot --&gt;|是 | AssignExec[分配执行器]
+        CheckSlot --&gt;|否 阻塞 | WaitWorker[阻塞等待 worker 释放]
+        WaitWorker --&gt; CheckCancel{cancel_event？}
+        CheckCancel --&gt;|是 | CancelErr[取消错误]
+        CheckCancel --&gt;|否 | AssignExec
+    end
+    
+    subgraph "执行器初始化"
+        AssignExec --&gt; CreateLoop[创建事件循环]
+        CreateLoop --&gt; InitAgent[初始化子代理]
+        InitAgent --&gt; StartExec[启动执行]
+        StartExec --&gt; UpdateStatus[更新状态：RUNNING]
+    end
+    
+    subgraph "结果返回"
+        UpdateStatus --&gt; ReturnID[返回任务 ID]
+        ReturnID --&gt; PollStart[开始轮询]
+        
+        Error --&gt; ReturnErr[返回错误信息]
+        CancelErr --&gt; ReturnErr
+        
+        ReturnID --&gt; End([完成])
+        ReturnErr --&gt; End
+    end
+    
+    style Start fill:#e1f5ff
+    style End fill:#e1ffe1
+    style AssignExec fill:#fff4e1
+    style PollStart fill:#f0e1ff</pre></div>
+<h2 id="3-子代理执行引擎图">3. 子代理执行引擎图</h2>
+<p>展示子代理执行引擎的核心执行流程。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #3</div><pre class="mermaid">graph TB
+    subgraph "执行器初始化"
+        Start[SubagentExecutor] --&gt; InitPool[初始化执行池]
+        InitPool --&gt; SetLimit[设置并发限制：3]
+        SetLimit --&gt; CreateQueue[创建任务队列]
+    end
+    
+    subgraph "任务执行"
+        CreateQueue --&gt; GetTask[获取任务]
+        GetTask --&gt; CheckStatus{状态检查}
+        CheckStatus --&gt;|有效 | CreateIsolatedLoop[创建独立事件循环]
+        CheckStatus --&gt;|取消 | SkipExec[跳过执行]
+    end
+    
+    subgraph "独立事件循环"
+        CreateIsolatedLoop --&gt; NewLoop[asyncio.new_event_loop]
+        NewLoop --&gt; SetEventLoop[设置事件循环]
+        SetEventLoop --&gt; InitSubagent[初始化子代理实例]
+        InitSubagent --&gt; InvokeSubagent[Invoke 子代理]
+    end
+    
+    subgraph "LLM 循环"
+        InvokeSubagent --&gt; GetState[获取 ThreadState]
+        GetState --&gt; CallMiddleware[调用中间件链]
+        CallMiddleware --&gt; CallLLM[调用 LLM]
+        CallLLM --&gt; ParseResponse[解析响应]
+        
+        ParseResponse --&gt; HasTools{有工具？}
+        HasTools --&gt;|是 | ExecuteTools
+        HasTools --&gt;|否 | FormatOutput
+        
+        ExecuteTools[执行工具] --&gt; ToolResult[工具结果]
+        ToolResult --&gt; UpdateState[更新状态]
+        UpdateState --&gt; CallLLM
+        
+        FormatOutput[格式化输出] --&gt; CheckComplete{完成？}
+        CheckComplete --&gt;|是 | ReturnResult
+        CheckComplete --&gt;|否 | GetState
+    end
+    
+    subgraph "状态管理"
+        ReturnResult[返回结果] --&gt; SetStatus[设置状态：COMPLETED]
+        SetStatus --&gt; CollectResult[收集结果]
+        CollectResult --&gt; Cleanup[清理资源]
+        
+        SkipExec --&gt; SetStatusCancel[设置状态：CANCELLED]
+        SetStatusCancel --&gt; Cleanup
+    end
+    
+    subgraph "错误处理"
+        InvokeSubagent --&gt; TryCatch[Try-Catch]
+        TryCatch --&gt;|异常 | SetStatusFail[设置状态：FAILED]
+        SetStatusFail --&gt; GetException[获取异常]
+        GetException --&gt; FormatError[格式化错误]
+        FormatError --&gt; ReturnError[返回错误结果]
+    end
+    
+    style Start fill:#e1f5ff
+    style ReturnResult fill:#e1ffe1
+    style CreateIsolatedLoop fill:#fff4e1
+    style ExecuteTools fill:#f0e1ff
+    style SetStatusFail fill:#ffe1e1</pre></div>
+<h2 id="4-子代理状态流转图">4. 子代理状态流转图</h2>
+<p>展示子代理状态机的完整流转逻辑。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #4</div><pre class="mermaid">stateDiagram-v2
+    direction TB
+
+    [*] --&gt; PENDING: 创建任务
+    PENDING --&gt; RUNNING: 分配 ThreadPoolExecutor worker
+    PENDING --&gt; CANCELLED: 等待期间取消
+
+    RUNNING --&gt; COMPLETED: 正常完成
+    RUNNING --&gt; FAILED: 执行失败
+    RUNNING --&gt; TIMED_OUT: timeout_seconds=900s 超时
+    RUNNING --&gt; CANCELLED: 用户取消
+
+    COMPLETED --&gt; [*]: 返回结果
+    FAILED --&gt; [*]: 返回错误
+    TIMED_OUT --&gt; [*]: 返回超时
+    CANCELLED --&gt; [*]: 返回取消
+
+    note right of PENDING
+        内部子状态：QUEUED（等待 _scheduler_pool 槽位）
+        可被取消
+    end note
+
+    note right of RUNNING
+        内部子状态流转：
+        INITIALIZING -&gt; LLM_LOOP -&gt; TOOL_CALL
+        （TOOL_CALL 完成后回到 LLM_LOOP）
+        timeout_seconds 保护（默认 900s）
+    end note
+
+    note left of COMPLETED
+        收集所有输出
+        清理临时数据
+        返回最终结果
+    end note
+
+    note left of FAILED
+        记录错误信息
+        清理执行资源
+        返回错误详情
+    end note</pre></div>
+<blockquote><strong>修正说明</strong>：旧版含虚构的 <code>EXECUTING</code> 顶层状态、<code>TIMEOUT</code> 状态名以及"30 秒队列超时"。实际为 <code>PENDING → RUNNING</code>（内含 INITIALIZING/LLM_LOOP/TOOL_CALL 子状态），超时统一为 <code>TIMED_OUT</code>，无独立队列超时。</blockquote>
+<h2 id="5-子代理并发控制图">5. 子代理并发控制图</h2>
+<p>展示子代理的并发执行和队列管理机制。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #5</div><pre class="mermaid">graph TB
+    subgraph "并发限制 (ThreadPoolExecutor)"
+        Start[任务请求&lt;br/&gt;_scheduler_pool.submit] --&gt; CheckConcurrency{空闲 worker &amp;lt; 3?}
+        CheckConcurrency --&gt;|是 有空闲 worker | AllowExec[获得 worker]
+        CheckConcurrency --&gt;|否 3 个都在忙 | EnqueueTask[阻塞等待]
+    end
+    
+    subgraph "任务队列"
+        EnqueueTask --&gt; QueueOrder[ThreadPoolExecutor 内部队列]
+        QueueOrder --&gt; WaitSlot[等待 worker 释放]
+        WaitSlot --&gt; CheckCancel{cancel_event 被设置？}
+        CheckCancel --&gt;|是 | CancelTask[取消任务]
+        CheckCancel --&gt;|否 | WaitSlot
+        
+        CancelTask --&gt; ReturnCancel[返回取消]
+    end
+    
+    subgraph "槽位管理"
+        AllowExec --&gt; AssignSlot[分配执行槽位]
+        AssignSlot --&gt; ExecuteTask[执行任务]
+        
+        ExecuteTask --&gt; OnComplete[完成执行]
+        OnComplete --&gt; ReleaseSlot[释放 worker]
+        ReleaseSlot --&gt; NotifyQueue[唤醒阻塞任务]
+    end
+    
+    subgraph "队列通知"
+        NotifyQueue --&gt; CheckQueue{队列非空？}
+        CheckQueue --&gt;|是 | NextTask[取下一个任务]
+        CheckQueue --&gt;|否 | Idle[空闲状态]
+        
+        NextTask --&gt; AssignSlot
+    end
+    
+    subgraph "执行超时控制（无队列超时）"
+        ExecuteTask --&gt; ExecTimeout{future.result 超时&lt;br/&gt;timeout_seconds=900s?}
+        ExecTimeout --&gt;|是 | ExecTimeoutErr[设置 TIMED_OUT]
+        ExecTimeout --&gt;|否 完成 | OnComplete
+    end
+    
+    style Start fill:#e1f5ff
+    style AllowExec fill:#e1ffe1
+    style EnqueueTask fill:#fff4e1
+    style CancelTask fill:#ffe1e1
+    style NotifyQueue fill:#f0e1ff</pre></div>
+<h2 id="6-子代理结果轮询图">6. 子代理结果轮询图</h2>
+<p>展示父代理轮询子代理结果的完整流程。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #6</div><pre class="mermaid">sequenceDiagram
+    participant Parent as 父代理
+    participant Poller as 轮询器
+    participant Executor as 执行器
+    participant Storage as 状态存储
+    
+    Parent-&gt;&gt;Poller: 启动轮询 (task_id)
+    
+    loop 轮询循环
+        Poller-&gt;&gt;Storage: 获取任务状态
+        Storage--&gt;&gt;Poller: 返回状态
+        
+        alt PENDING
+            Poller-&gt;&gt;Poller: asyncio.sleep(5)
+        else RUNNING
+            Poller-&gt;&gt;Poller: asyncio.sleep(5)
+        else COMPLETED
+            Poller-&gt;&gt;Storage: 获取结果
+            Storage--&gt;&gt;Poller: 返回结果
+            Poller-&gt;&gt;Parent: 返回结果
+            break 退出轮询
+        else FAILED
+            Poller-&gt;&gt;Storage: 获取错误
+            Storage--&gt;&gt;Poller: 返回错误
+            Poller-&gt;&gt;Parent: 返回错误
+            break 退出轮询
+        else TIMED_OUT
+            Poller-&gt;&gt;Parent: 返回超时
+            break 退出轮询
+        else CANCELLED
+            Poller-&gt;&gt;Parent: 返回取消
+            break 退出轮询
+        end
+        
+        Poller-&gt;&gt;Poller: asyncio.sleep(5)
+    end
+    
+    Parent-&gt;&gt;Poller: 停止轮询 (可选)
+    Poller--&gt;&gt;Parent: 轮询停止</pre></div>
+<h2 id="7-子代理嵌套调用图-嵌套被禁止">7. 子代理嵌套调用图（嵌套被禁止）</h2>
+<blockquote><strong>重要修正</strong>：旧版此处画了"子代理 1 → 子代理 2 → 子代理 3"的三层嵌套调用图。<strong>代码明确禁止嵌套</strong>：<code>task_tool.py:290-295</code> 中子代理创建时强制 <code>subagent_enabled=False</code>，注释写明 <em>"Subagents should not have subagent tools enabled (prevent recursive nesting)"</em>。因此子代理无法再创建孙代理。</blockquote>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #7</div><pre class="mermaid">graph TB
+    subgraph "父代理（Lead Agent）"
+        Start[父代理执行] --&gt; CallTask[调用 task 工具]
+        CallTask --&gt; CreateSub[创建子代理&lt;br/&gt;subagent_enabled=False]
+    end
+    
+    subgraph "子代理（不可再委托）"
+        CreateSub --&gt; SubExec[SubagentExecutor 执行]
+        SubExec --&gt; SubLLM[子代理 LLM 循环]
+        SubLLM --&gt; SubTools[可用工具中&lt;br/&gt;不包含 task 工具]
+        SubTools --&gt; SubFinal[生成最终响应]
+    end
+    
+    subgraph "结果返回（单层，无递归）"
+        SubFinal --&gt; ReturnSub[返回结果给父代理]
+        ReturnSub --&gt; ParentResult[父代理接收并继续]
+    end
+    
+    Forbidden[禁止：子代理调用 task 创建孙代理]
+    SubTools -.-&gt;|设计上不可达| Forbidden
+    
+    style Start fill:#e1f5ff
+    style ParentResult fill:#e1ffe1
+    style CreateSub fill:#fff4e1
+    style Forbidden fill:#ffe1e1</pre></div>
+<p><strong>设计意图</strong>：禁用嵌套可避免递归爆炸、简化状态管理与资源回收，并让父子任务边界清晰。需要并行/分解任务时，应由父代理并行调用多个子代理（受 <code>max_concurrent_subagents=3</code> 限制），而非让子代理层层下钻。</p>
+<h2 id="8-子代理超时控制图">8. 子代理超时控制图</h2>
+<blockquote><strong>重要修正</strong>：旧版声称存在"总体 15 分钟 / 空闲 5 分钟 / 队列 30 秒"三重超时。<strong>代码中"空闲超时"和"队列超时"完全不存在</strong>，仅有单一执行超时 <code>timeout_seconds</code>（默认 900 秒 = 15 分钟，<code>config.py:35</code>）加一个轮询安全网。</blockquote>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #8</div><pre class="mermaid">graph TB
+    Start[任务创建] --&gt; ReadConfig[读取 config.timeout_seconds&lt;br/&gt;默认 900s]
+    ReadConfig --&gt; Submit[_scheduler_pool.submit]
+    Submit --&gt; ExecTimeout[执行超时: future.result timeout=900s]
+    
+    ExecTimeout --&gt; ExecCheck{future 超时？}
+    ExecCheck --&gt;|否 正常完成| SetCompleted[设置状态: COMPLETED]
+    ExecCheck --&gt;|是 超时| SetTimedOut[设置状态: TIMED_OUT]
+    
+    SetTimedOut --&gt; LogErr[记录超时错误]
+    LogErr --&gt; ReturnTimeout[返回超时结果]
+    SetCompleted --&gt; ReturnNormal[返回正常结果]
+    
+    ReturnTimeout --&gt; PollNet[父代理轮询安全网&lt;br/&gt;轮询上限 = 900/60+1 次&lt;br/&gt;每 5 秒一次]
+    ReturnNormal --&gt; PollNet
+    PollNet --&gt; Catch{是否超过轮询上限？}
+    Catch --&gt;|是 卡住的安全网| CancelTask[request_cancel_background_task&lt;br/&gt;协作式取消]
+    Catch --&gt;|否| Cleanup[cleanup_background_task]
+    CancelTask --&gt; Cleanup
+    
+    style Start fill:#e1f5ff
+    style ExecTimeout fill:#fff4e1
+    style SetTimedOut fill:#ffe1e1
+    style CancelTask fill:#ffe1e1
+    style Cleanup fill:#e1ffe1</pre></div>
+<p><strong>真实超时机制</strong>：</p>
+<ul>
+<li><strong>执行超时</strong>：<code>future.result(timeout=self.config.timeout_seconds)</code>（<code>executor.py:693</code>、<code>executor.py:801</code>），由 <code>ThreadPoolExecutor</code> 的 <code>Future</code> 实现，唯一超时来源。</li>
+<li><strong>轮询安全网</strong>：<code>task_tool.py:400-415</code>，作为"线程池超时万一失效"的兜底，轮询计数超过 <code>max_poll_count</code> 后协作式取消。</li>
+<li><strong>可配置</strong>：<code>timeout_seconds</code> 可在 <code>config.yaml</code> 的 <code>subagents</code> 全局或 <code>agents.&lt;name&gt;</code> 单代理级别覆盖（<code>registry.py:83-90</code>）。</li>
+</ul>
+<h2 id="9-子代理清理机制图">9. 子代理清理机制图</h2>
+<p>展示子代理完成后的资源清理流程。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #9</div><pre class="mermaid">graph TB
+    subgraph "触发清理"
+        Start[任务完成] --&gt; TriggerCleanup[触发清理]
+        TriggerCleanup --&gt; DelayCheck{延迟清理？}
+    end
+    
+    subgraph "延迟清理"
+        DelayCheck --&gt;|是 | StartDelay[启动延迟计时器]
+        StartDelay --&gt; DelayWait[等待延迟时间]
+        DelayWait --&gt; ActiveCheck{有活跃引用？}
+        
+        ActiveCheck --&gt;|是 | ExtendDelay[延长延迟]
+        ExtendDelay --&gt; DelayWait
+        
+        ActiveCheck --&gt;|否 | ProceedCleanup
+        DelayCheck --&gt;|否 | ProceedCleanup
+    end
+    
+    subgraph "状态清理"
+        ProceedCleanup[执行清理] --&gt; ClearState[清除子代理 ThreadState]
+        ClearState --&gt; ClearArtifacts[释放临时 artifacts 引用]
+        ClearArtifacts --&gt; ClearSandbox[释放 sandbox 句柄]
+        ClearSandbox --&gt; ReleaseLoop[关闭独立事件循环]
+    end
+    
+    subgraph "资源释放"
+        ReleaseLoop --&gt; ReleaseExecutor[释放 ThreadPoolExecutor 槽位]
+        ReleaseExecutor --&gt; RemoveTask[从 _background_tasks 移除]
+        RemoveTask --&gt; UpdatePool[更新任务表]
+    end
+    
+    subgraph "持久化"
+        UpdatePool --&gt; PersistFinal[持久化最终状态]
+        PersistFinal --&gt; UpdateIndex[更新索引]
+        UpdateIndex --&gt; NotifyParent[通知父代理]
+    end
+    
+    subgraph "错误清理"
+        Start --&gt; ErrorCheck{执行失败？}
+        ErrorCheck --&gt;|是 | ErrorCleanup[错误清理]
+        ErrorCheck --&gt;|否 | TriggerCleanup
+        
+        ErrorCleanup --&gt; SaveErrorLog[保存错误日志]
+        SaveErrorLog --&gt; PartialCleanup[部分清理]
+        PartialCleanup --&gt; UpdateStatus[更新状态]
+        UpdateStatus --&gt; ErrNotify[通知父代理]
+    end
+    
+    style Start fill:#e1f5ff
+    style UpdatePool fill:#e1ffe1
+    style ErrorCleanup fill:#ffe1e1
+    style NotifyParent fill:#f0e1ff</pre></div>
+<h2 id="10-子代理工具调用时序图">10. 子代理工具调用时序图</h2>
+<p>展示子代理工具调用的完整时序。</p>
+<div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #10</div><pre class="mermaid">sequenceDiagram
+    participant LLM as LLM
+    participant Parser as 解析器
+    participant Tool as task_tool
+    participant Executor as SubagentExecutor
+    participant Parent as 父线程
+    participant Storage as 存储
+    
+    LLM-&gt;&gt;Parser: 输出工具调用
+    Parser-&gt;&gt;Tool: 调用 task_tool(args)
+    
+    Tool-&gt;&gt;Tool: 验证参数
+    Tool-&gt;&gt;Executor: 创建执行器实例
+    Executor-&gt;&gt;Executor: 初始化子代理
+    Executor-&gt;&gt;Storage: 保存任务状态 (PENDING)
+    
+    Executor-&gt;&gt;Executor: 检查并发限制
+    alt 有可用槽位
+        Executor-&gt;&gt;Executor: 启动执行
+        Executor-&gt;&gt;Storage: 更新状态 (RUNNING)
+    else 无可用槽位
+        Executor-&gt;&gt;Storage: 加入队列
+        Storage-&gt;&gt;Executor: 队列位置
+    end
+    
+    Tool-&gt;&gt;Executor: 返回 task_id
+    Tool-&gt;&gt;Parser: 返回工具调用结果
+    
+    Parser-&gt;&gt;LLM: 继续执行 (task_id 待完成)
+    
+    loop 轮询结果
+        Tool-&gt;&gt;Storage: 查询任务状态
+        Storage--&gt;&gt;Tool: 返回状态
+        
+        alt PENDING/RUNNING
+            Tool-&gt;&gt;Tool: 等待 5 秒
+        else COMPLETED
+            Storage-&gt;&gt;Tool: 返回结果
+            Tool-&gt;&gt;Parser: 返回完整结果
+            break
+        else FAILED/TIMED_OUT/CANCELLED
+            Storage-&gt;&gt;Tool: 返回错误
+            Tool-&gt;&gt;Parser: 返回错误
+            break
+        end
+    end
+    
+    Parser-&gt;&gt;LLM: 工具调用结果
+    LLM-&gt;&gt;LLM: 生成最终响应</pre></div>
+<h2 id="图表说明">图表说明</h2>
+<h3 id="状态图例">状态图例</h3>
+<ul>
+<li><strong>PENDING</strong>: 任务已创建，等待 <code>_scheduler_pool</code>（ThreadPoolExecutor）槽位</li>
+<li><strong>RUNNING</strong>: 正在执行，已分配执行器，内部含 INITIALIZING/LLM_LOOP/TOOL_CALL 子状态</li>
+<li><strong>COMPLETED</strong>: 正常完成，有有效结果</li>
+<li><strong>FAILED</strong>: 执行失败，有错误信息</li>
+<li><strong>TIMED_OUT</strong>: 超时（单一执行超时 <code>timeout_seconds</code>，默认 900s）</li>
+<li><strong>CANCELLED</strong>: 用户主动取消（协作式，经 <code>cancel_event</code>）</li>
+</ul>
+<blockquote>注：旧版的 <code>EXECUTING</code> 顶层状态与 <code>TIMEOUT</code> 状态名均已修正（无 EXECUTING，TIMEOUT→TIMED_OUT）。</blockquote>
+<h3 id="关键参数">关键参数</h3>
+<ul>
+<li><strong>最大并发</strong>: <code>MAX_CONCURRENT_SUBAGENTS = 3</code>，由 <code>_scheduler_pool = ThreadPoolExecutor(max_workers=3)</code> 实现（<code>executor.py:141</code>、<code>executor.py:821</code>）</li>
+<li><strong>执行超时</strong>: <code>timeout_seconds</code> 默认 900 秒（15 分钟），<code>config.py:35</code>，可全局或单代理覆盖</li>
+<li><strong>轮询间隔</strong>: <strong>5 秒</strong>（<code>asyncio.sleep(5)</code>，<code>task_tool.py:397</code>）</li>
+<li><strong>轮询安全网上限</strong>: <code>timeout_seconds // 60 + 1</code> 次（<code>task_tool.py:400</code>）</li>
+</ul>
+<h3 id="设计特点">设计特点</h3>
+<ol>
+<li><strong>异步执行</strong>: 独立事件循环隔离子代理（<code>asyncio.new_event_loop</code>）</li>
+<li><strong>并发控制</strong>: <code>_scheduler_pool</code> 线程池限制最大并发数；另有 <code>SubagentLimitMiddleware</code> 截断 LLM 输出的并行 task 工具调用</li>
+<li><strong>单一执行超时</strong>: 由 <code>Future.result(timeout=...)</code> 实现，加轮询安全网兜底（无空闲/队列超时）</li>
+<li><strong>状态轮询</strong>: 父代理每 5 秒轮询子代理状态</li>
+<li><strong>延迟清理</strong>: <code>cleanup_background_task</code> 仅在终态移除，防止过早清理活跃资源</li>
+<li><strong>禁止嵌套</strong>: 子代理强制 <code>subagent_enabled=False</code>，无法创建孙代理（<code>task_tool.py:290-295</code>）</li>
+<li><strong>错误隔离</strong>: 子代理错误不影响父代理，以错误结果返回</li>
+</ol>
+<h3 id="使用场景">使用场景</h3>
+<ul>
+<li>复杂任务分解（父代理并行派发多个子代理）</li>
+<li>长时间运行任务（受 900s 超时保护）</li>
+<li>需要独立环境的任务</li>
+<li>并行任务执行（≤3 并发）</li>
+<li>资源密集型任务</li>
+</ul>
+      <div id="page-nav"></div>
+    </div>
+  </main>
+</div>
+<script src="assets/nav.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose',
+    flowchart: { curve: 'stepAfter', htmlLabels: true, nodeSpacing: 55, rankSpacing: 65, useMaxWidth: true },
+    themeVariables: { darkMode: true, background: '#0d1117', primaryColor: '#1f2937',
+      primaryTextColor: '#e6edf3', primaryBorderColor: '#58a6ff', lineColor: '#9aa4b2',
+      secondaryColor: '#161b22', tertiaryColor: '#1a2029', textColor: '#e6edf3' } });
+  const renderAll = () => mermaid.run({ querySelector: 'pre.mermaid' })
+    .catch(e => console.error('mermaid render error:', e));
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderAll);
+  } else {
+    renderAll();
+  }
+</script>
+</body>
+</html>
