@@ -48,125 +48,75 @@
     end note</pre></div>
 <blockquote><strong>修正说明</strong>：旧版含虚构的 <code>EXECUTING</code> 子状态与 <code>TIMEOUT</code> 状态名。实际 <code>SubagentStatus</code> 枚举为 <code>PENDING / RUNNING / COMPLETED / FAILED / CANCELLED / TIMED_OUT</code>（<code>executor.py:47-55</code>），无 <code>EXECUTING</code>，<code>RUNNING</code> 直接覆盖整个执行阶段。</blockquote>
 <h2 id="2-子代理创建流程图">2. 子代理创建流程图</h2>
-<p>展示子代理创建的完整流程。</p>
+<blockquote><strong>修正说明</strong>：旧版"配置复制 → 复制模型配置/复制工具列表/复制中间件配置"是臆造的。实际并无"深拷贝配置"步骤：<code>task_tool</code> 先用 <code>get_available_tools(subagent_enabled=False)</code> 取工具并由 <code>_filter_tools</code> 按 allow/deny 过滤，再构造 <code>SubagentExecutor</code>（<strong>继承</strong>父代理的 <code>sandbox_state / thread_data / thread_id / trace_id</code>）；<code>execute_async</code> 先在 <code>_background_tasks</code> 登记 <code>PENDING</code> 结果，再把 <code>run_task</code> 提交给 <code>_scheduler_pool</code>（ThreadPoolExecutor, max_workers=3），由后台线程翻转为 <code>RUNNING</code> 并把 <code>_aexecute</code> 投递到<strong>持久复用的隔离事件循环</strong>。</blockquote>
 <div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #2</div><pre class="mermaid">graph TB
-    subgraph "触发阶段"
-        Start[LLM 调用 task_tool] --&gt; ParseArgs[解析参数]
-        ParseArgs --&gt; Validate{参数有效？}
-        Validate --&gt;|是 | CreateTask[创建任务对象]
-        Validate --&gt;|否 | Error[返回错误]
+    Start([LLM 调用 task 工具]) --&gt; Validate{参数 + subagent_type&lt;br/&gt;有效?}
+    Validate --&gt;|否| Error[返回 Error 字符串]
+    Validate --&gt;|是| GetTools[get_available_tools&lt;br/&gt;subagent_enabled=False&lt;br/&gt;★ 禁止嵌套]
+
+    subgraph Build["构造执行器 · 主线程同步"]
+        direction TB
+        GetTools --&gt; Filter[_filter_tools&lt;br/&gt;按 allowed/disallowed 过滤]
+        Filter --&gt; NewExec[new SubagentExecutor&lt;br/&gt;继承 sandbox_state / thread_data&lt;br/&gt;thread_id / trace_id]
     end
-    
-    subgraph "任务对象创建"
-        CreateTask --&gt; GenTaskID[生成任务 ID]
-        GenTaskID --&gt; InitState[初始化状态]
-        InitState --&gt; SetParent[设置父线程信息]
-        SetParent --&gt; CopyConfig[复制配置]
+
+    NewExec --&gt; ExecAsync[executor.execute_async&lt;br/&gt;task_id = tool_call_id]
+
+    subgraph Async["execute_async · 登记并提交"]
+        direction TB
+        ExecAsync --&gt; Pending[在 _background_tasks 登记&lt;br/&gt;SubagentResult status=PENDING]
+        Pending --&gt; Submit[_scheduler_pool.submit（run_task）]
+        Submit --&gt; Running[run_task 线程内&lt;br/&gt;status=RUNNING + started_at]
+        Running --&gt; ToLoop[投递 _aexecute 到&lt;br/&gt;持久隔离事件循环&lt;br/&gt;见第 3 图]
     end
-    
-    subgraph "配置复制"
-        CopyConfig --&gt; CopyModel[复制模型配置]
-        CopyConfig --&gt; CopyTools[复制工具列表]
-        CopyConfig --&gt; CopyMiddleware[复制中间件配置]
-        CopyConfig --&gt; SetTimeout[设置超时时间]
-    end
-    
-    subgraph "资源分配"
-        SetTimeout --&gt; SubmitPool[_scheduler_pool.submit&lt;br/&gt;ThreadPoolExecutor max_workers=3]
-        SubmitPool --&gt; CheckSlot{有空闲 worker？}
-        CheckSlot --&gt;|是 | AssignExec[分配执行器]
-        CheckSlot --&gt;|否 阻塞 | WaitWorker[阻塞等待 worker 释放]
-        WaitWorker --&gt; CheckCancel{cancel_event？}
-        CheckCancel --&gt;|是 | CancelErr[取消错误]
-        CheckCancel --&gt;|否 | AssignExec
-    end
-    
-    subgraph "执行器初始化"
-        AssignExec --&gt; CreateLoop[创建事件循环]
-        CreateLoop --&gt; InitAgent[初始化子代理]
-        InitAgent --&gt; StartExec[启动执行]
-        StartExec --&gt; UpdateStatus[更新状态：RUNNING]
-    end
-    
-    subgraph "结果返回"
-        UpdateStatus --&gt; ReturnID[返回任务 ID]
-        ReturnID --&gt; PollStart[开始轮询]
-        
-        Error --&gt; ReturnErr[返回错误信息]
-        CancelErr --&gt; ReturnErr
-        
-        ReturnID --&gt; End([完成])
-        ReturnErr --&gt; End
-    end
-    
-    style Start fill:#e1f5ff
-    style End fill:#e1ffe1
-    style AssignExec fill:#fff4e1
-    style PollStart fill:#f0e1ff</pre></div>
+
+    ExecAsync --&gt; ReturnID[返回 task_id]
+    ReturnID --&gt; Poll([进入轮询 · 见第 6 图])
+
+    Error --&gt; Done([结束])
+
+    style Start fill:#1f6feb,stroke:#58a6ff,color:#fff
+    style Poll fill:#238636,stroke:#3fb950,color:#fff
+    style Done fill:#238636,stroke:#3fb950,color:#fff
+    style GetTools fill:#3d2c00,stroke:#e3b341,color:#e6edf3
+    style ToLoop fill:#3d2c5a,stroke:#bc8cff,color:#fff
+    style Error fill:#3c1518,stroke:#f85149,color:#fff
+    style Pending fill:#1a2a4a,stroke:#58a6ff,color:#e6edf3</pre></div>
 <h2 id="3-子代理执行引擎图">3. 子代理执行引擎图</h2>
-<p>展示子代理执行引擎的核心执行流程。</p>
+<blockquote><strong>修正说明</strong>：旧版"初始化执行池/设置并发限制:3/创建任务队列"与手写 LLM 循环都是臆造的。真实的 <code>_aexecute</code>（<code>executor.py:483</code>）跑在<strong>持久复用</strong>的隔离事件循环上（<strong>不是每个任务新建并关闭</strong>）：先 <code>_build_initial_state</code>（加载技能、组装 deferred 工具、把 system prompt 放进初始 messages），再 <code>_create_agent</code>（LangChain <code>create_agent</code>，复用 <code>build_subagent_runtime_middlewares</code>，<code>checkpointer=False</code>），随后 <code>agent.astream(recursion_limit=max_turns)</code> 驱动 ReAct 循环。所谓"LLM 循环"是 LangGraph 内部行为，外层只在每个 chunk 边界做<strong>协作式取消</strong>检查并收集 <code>AIMessage</code>。</blockquote>
 <div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #3</div><pre class="mermaid">graph TB
-    subgraph "执行器初始化"
-        Start[SubagentExecutor] --&gt; InitPool[初始化执行池]
-        InitPool --&gt; SetLimit[设置并发限制：3]
-        SetLimit --&gt; CreateQueue[创建任务队列]
+    Start([run_task 投递 _aexecute&lt;br/&gt;到持久隔离事件循环]) --&gt; PreCancel{cancel_event&lt;br/&gt;已置位?}
+    PreCancel --&gt;|是| Cancelled[try_set_terminal&lt;br/&gt;CANCELLED]
+
+    PreCancel --&gt;|否| BuildState
+
+    subgraph Prepare["执行前准备"]
+        direction TB
+        BuildState[_build_initial_state&lt;br/&gt;加载技能 + 组装 deferred 工具&lt;br/&gt;system prompt 入 messages] --&gt; CreateAgent[_create_agent&lt;br/&gt;create_chat_model thinking=False&lt;br/&gt;build_subagent_runtime_middlewares&lt;br/&gt;checkpointer=False]
     end
-    
-    subgraph "任务执行"
-        CreateQueue --&gt; GetTask[获取任务]
-        GetTask --&gt; CheckStatus{状态检查}
-        CheckStatus --&gt;|有效 | CreateIsolatedLoop[创建独立事件循环]
-        CheckStatus --&gt;|取消 | SkipExec[跳过执行]
+
+    CreateAgent --&gt; Stream
+
+    subgraph Loop["agent.astream · recursion_limit=max_turns"]
+        direction TB
+        Stream[逐 chunk 流式迭代&lt;br/&gt;stream_mode=values] --&gt; CancelChk{cancel_event&lt;br/&gt;已置位?}
+        CancelChk --&gt;|是| CancelMid[try_set_terminal&lt;br/&gt;CANCELLED 并返回]
+        CancelChk --&gt;|否| Collect[收集新 AIMessage&lt;br/&gt;按 id 去重]
+        Collect --&gt; More{还有 chunk?}
+        More --&gt;|是| Stream
     end
-    
-    subgraph "独立事件循环"
-        CreateIsolatedLoop --&gt; NewLoop[asyncio.new_event_loop]
-        NewLoop --&gt; SetEventLoop[设置事件循环]
-        SetEventLoop --&gt; InitSubagent[初始化子代理实例]
-        InitSubagent --&gt; InvokeSubagent[Invoke 子代理]
-    end
-    
-    subgraph "LLM 循环"
-        InvokeSubagent --&gt; GetState[获取 ThreadState]
-        GetState --&gt; CallMiddleware[调用中间件链]
-        CallMiddleware --&gt; CallLLM[调用 LLM]
-        CallLLM --&gt; ParseResponse[解析响应]
-        
-        ParseResponse --&gt; HasTools{有工具？}
-        HasTools --&gt;|是 | ExecuteTools
-        HasTools --&gt;|否 | FormatOutput
-        
-        ExecuteTools[执行工具] --&gt; ToolResult[工具结果]
-        ToolResult --&gt; UpdateState[更新状态]
-        UpdateState --&gt; CallLLM
-        
-        FormatOutput[格式化输出] --&gt; CheckComplete{完成？}
-        CheckComplete --&gt;|是 | ReturnResult
-        CheckComplete --&gt;|否 | GetState
-    end
-    
-    subgraph "状态管理"
-        ReturnResult[返回结果] --&gt; SetStatus[设置状态：COMPLETED]
-        SetStatus --&gt; CollectResult[收集结果]
-        CollectResult --&gt; Cleanup[清理资源]
-        
-        SkipExec --&gt; SetStatusCancel[设置状态：CANCELLED]
-        SetStatusCancel --&gt; Cleanup
-    end
-    
-    subgraph "错误处理"
-        InvokeSubagent --&gt; TryCatch[Try-Catch]
-        TryCatch --&gt;|异常 | SetStatusFail[设置状态：FAILED]
-        SetStatusFail --&gt; GetException[获取异常]
-        GetException --&gt; FormatError[格式化错误]
-        FormatError --&gt; ReturnError[返回错误结果]
-    end
-    
-    style Start fill:#e1f5ff
-    style ReturnResult fill:#e1ffe1
-    style CreateIsolatedLoop fill:#fff4e1
-    style ExecuteTools fill:#f0e1ff
-    style SetStatusFail fill:#ffe1e1</pre></div>
+
+    More --&gt;|否 流式结束| Final[提取最后一条 AIMessage&lt;br/&gt;作为最终结果]
+    Final --&gt; Completed[try_set_terminal&lt;br/&gt;COMPLETED + token 用量]
+
+    Stream -.astream 抛异常.-&gt; Failed[try_set_terminal&lt;br/&gt;FAILED + error]
+
+    style Start fill:#1f6feb,stroke:#58a6ff,color:#fff
+    style Completed fill:#238636,stroke:#3fb950,color:#fff
+    style Failed fill:#3c1518,stroke:#f85149,color:#fff
+    style Cancelled fill:#3d2c00,stroke:#e3b341,color:#e6edf3
+    style CancelMid fill:#3d2c00,stroke:#e3b341,color:#e6edf3
+    style CreateAgent fill:#3d2c5a,stroke:#bc8cff,color:#fff</pre></div>
 <h2 id="4-子代理状态流转图">4. 子代理状态流转图</h2>
 <p>展示子代理状态机的完整流转逻辑。</p>
 <div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #4</div><pre class="mermaid">stateDiagram-v2
@@ -360,59 +310,43 @@
 <li><strong>可配置</strong>：<code>timeout_seconds</code> 可在 <code>config.yaml</code> 的 <code>subagents</code> 全局或 <code>agents.&lt;name&gt;</code> 单代理级别覆盖（<code>registry.py:83-90</code>）。</li>
 </ul>
 <h2 id="9-子代理清理机制图">9. 子代理清理机制图</h2>
-<p>展示子代理完成后的资源清理流程。</p>
+<blockquote><strong>重要修正</strong>：旧版的"延迟计时器/延长延迟/有活跃引用?/持久化最终状态/更新索引/通知父代理/关闭独立事件循环"全部是臆造的。真实的 <code>cleanup_background_task</code>（<code>executor.py:866</code>）极其简单：仅当任务处于<strong>终态</strong>（<code>status.is_terminal</code> 或 <code>completed_at</code> 非空）时 <code>del _background_tasks[task_id]</code>，否则跳过（避免与后台线程更新条目竞争）。<strong>持久隔离事件循环不会在每个任务后关闭</strong>（它被所有子代理复用，仅在进程退出时由 <code>atexit</code> 关闭）。唯一的"延迟清理"出现在轮询安全网触发取消的兜底路径上。</blockquote>
 <div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #9</div><pre class="mermaid">graph TB
-    subgraph "触发清理"
-        Start[任务完成] --&gt; TriggerCleanup[触发清理]
-        TriggerCleanup --&gt; DelayCheck{延迟清理？}
+    subgraph Normal["正常路径 · task_tool 轮询命中终态后"]
+        direction TB
+        Term([轮询得到终态&lt;br/&gt;COMPLETED/FAILED&lt;br/&gt;CANCELLED/TIMED_OUT]) --&gt; Call[cleanup_background_task（task_id）]
+        Call --&gt; Check{status.is_terminal&lt;br/&gt;或 completed_at 非空?}
+        Check --&gt;|是| Del[del _background_tasks task_id]
+        Check --&gt;|否| Skip[跳过 · 记 debug 日志&lt;br/&gt;防与后台线程竞争]
     end
-    
-    subgraph "延迟清理"
-        DelayCheck --&gt;|是 | StartDelay[启动延迟计时器]
-        StartDelay --&gt; DelayWait[等待延迟时间]
-        DelayWait --&gt; ActiveCheck{有活跃引用？}
-        
-        ActiveCheck --&gt;|是 | ExtendDelay[延长延迟]
-        ExtendDelay --&gt; DelayWait
-        
-        ActiveCheck --&gt;|否 | ProceedCleanup
-        DelayCheck --&gt;|否 | ProceedCleanup
+
+    subgraph Safety["安全网路径 · 轮询超过上限"]
+        direction TB
+        Over([poll_count &amp;gt; max_poll_count]) --&gt; Cancel[request_cancel_background_task&lt;br/&gt;设置 cancel_event 协作式取消]
+        Cancel --&gt; Defer[_schedule_deferred_subagent_cleanup&lt;br/&gt;asyncio.create_task]
+        Defer --&gt; DLoop[_deferred_cleanup_subagent_task&lt;br/&gt;每 5 秒轮询]
+        DLoop --&gt; DTerm{已到终态?}
+        DTerm --&gt;|是| DDel[cleanup_background_task&lt;br/&gt;→ 移除条目]
+        DTerm --&gt;|否, 未超上限| DLoop
+        DTerm --&gt;|否, 超出 max_polls| DGiveup[记 warning 放弃]
     end
-    
-    subgraph "状态清理"
-        ProceedCleanup[执行清理] --&gt; ClearState[清除子代理 ThreadState]
-        ClearState --&gt; ClearArtifacts[释放临时 artifacts 引用]
-        ClearArtifacts --&gt; ClearSandbox[释放 sandbox 句柄]
-        ClearSandbox --&gt; ReleaseLoop[关闭独立事件循环]
-    end
-    
-    subgraph "资源释放"
-        ReleaseLoop --&gt; ReleaseExecutor[释放 ThreadPoolExecutor 槽位]
-        ReleaseExecutor --&gt; RemoveTask[从 _background_tasks 移除]
-        RemoveTask --&gt; UpdatePool[更新任务表]
-    end
-    
-    subgraph "持久化"
-        UpdatePool --&gt; PersistFinal[持久化最终状态]
-        PersistFinal --&gt; UpdateIndex[更新索引]
-        UpdateIndex --&gt; NotifyParent[通知父代理]
-    end
-    
-    subgraph "错误清理"
-        Start --&gt; ErrorCheck{执行失败？}
-        ErrorCheck --&gt;|是 | ErrorCleanup[错误清理]
-        ErrorCheck --&gt;|否 | TriggerCleanup
-        
-        ErrorCleanup --&gt; SaveErrorLog[保存错误日志]
-        SaveErrorLog --&gt; PartialCleanup[部分清理]
-        PartialCleanup --&gt; UpdateStatus[更新状态]
-        UpdateStatus --&gt; ErrNotify[通知父代理]
-    end
-    
-    style Start fill:#e1f5ff
-    style UpdatePool fill:#e1ffe1
-    style ErrorCleanup fill:#ffe1e1
-    style NotifyParent fill:#f0e1ff</pre></div>
+
+    Del --&gt; Done([条目已移除])
+    DDel --&gt; Done
+
+    style Term fill:#1f6feb,stroke:#58a6ff,color:#fff
+    style Over fill:#3d2c00,stroke:#e3b341,color:#e6edf3
+    style Done fill:#238636,stroke:#3fb950,color:#fff
+    style Del fill:#1a3a1a,stroke:#3fb950,color:#e6edf3
+    style DDel fill:#1a3a1a,stroke:#3fb950,color:#e6edf3
+    style Cancel fill:#3c1518,stroke:#f85149,color:#fff
+    style DGiveup fill:#3c1518,stroke:#f85149,color:#fff</pre></div>
+<p><strong>关键点</strong>：</p>
+<ul>
+<li><strong>无显式资源释放</strong>：子代理 <code>ThreadState</code>、sandbox 句柄等随条目从 <code>_background_tasks</code> 移除后由 GC 回收，代码中没有逐项"释放 artifacts / 关闭事件循环"的步骤。</li>
+<li><strong>终态守卫</strong>：<code>cleanup_background_task</code> 对非终态任务直接跳过，避免删除仍在被后台线程更新的条目。</li>
+<li><strong>兜底取消是协作式的</strong>：<code>request_cancel_background_task</code> 只设置 <code>cancel_event</code>，真正停止发生在 <code>_aexecute</code> 的 <code>astream</code> 下一个 chunk 边界。</li>
+</ul>
 <h2 id="10-子代理工具调用时序图">10. 子代理工具调用时序图</h2>
 <p>展示子代理工具调用的完整时序。</p>
 <div class="diagram-card"><div class="diagram-label"><span class="d-icon">∿</span> Mermaid 图 #10</div><pre class="mermaid">sequenceDiagram
@@ -484,7 +418,7 @@
 </ul>
 <h3 id="设计特点">设计特点</h3>
 <ol>
-<li><strong>异步执行</strong>: 独立事件循环隔离子代理（<code>asyncio.new_event_loop</code>）</li>
+<li><strong>异步执行</strong>: 持久复用的隔离事件循环（<code>_get_isolated_subagent_loop</code>，跨子代理复用，进程退出时由 <code>atexit</code> 关闭），而非每个任务新建/关闭</li>
 <li><strong>并发控制</strong>: <code>_scheduler_pool</code> 线程池限制最大并发数；另有 <code>SubagentLimitMiddleware</code> 截断 LLM 输出的并行 task 工具调用</li>
 <li><strong>单一执行超时</strong>: 由 <code>Future.result(timeout=...)</code> 实现，加轮询安全网兜底（无空闲/队列超时）</li>
 <li><strong>状态轮询</strong>: 父代理每 5 秒轮询子代理状态</li>

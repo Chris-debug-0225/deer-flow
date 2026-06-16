@@ -200,61 +200,73 @@ sequenceDiagram
 
 ## 4. 条件中间件启用图
 
-> **修正说明**：旧版"有工具？/有沙盒？/需要澄清？"等判断多数是臆造的。下图依据 `build_middlewares()`（`agent.py:270-377`）的真实条件编写。注意 `ClarificationMiddleware` **总是最后注册**（无任何条件），并非旧版画的"需要澄清才启用"。
+> **修正说明**：旧版"有工具？/有沙盒？/需要澄清？"等判断多数是臆造的。下图依据 `_build_runtime_middlewares()`（`tool_error_handling_middleware.py:129`）与 `build_middlewares()`（`agent.py:270-377`）的真实代码编写。两点关键修正：① `GuardrailMiddleware` 注册在**基础链内部**（`LLMErrorHandling` 与 `SandboxAudit` 之间），不是基础链之后；② `ClarificationMiddleware` **永远最后注册**（无任何条件），并非旧版画的"需要澄清才启用"。
+>
+> 图例：**实心方块 = 总是注册**；**菱形 = 条件判断**；条件命中才会插入对应中间件。
 
 ```mermaid
 graph TD
-    Start[build_lead_runtime_middlewares<br/>阶段1 固定基础链] --> Base[固定注册:<br/>ToolOutputBudget→ThreadData→Uploads→Sandbox<br/>→DanglingToolCall→LLMErrorHandling→SandboxAudit→ToolErrorHandling]
-    
-    Base --> Guardrail{guardrails.enabled?}
-    Guardrail -->|是| AddGuardrail[插入 GuardrailMiddleware]
-    Guardrail -->|否| DynCtx
-    
-    AddGuardrail --> DynCtx[DynamicContextMiddleware 总是注册]
-    DynCtx --> Skill[SkillActivationMiddleware 总是注册]
-    
-    Skill --> Q1{summarization.enabled?}
-    Q1 -->|是| AddSum[SummarizationMiddleware]
-    Q1 -->|否| Q2
-    AddSum --> Q2{is_plan_mode?}
-    
-    Q2 -->|是| AddTodo[TodoMiddleware]
-    Q2 -->|否| Q3
-    AddTodo --> Q3{token_usage.enabled?}
-    
-    Q3 -->|是| AddToken[TokenUsageMiddleware]
-    Q3 -->|否| Title
-    AddToken --> Title[TitleMiddleware 总是注册]
-    
-    Title --> Memory[MemoryMiddleware 总是注册]
-    Memory --> Q4{model.supports_vision?}
-    Q4 -->|是| AddView[ViewImageMiddleware]
-    Q4 -->|否| Q5
-    AddView --> Q5{deferred_setup 非空?}
-    
-    Q5 -->|有 deferred 工具| AddDeferred[DeferredToolFilterMiddleware]
-    Q5 -->|否| Q6
-    AddDeferred --> Q6{subagent_enabled?}
-    
-    Q6 -->|是| AddSubLimit[SubagentLimitMiddleware max=3]
-    Q6 -->|否| Q7
-    AddSubLimit --> Q7{loop_detection.enabled?}
-    
-    Q7 -->|是| AddLoop[LoopDetectionMiddleware]
-    Q7 -->|否| Custom
-    AddLoop --> Custom[custom_middlewares 注入点]
-    
-    Custom --> Q8{safety_finish_reason.enabled?}
-    Q8 -->|是| AddSafety[SafetyFinishReasonMiddleware]
-    Q8 -->|否| Clarify
-    AddSafety --> Clarify[ClarificationMiddleware 总在最后]
-    
-    Clarify --> End[返回完整中间件链]
-    
-    style Start fill:#e1f5ff
-    style End fill:#e1ffe1
-    style Base fill:#fff4e1
-    style Clarify fill:#f0e1ff
+    Start([开始装配中间件链]) --> Phase1
+
+    subgraph Phase1["阶段 1 · 基础运行时链 &#40;build_lead_runtime_middlewares&#41;"]
+        direction TB
+        B1[ToolOutputBudget] --> B2[ThreadData]
+        B2 --> B3[Uploads<br/>仅 Lead Agent]
+        B3 --> B4[Sandbox]
+        B4 --> B5[DanglingToolCall]
+        B5 --> B6[LLMErrorHandling]
+        B6 --> GQ{guardrails.enabled<br/>且配置 provider?}
+        GQ -->|是| BG[Guardrail]
+        GQ -->|否| B7
+        BG --> B7[SandboxAudit]
+        B7 --> B8[ToolErrorHandling]
+    end
+
+    B8 --> P2A[DynamicContext<br/>注入日期/记忆]
+    P2A --> P2B[SkillActivation]
+
+    subgraph Phase2["阶段 2 · 条件追加 &#40;build_middlewares&#41;"]
+        direction TB
+        P2B --> C1{summarization<br/>.enabled?}
+        C1 -->|是| A1[Summarization]
+        C1 -->|否| C2
+        A1 --> C2{is_plan_mode?}
+        C2 -->|是| A2[Todo]
+        C2 -->|否| C3
+        A2 --> C3{token_usage<br/>.enabled?}
+        C3 -->|是| A3[TokenUsage]
+        C3 -->|否| FIX1
+        A3 --> FIX1[Title 总是注册]
+        FIX1 --> FIX2[Memory 总是注册]
+        FIX2 --> C4{model<br/>.supports_vision?}
+        C4 -->|是| A4[ViewImage]
+        C4 -->|否| C5
+        A4 --> C5{deferred_setup<br/>有 deferred 工具?}
+        C5 -->|是| A5[DeferredToolFilter]
+        C5 -->|否| C6
+        A5 --> C6{subagent_enabled?}
+        C6 -->|是| A6[SubagentLimit<br/>max=3]
+        C6 -->|否| C7
+        A6 --> C7{loop_detection<br/>.enabled?}
+        C7 -->|是| A7[LoopDetection]
+        C7 -->|否| CUS
+        A7 --> CUS[custom_middlewares<br/>注入点]
+        CUS --> C8{safety_finish_reason<br/>.enabled?}
+        C8 -->|是| A8[SafetyFinishReason]
+        C8 -->|否| CLA
+        A8 --> CLA[Clarification<br/>★ 永远最后]
+    end
+
+    CLA --> End([返回完整中间件链<br/>最多 22 个])
+
+    style Start fill:#1f6feb,stroke:#58a6ff,color:#fff
+    style End fill:#238636,stroke:#3fb950,color:#fff
+    style BG fill:#3c1518,stroke:#f85149,color:#fff
+    style FIX1 fill:#1a3a1a,stroke:#3fb950,color:#e6edf3
+    style FIX2 fill:#1a3a1a,stroke:#3fb950,color:#e6edf3
+    style CLA fill:#3d2c00,stroke:#e3b341,color:#e6edf3
+    style P2A fill:#1a2a4a,stroke:#58a6ff,color:#e6edf3
+    style P2B fill:#1a2a4a,stroke:#58a6ff,color:#e6edf3
 ```
 
 **真实启用条件速查表**：
@@ -268,126 +280,97 @@ graph TD
 | ViewImage | `model_config.supports_vision` | agent.py:340 |
 | SubagentLimit | `subagent_enabled`，max 默认 3 | agent.py:352 |
 | LoopDetection | `loop_detection.enabled` | agent.py:359 |
-| Guardrail | `guardrails_config.enabled` | tool_error_handling_middleware.py |
+| Guardrail | `guardrails.enabled` 且配置 `provider`（注册在基础链内部） | tool_error_handling_middleware.py:162 |
 | SafetyFinishReason | `safety_finish_reason.enabled` | agent.py:372 |
 | Clarification | **总是注册，必为最后** | agent.py:376 |
 
 ## 5. LLM 节点调用图
 
-展示 LLM 节点内部的详细调用流程。
+> **修正说明**：旧版臆造了"提取消息→构建历史→选择模型→温度/MaxTokens/Top P"等步骤。实际上 Lead Agent 由 LangChain `create_agent` 编译为 **ReAct 图**，并**没有**自定义 LLM 节点。模型节点的行为由中间件钩子决定：`before_model` 钩子按注册顺序修改 `ModelRequest`（注入上下文），`wrap_model_call` 包裹真正的模型调用（重试/降级），`after_model` 钩子按**逆序**处理响应。下图展示这一真实结构。
 
 ```mermaid
 graph TB
-    subgraph "输入处理"
-        State[ThreadState] --> ExtractMsg[提取消息]
-        ExtractMsg --> BuildHistory[构建历史]
-        BuildHistory --> AddSystem[添加系统提示]
-        AddSystem --> AddContext[添加上下文]
+    State([ThreadState · messages 累积历史]) --> BM
+
+    subgraph BM["before_model 钩子 · 正序修改 ModelRequest"]
+        direction TB
+        H1[DynamicContext<br/>注入 system-reminder<br/>当前日期 + 记忆] --> H2[SkillActivation<br/>/skill 命令注入 SKILL.md]
+        H2 --> H3[Summarization<br/>超长则压缩历史]
+        H3 --> H4[Todo<br/>plan 模式注入待办]
+        H4 --> H5[其余 before_model 钩子]
     end
 
-    subgraph "上下文增强（4 路并行，全部汇入请求）"
-        AddContext --> MemoryRetrieval[检索记忆]
-        MemoryRetrieval --> AddMemoryCtx[添加记忆到提示]
+    BM --> WRAP
 
-        AddContext --> ThreadInfo[线程信息]
-        ThreadInfo --> AddThreadCtx[添加线程数据]
-
-        AddContext --> TodoList[待办列表]
-        TodoList --> AddTodoCtx[添加待办到提示]
-
-        AddContext --> Summary[对话摘要]
-        Summary --> AddSummaryCtx[添加摘要到提示]
+    subgraph WRAP["wrap_model_call · 包裹真正的模型调用"]
+        direction TB
+        W1[LLMErrorHandling<br/>熔断检查 + 重试包裹] --> W2[model.bind_tools<br/>静态 system_prompt + 绑定工具]
+        W2 --> W3[Provider 流式 API<br/>create_chat_model 构建]
     end
 
-    subgraph "模型配置"
-        BuildHistory --> ModelSelect[选择模型]
-        ModelSelect --> ConfigParams[配置参数]
-        ConfigParams --> Temperature[温度]
-        ConfigParams --> MaxTokens[最大 token]
-        ConfigParams --> TopP[Top P]
+    WRAP --> RESP[AIMessage<br/>content + tool_calls?]
+    RESP --> AM
+
+    subgraph AM["after_model 钩子 · 逆序处理响应"]
+        direction TB
+        R1[Clarification<br/>拦截澄清请求] --> R2[Memory<br/>排队记忆更新]
+        R2 --> R3[Title<br/>首轮生成标题]
+        R3 --> R4[Loop/Subagent 计数等]
     end
 
-    subgraph "API 调用"
-        AddMemoryCtx --> PrepareRequest[准备请求]
-        AddThreadCtx --> PrepareRequest
-        AddTodoCtx --> PrepareRequest
-        AddSummaryCtx --> PrepareRequest
-        ConfigParams --> PrepareRequest
-        PrepareRequest --> Stream{流式？}
-        Stream -->|是| StreamCall[流式 API 调用]
-        Stream -->|否| NormalCall[普通 API 调用]
-    end
+    AM --> ROUTE{AIMessage<br/>含 tool_calls?}
+    ROUTE -->|否| Done([结束 · 返回最终 AIMessage])
+    ROUTE -->|是 · 工具结果回灌后回到本图顶部| ToolNode([→ ToolNode 执行工具<br/>见第 6 图])
 
-    subgraph "响应处理"
-        StreamCall --> ParseStream[解析流式响应]
-        NormalCall --> ParseStream
-
-        ParseStream --> CheckContent{有内容？}
-        CheckContent -->|是| ExtractContent[提取内容]
-        CheckContent -->|工具调用| ExtractTool[提取工具调用]
-
-        ExtractContent --> CreateMessage[创建 AI 消息]
-        ExtractTool --> CreateToolMessage[创建工具消息]
-
-        CreateMessage --> ReturnState[返回状态]
-        CreateToolMessage --> ReturnState
-    end
-
-    style State fill:#e1f5ff
-    style ReturnState fill:#e1ffe1
-    style StreamCall fill:#fff4e1
-    style ExtractTool fill:#f0e1ff
-    style PrepareRequest fill:#ffe1e1,stroke:#d97706,stroke-width:2px
+    style State fill:#1f6feb,stroke:#58a6ff,color:#fff
+    style Done fill:#238636,stroke:#3fb950,color:#fff
+    style ToolNode fill:#3d2c5a,stroke:#bc8cff,color:#fff
+    style RESP fill:#3d2c00,stroke:#e3b341,color:#e6edf3
+    style W3 fill:#1a2a4a,stroke:#58a6ff,color:#e6edf3
 ```
 
 ## 6. 工具调用处理图
 
-展示工具调用的完整处理流程。
+> **修正说明**：旧版"验证参数→获取工具→再次调用 LLM→继续？"是泛化描述。实际工具执行由 LangChain `ToolNode` 完成：模型产出 `tool_calls` 后进入 `ToolNode`，按工具名从注册表分发；`ToolErrorHandlingMiddleware.wrap_tool_call` 包裹每次调用，捕获异常并把结果统一封装为 `ToolMessage` 回灌历史，再回到模型节点形成 ReAct 循环，直到某次响应不含 `tool_calls` 为止。
 
 ```mermaid
 graph TB
-    subgraph "工具检测"
-        Response[LLM 响应] --> ParseTool[解析工具调用]
-        ParseTool --> CheckTools{有工具？}
-        CheckTools -->|是 | CreateToolMsg
-        CheckTools -->|否 | SkipTool
+    Model([模型节点输出 AIMessage]) --> HasCalls{含 tool_calls?}
+    HasCalls -->|否| Done([结束 · 返回最终 AIMessage])
+    HasCalls -->|是| ToolNode
+
+    subgraph ToolNode["ToolNode · 按注册表分发并行执行"]
+        direction TB
+        Dispatch[按 tool_call.name<br/>查工具注册表] --> Wrap
+
+        subgraph Wrap["wrap_tool_call 包裹 · 逐个工具"]
+            direction TB
+            Try[执行工具 handler] --> Kind{工具类别}
+            Kind -->|内置工具| Builtin[bash · ls · read_file<br/>write_file · str_replace<br/>glob · grep · web_search ...]
+            Kind -->|MCP 工具| MCP[MCP server 远程调用]
+            Kind -->|task 子代理| Sub[task_tool<br/>见第 7 图]
+        end
     end
-    
-    subgraph "工具执行"
-        CreateToolMsg[创建工具消息] --> GetTool[获取工具]
-        GetTool --> ValidateArgs[验证参数]
-        ValidateArgs --> ExecTool[执行工具]
-        ExecTool --> ToolResult[工具结果]
-    end
-    
-    subgraph "工具类型"
-        ExecTool --> ToolType{工具类型？}
-        ToolType -->|内置 | BuiltInExec[内置工具执行]
-        ToolType -->|MCP | MCPExec[MCP 工具执行]
-        ToolType -->|子代理 | SubAgentExec[子代理执行]
-    end
-    
-    subgraph "结果处理"
-        BuiltInExec --> FormatResult[格式化结果]
-        MCPExec --> FormatResult
-        SubAgentExec --> FormatResult
-    end
-    
-    subgraph "循环继续"
-        FormatResult --> AddToHistory[添加到历史]
-        AddToHistory --> LLMAgain[再次调用 LLM]
-        LLMAgain --> CheckAgain{继续？}
-        CheckAgain -->|是 | ParseTool
-        CheckAgain -->|否 | FinalResp[最终响应]
-    end
-    
-    SkipTool[跳过工具] --> FinalResp
-    
-    style Response fill:#e1f5ff
-    style FinalResp fill:#e1ffe1
-    style ExecTool fill:#fff4e1
-    style SubAgentExec fill:#f0e1ff
-    style MCPExec fill:#ffe1e1
+
+    Builtin --> Outcome
+    MCP --> Outcome
+    Sub --> Outcome
+    Outcome{执行结果}
+    Outcome -->|成功| OK[ToolMessage<br/>task 工具加盖 subagent_status]
+    Outcome -->|抛异常| Err["ToolMessage status=error<br/>Error: Tool '…' failed …"]
+    Outcome -->|GraphBubbleUp| Bubble[中断/暂停信号<br/>原样上抛, 不拦截]
+
+    OK --> Append[追加到 messages]
+    Err --> Append
+    Append --> Loop([回到模型节点])
+    Loop -.下一轮 ReAct.-> Model
+
+    style Model fill:#1f6feb,stroke:#58a6ff,color:#fff
+    style Done fill:#238636,stroke:#3fb950,color:#fff
+    style Sub fill:#3d2c5a,stroke:#bc8cff,color:#fff
+    style Err fill:#3c1518,stroke:#f85149,color:#fff
+    style Bubble fill:#3d2c00,stroke:#e3b341,color:#e6edf3
+    style OK fill:#1a3a1a,stroke:#3fb950,color:#e6edf3
 ```
 
 ## 7. 子代理工具调用图
@@ -455,69 +438,53 @@ graph TB
 
 ## 8. 错误处理调用图
 
-展示整个系统中的错误处理流程。
+> **修正说明**：旧版臆造了"预算错误/系统错误/安全模式/降级处理"等分支。实际错误处理由**两个独立中间件**承担，职责清晰：
+> - **LLMErrorHandling**（`wrap_model_call`）：包裹模型调用，分类错误→可重试则指数退避重试→失败兜底为 `AIMessage`，并带熔断器。
+> - **ToolErrorHandling**（`wrap_tool_call`）：包裹工具调用，捕获异常→封装为 `status=error` 的 `ToolMessage`→让 ReAct 循环继续。
+>
+> 二者均放行 `GraphBubbleUp`（中断/暂停/恢复等 LangGraph 控制流信号）。
 
 ```mermaid
 graph TB
-    subgraph "错误来源"
-        LLMError[LLM API 错误]
-        ToolError[工具执行错误]
-        SandboxError[Sandbox 错误]
-        SubagentError[子代理错误]
-        MiddlewareError[中间件错误]
+    subgraph LLM["① LLMErrorHandling · wrap_model_call"]
+        direction TB
+        L0([模型调用请求]) --> LCirc{熔断器开启?}
+        LCirc -->|是| LFback[兜底 AIMessage<br/>circuit_open]
+        LCirc -->|否| LTry[调用 handler]
+        LTry --> LResult{结果}
+        LResult -->|成功| LOK[记录成功<br/>返回响应]
+        LResult -->|GraphBubbleUp| LBubble[原样上抛]
+        LResult -->|异常| LClass[_classify_error]
+        LClass --> LKind{可重试?}
+        LKind -->|transient / busy| LRetryQ{attempt &lt; max?}
+        LKind -->|quota / auth / generic| LFail[兜底 AIMessage<br/>deerflow_error_fallback]
+        LRetryQ -->|是| LRetry[指数退避 sleep<br/>emit llm_retry 事件] --> LTry
+        LRetryQ -->|否| LFail
     end
-    
-    subgraph "捕获层"
-        LLMError --> TryCatch[Try-Catch]
-        ToolError --> TryCatch
-        SandboxError --> TryCatch
-        SubagentError --> TryCatch
-        MiddlewareError --> TryCatch
+
+    subgraph TOOL["② ToolErrorHandling · wrap_tool_call"]
+        direction TB
+        T0([工具调用请求]) --> TTry[调用 handler]
+        TTry --> TResult{结果}
+        TResult -->|成功| TOK[ToolMessage<br/>task 加盖 subagent_status]
+        TResult -->|GraphBubbleUp| TBubble[原样上抛]
+        TResult -->|异常| TErr["ToolMessage status=error<br/>Error: Tool '…' failed with …"]
     end
-    
-    subgraph "ToolErrorHandling 中间件"
-        TryCatch --> Middleware[ToolErrorHandlingMiddleware]
-        Middleware --> Categorize[分类错误]
-        Categorize --> BudgetError{预算错误？}
-        Categorize --> ToolErrCheck{工具错误？}
-        Categorize --> SystemError{系统错误？}
-    end
-    
-    subgraph "错误处理策略"
-        BudgetError --> BudgetHandler[预算处理]
-        BudgetHandler --> Warn[警告用户]
-        Warn --> Limit[限制输出]
-        
-        ToolErrCheck --> ToolHandler[工具处理]
-        ToolHandler --> Retry{可重试？}
-        Retry -->|是 | RetryExec[重试执行]
-        Retry -->|否 | ReportError[报告错误]
-        
-        SystemError --> SystemHandler[系统处理]
-        SystemHandler --> SafeMode[安全模式]
-        SafeMode --> Fallback[降级处理]
-    end
-    
-    subgraph "用户反馈"
-        Limit --> UserMsg1[用户消息]
-        ReportError --> UserMsg2[用户消息]
-        Fallback --> UserMsg3[用户消息]
-        
-        UserMsg1 --> FormatError[格式化错误]
-        UserMsg2 --> FormatError
-        UserMsg3 --> FormatError
-    end
-    
-    subgraph "继续执行"
-        FormatError --> Continue[继续执行]
-        Continue --> LLMAgain2[再次调用 LLM]
-        LLMAgain2 --> Final[最终响应]
-    end
-    
-    style LLMError fill:#ffe1e1
-    style Final fill:#e1ffe1
-    style RetryExec fill:#fff4e1
-    style Fallback fill:#f0e1ff
+
+    LOK --> Cont([继续 ReAct 循环])
+    LFail --> Cont
+    TOK --> Cont
+    TErr --> Cont
+
+    style L0 fill:#1f6feb,stroke:#58a6ff,color:#fff
+    style T0 fill:#1f6feb,stroke:#58a6ff,color:#fff
+    style Cont fill:#238636,stroke:#3fb950,color:#fff
+    style LFail fill:#3c1518,stroke:#f85149,color:#fff
+    style LFback fill:#3c1518,stroke:#f85149,color:#fff
+    style TErr fill:#3c1518,stroke:#f85149,color:#fff
+    style LRetry fill:#3d2c00,stroke:#e3b341,color:#e6edf3
+    style LBubble fill:#3d2c00,stroke:#e3b341,color:#e6edf3
+    style TBubble fill:#3d2c00,stroke:#e3b341,color:#e6edf3
 ```
 
 ## 图表说明
@@ -530,9 +497,9 @@ graph TB
 - `#ffe1e1` (红色): 错误/异常状态
 
 ### 关键调用链
-1. **请求处理链**: API → Agent → before_model 链 → LLM → 工具 → after_model 链 → 响应
+1. **请求处理链**: API → Agent → before_model 链 → 模型节点 → ToolNode → after_model 链（逆序）→ 响应
 2. **中间件链**: 最多 22 个中间件，两阶段条件构建，before_model 正序、after_model 逆序触发
-3. **工具执行链**: 检测 → 验证 → 执行 → 结果 → 循环
+3. **工具执行链**: 模型产出 tool_calls → ToolNode 按注册表分发（内置/MCP/task）→ wrap_tool_call 包裹 → ToolMessage 回灌 → 回到模型节点循环
 4. **子代理链**: 触发（task 工具）→ 创建 → ThreadPoolExecutor 异步执行 → 每 5 秒轮询 → 结果 → 清理
 
 ### 设计模式

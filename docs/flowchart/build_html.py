@@ -12,6 +12,7 @@ import html
 import json
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+MD_DIR = os.path.join(HERE, "md文档")
 HTML_DIR = os.path.join(HERE, "html")
 ASSETS_DIR = os.path.join(HTML_DIR, "assets")
 
@@ -450,7 +451,7 @@ def main():
     os.makedirs(ASSETS_DIR, exist_ok=True)
     meta = []
     for num, title, md_name, html_name in DOCS:
-        md_path = os.path.join(HERE, md_name)
+        md_path = os.path.join(MD_DIR, md_name)
         out_path = os.path.join(HTML_DIR, html_name)
         m_count = build_doc_page(num, title, md_path, out_path, DOCS)
         meta.append((num, title, html_name, m_count))
