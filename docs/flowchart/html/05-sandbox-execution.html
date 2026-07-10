@@ -554,19 +554,39 @@
   </main>
 </div>
 <script src="assets/nav.js"></script>
+<script src="assets/verify_arrows.js"></script>
 <script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  // ===== 修复要点 =====
+  // 1) 锁定 mermaid 版本，避免上游回归引入箭头错位
+  // 2) useMaxWidth: false —— 不对 SVG 做宽度缩放，箭头 marker 坐标与节点完全一致
+  // 3) 等 document.fonts.ready 后再渲染 —— 中文标签必须等字体加载完，
+  //    否则节点尺寸用 fallback 字体计算，渲染后节点实际尺寸变化导致箭头错位
+  // 4) padding 增加节点与边界留白，避免箭头贴边
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs';
   mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose',
-    flowchart: { curve: 'stepAfter', htmlLabels: true, nodeSpacing: 55, rankSpacing: 65, useMaxWidth: true },
+    flowchart: { curve: 'stepAfter', htmlLabels: true, nodeSpacing: 55, rankSpacing: 65,
+      useMaxWidth: false, padding: 15, diagramPadding: 12 },
     themeVariables: { darkMode: true, background: '#0d1117', primaryColor: '#1f2937',
       primaryTextColor: '#e6edf3', primaryBorderColor: '#58a6ff', lineColor: '#9aa4b2',
       secondaryColor: '#161b22', tertiaryColor: '#1a2029', textColor: '#e6edf3' } });
+
   const renderAll = () => mermaid.run({ querySelector: 'pre.mermaid' })
+    .then(() => window.__verifyArrows && window.__verifyArrows())
     .catch(e => console.error('mermaid render error:', e));
+
+  const startRender = () => {
+    // 等字体就绪，再延迟一帧确保布局稳定
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => requestAnimationFrame(renderAll));
+    } else {
+      // 回退：window load 后再延迟，给字体时间
+      window.addEventListener('load', () => setTimeout(renderAll, 300));
+    }
+  };
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', renderAll);
+    document.addEventListener('DOMContentLoaded', startRender);
   } else {
-    renderAll();
+    startRender();
   }
 </script>
 </body>

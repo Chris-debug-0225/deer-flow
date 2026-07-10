@@ -89,7 +89,12 @@ pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 .diagram-card .diagram-label { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; color: var(--accent-2); background: var(--bg-soft); padding: 8px 16px; border-bottom: 1px solid var(--border); }
 .diagram-card .d-icon { color: var(--green-soft); font-weight: 700; }
 .diagram-card pre.mermaid { background: #0d1117; border: none; margin: 0; padding: 26px 20px; text-align: center; overflow-x: auto; }
-.diagram-card pre.mermaid svg { max-width: 100%; height: auto; }
+/* 关键：不对 SVG 做任何宽度/变换缩放，保持箭头 marker 与节点坐标完全一致 */
+.diagram-card pre.mermaid svg { height: auto; display: inline-block; max-width: none; }
+/* 运行时自检结果横幅 */
+.arrow-report { margin: 0 0 4px; padding: 10px 16px; border-radius: 8px; font-family: var(--mono); font-size: 12.5px; border: 1px solid var(--border); }
+.arrow-report.pass { color: var(--green-soft); border-color: var(--green); background: rgba(63,185,80,0.08); }
+.arrow-report.fail { color: var(--red); border-color: var(--red); background: rgba(248,81,73,0.08); }
 
 /* ============ 表格 ============ */
 .table-wrap { overflow-x: auto; margin: 18px 0; }
