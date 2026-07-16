@@ -408,12 +408,12 @@ models:
 
 ## 5.8 本章小结
 
-✅ **工厂模式**解决「新增模型不改代码」的问题，deer-flow 用**工厂 + 反射**实现
-✅ **反射** `resolve_class("模块:类名")` 能在运行时根据字符串动态加载类，核心是 `import_module` + `getattr`
-✅ `create_chat_model()` 的流程：**读配置 → 反射加载类 → 提取参数 → 处理思考开关 → 实例化 → 挂 tracing**
-✅ **思考模式开关**用 `when_thinking_enabled/disabled` 两套参数声明，代码只负责「按需合并」，优雅地处理了不同模型的差异
-✅ 兼容 OpenAI 接口的模型都用 `langchain_openai:ChatOpenAI`；非标准行为（vLLM、DeepSeek 思考）用 deer-flow 自己的 Patched 适配器
-✅ 同一套反射机制服务**模型、工具、沙箱、检测器**所有可配置组件——架构一致性的典范
+- ✅ **工厂模式**解决「新增模型不改代码」的问题，deer-flow 用**工厂 + 反射**实现
+- ✅ **反射** `resolve_class("模块:类名")` 能在运行时根据字符串动态加载类，核心是 `import_module` + `getattr`
+- ✅ `create_chat_model()` 的流程：**读配置 → 反射加载类 → 提取参数 → 处理思考开关 → 实例化 → 挂 tracing**
+- ✅ **思考模式开关**用 `when_thinking_enabled/disabled` 两套参数声明，代码只负责「按需合并」，优雅地处理了不同模型的差异
+- ✅ 兼容 OpenAI 接口的模型都用 `langchain_openai:ChatOpenAI`；非标准行为（vLLM、DeepSeek 思考）用 deer-flow 自己的 Patched 适配器
+- ✅ 同一套反射机制服务**模型、工具、沙箱、检测器**所有可配置组件——架构一致性的典范
 
 ---
 

@@ -593,13 +593,13 @@ system_prompt = f"""
 
 ## 6.12 本章小结
 
-✅ **Agent = 模型 + 工具 + 系统提示词 + 中间件链**，`make_lead_agent()` 就是组装它们的工厂
-✅ **中间件**采用「洋葱模型」，在 Agent 循环的 before/after/wrap 三个时机介入，实现「关注点分离」
-✅ 中间件有**三大钩子**：`before_model`（LLM 前）、`after_model`（LLM 后）、`wrap_tool_call`（工具执行时）
-✅ deer-flow 串了 **19 个中间件**，顺序敏感，按需加载（视觉模型才加 ViewImage，计划模式才加 Todo…）
-✅ **ClarificationMiddleware 必须最后**，因为它会用 `Command(goto=END)` 中断执行
-✅ 系统提示词是**动态拼装**的，技能和记忆在运行时注入
-✅ 这套中间件架构是 deer-flow 工程设计的精华——**可插拔、可组合、顺序可控**
+- ✅ **Agent = 模型 + 工具 + 系统提示词 + 中间件链**，`make_lead_agent()` 就是组装它们的工厂
+- ✅ **中间件**采用「洋葱模型」，在 Agent 循环的 before/after/wrap 三个时机介入，实现「关注点分离」
+- ✅ 中间件有**三大钩子**：`before_model`（LLM 前）、`after_model`（LLM 后）、`wrap_tool_call`（工具执行时）
+- ✅ deer-flow 串了 **19 个中间件**，顺序敏感，按需加载（视觉模型才加 ViewImage，计划模式才加 Todo…）
+- ✅ **ClarificationMiddleware 必须最后**，因为它会用 `Command(goto=END)` 中断执行
+- ✅ 系统提示词是**动态拼装**的，技能和记忆在运行时注入
+- ✅ 这套中间件架构是 deer-flow 工程设计的精华——**可插拔、可组合、顺序可控**
 
 ---
 

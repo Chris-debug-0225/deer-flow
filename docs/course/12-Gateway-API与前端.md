@@ -388,14 +388,14 @@ print(response)
 
 ## 12.10 本章小结
 
-✅ **Gateway API** 是 deer-flow 的「对外窗口」，用 FastAPI 把 Harness 层能力暴露成 REST 接口
-✅ 核心 API：**`/runs/stream`（流式对话）**、`/models`、`/skills`、`/memory`、`/uploads`、`/artifacts`
-✅ **RunManager** 管理一次 Agent 运行的生命周期（pending → running → completed/failed）
-✅ **StreamBridge** 解耦「Agent 生产」和「HTTP 消费」，实现流式输出
-✅ **SSE** 让 LLM 边生成边推送，实现打字机效果（所有现代 AI 聊天标配）
-✅ Gateway 兼容 **LangGraph 标准 API 格式**，借力生态（SDK、Studio）
-✅ **DeerFlowClient** 提供「不用 HTTP 也能用」的嵌入式方式，返回格式与 API 一致
-✅ 前端通过 LangGraph SDK + SSE 与后端通信，无魔法
+- ✅ **Gateway API** 是 deer-flow 的「对外窗口」，用 FastAPI 把 Harness 层能力暴露成 REST 接口
+- ✅ 核心 API：**`/runs/stream`（流式对话）**、`/models`、`/skills`、`/memory`、`/uploads`、`/artifacts`
+- ✅ **RunManager** 管理一次 Agent 运行的生命周期（pending → running → completed/failed）
+- ✅ **StreamBridge** 解耦「Agent 生产」和「HTTP 消费」，实现流式输出
+- ✅ **SSE** 让 LLM 边生成边推送，实现打字机效果（所有现代 AI 聊天标配）
+- ✅ Gateway 兼容 **LangGraph 标准 API 格式**，借力生态（SDK、Studio）
+- ✅ **DeerFlowClient** 提供「不用 HTTP 也能用」的嵌入式方式，返回格式与 API 一致
+- ✅ 前端通过 LangGraph SDK + SSE 与后端通信，无魔法
 
 ---
 
