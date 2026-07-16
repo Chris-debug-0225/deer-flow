@@ -7,12 +7,17 @@
   --bg: #f5f8fc;
   --bg-soft: #edf3fa;
   --bg-card: #ffffff;
-  --bg-code: #0f172a;
+  --bg-code: #f7f8fb;
+  --bg-code-header: #eef1f6;
+  --bg-code-gutter: #f1f4f9;
+  --bg-code-hover: #eef5ff;
   --border: #d6e0ec;
   --border-soft: #e4ebf3;
   --text: #172033;
   --text-soft: #43506a;
   --text-dim: #6f7c96;
+  --code-text: #24324a;
+  --code-ln: #94a0b5;
   --accent: #2f6fe4;
   --accent-2: #4d8dff;
   --green: #2f9e44;
@@ -197,19 +202,19 @@ code {
 }
 pre {
   background: var(--bg-code);
-  border: 1px solid var(--border);
+  border: 1px solid #d8deea;
   border-radius: var(--radius);
   padding: 18px 20px;
   overflow-x: auto;
   margin: 18px 0;
   position: relative;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+  box-shadow: 0 10px 24px rgba(28, 45, 78, 0.07);
 }
 pre code {
   background: none;
   border: none;
   padding: 0;
-  color: var(--text);
+  color: var(--code-text);
   font-size: 13.5px;
   line-height: 1.65;
 }
@@ -261,11 +266,11 @@ pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
 .code-window {
   --code-gutter: 64px;
-  border: 1px solid #c9d5e7;
+  border: 1px solid #d7deea;
   border-radius: 14px;
   overflow: hidden;
-  background: #0f172a;
-  box-shadow: 0 14px 32px rgba(24, 38, 66, 0.12);
+  background: var(--bg-code);
+  box-shadow: 0 16px 36px rgba(27, 44, 76, 0.08);
 }
 
 .code-window-header {
@@ -274,8 +279,8 @@ pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   justify-content: space-between;
   gap: 12px;
   padding: 10px 14px;
-  background: linear-gradient(180deg, #1d2940, #172033);
-  border-bottom: 1px solid #2c3a54;
+  background: linear-gradient(180deg, #f7f8fb, var(--bg-code-header));
+  border-bottom: 1px solid #dde4ef;
 }
 
 .code-window-dots {
@@ -297,7 +302,7 @@ pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 .code-window-title {
   font-family: var(--mono);
   font-size: 12px;
-  color: #9db0c7;
+  color: #7b889f;
   flex: 1;
   min-width: 0;
   text-align: right;
@@ -310,7 +315,7 @@ pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   line-height: 1.72;
   padding: 12px 0;
   background:
-    linear-gradient(90deg, rgba(255,255,255,0.05) 0, rgba(255,255,255,0.05) var(--code-gutter), transparent var(--code-gutter));
+    linear-gradient(90deg, var(--bg-code-gutter) 0, var(--bg-code-gutter) var(--code-gutter), transparent var(--code-gutter));
 }
 
 .code-line {
@@ -321,21 +326,21 @@ pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 }
 
 .code-line:hover {
-  background: rgba(77, 141, 255, 0.08);
+  background: var(--bg-code-hover);
 }
 
 .code-ln {
   user-select: none;
   text-align: right;
   padding: 0 14px 0 0;
-  color: #5f7188;
-  border-right: 1px solid rgba(255,255,255,0.06);
+  color: var(--code-ln);
+  border-right: 1px solid #e0e6f0;
 }
 
 .code-src {
   min-width: 0;
   padding: 0 18px 0 14px;
-  color: #d9e2ec;
+  color: var(--code-text);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -343,7 +348,7 @@ pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
 .code-line .tok-com {
   display: block;
-  color: #8fa2b8;
+  color: #7f8ca4;
   font-style: normal;
 }
 
@@ -362,17 +367,17 @@ pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 .code-label + pre { border-top-left-radius: 0; }
 
 /* 语法高亮 token */
-.tok-kw { color: var(--pink); font-weight: 500; }           /* 关键字: if, def, class, import */
-.tok-fn { color: var(--purple); font-weight: 500; }         /* 函数名 */
-.tok-str { color: var(--green-soft); }                      /* 字符串 */
-.tok-num { color: var(--accent-2); }                        /* 数字 */
-.tok-com { color: var(--text-dim); font-style: italic; }    /* 注释 */
-.tok-cls { color: var(--yellow); font-weight: 500; }        /* 类名 */
-.tok-dec { color: var(--orange); font-weight: 500; }        /* 装饰器 */
-.tok-self { color: var(--red); font-style: italic; }        /* self, this */
-.tok-op { color: var(--text-soft); }                        /* 操作符 */
-.tok-type { color: var(--accent); }                         /* 类型注解 */
-.tok-attr { color: var(--accent-2); }                       /* 属性/方法 */
+.tok-kw { color: #b4236b; font-weight: 500; }               /* 关键字: if, def, class, import */
+.tok-fn { color: #6d4aff; font-weight: 500; }               /* 函数名 */
+.tok-str { color: #16794b; }                                /* 字符串 */
+.tok-num { color: #246bdb; }                                /* 数字 */
+.tok-com { color: #7f8ca4; font-style: italic; }            /* 注释 */
+.tok-cls { color: #9a6700; font-weight: 500; }              /* 类名 */
+.tok-dec { color: #c2410c; font-weight: 500; }              /* 装饰器 */
+.tok-self { color: #c62828; font-style: italic; }           /* self, this */
+.tok-op { color: #54627c; }                                 /* 操作符 */
+.tok-type { color: #2f6fe4; }                               /* 类型注解 */
+.tok-attr { color: #1d6fd6; }                               /* 属性/方法 */
 
 /* ============ 卡片 / 提示框 ============ */
 .card {
@@ -781,7 +786,7 @@ td code, th code { font-size: 12.5px; }
 
 .code-block {
   background: var(--bg-code);
-  color: var(--text-soft);
+  color: var(--code-text);
   padding: 18px 20px;
   border-radius: 8px;
   overflow-x: auto;
@@ -789,14 +794,14 @@ td code, th code { font-size: 12.5px; }
   font-family: var(--mono);
   font-size: 13.5px;
   line-height: 1.65;
-  border: 1px solid var(--border);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+  border: 1px solid #d8deea;
+  box-shadow: 0 10px 24px rgba(28, 45, 78, 0.07);
 }
 .code-block code {
   background: none;
   border: none;
   padding: 0;
-  color: var(--text-soft);
+  color: var(--code-text);
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
