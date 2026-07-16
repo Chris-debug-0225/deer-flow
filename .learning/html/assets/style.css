@@ -523,32 +523,47 @@ td code, th code { font-size: 12.5px; }
 
 .flow-steps {
   display: grid;
-  gap: 12px;
+  gap: 28px;
 }
 
-.flow-step {
+.flow-steps > .flow-step {
   position: relative;
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 14px;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 16px;
   align-items: start;
-  padding: 14px 16px;
+  padding: 16px 18px;
   background: rgba(13, 17, 23, 0.58);
   border: 1px solid rgba(88, 166, 255, 0.16);
   border-radius: 14px;
+  overflow: visible;
 }
 
-.flow-step:not(:last-child)::after {
-  content: "↓";
+.flow-steps > .flow-step:not(:last-child)::before {
+  content: "";
   position: absolute;
-  left: 21px;
-  bottom: -20px;
-  color: var(--accent-2);
-  font-size: 18px;
-  line-height: 1;
+  left: 29px;
+  top: calc(100% + 6px);
+  width: 2px;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(88,166,255,0.72), rgba(88,166,255,0.18));
 }
 
-.flow-step-num {
+.flow-steps > .flow-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 24px;
+  top: calc(100% + 16px);
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--accent-2);
+  border-bottom: 2px solid var(--accent-2);
+  transform: rotate(45deg);
+  opacity: 0.88;
+}
+
+.flow-steps > .flow-step .flow-step-num {
   width: 28px;
   height: 28px;
   display: grid;
@@ -562,61 +577,82 @@ td code, th code { font-size: 12.5px; }
   margin-top: 1px;
 }
 
-.flow-step-copy {
+.flow-steps > .flow-step .flow-step-copy {
   min-width: 0;
-  max-width: 72ch;
+  max-width: none;
 }
 
-.flow-step-copy strong {
+.flow-steps > .flow-step .flow-step-copy strong {
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 0;
   color: var(--text);
   font-size: 15px;
 }
 
-.flow-step-copy p {
+.flow-steps > .flow-step .flow-step-copy p {
   margin: 0;
   color: var(--text-soft);
   font-size: 14px;
   line-height: 1.65;
 }
 
-.flow-step-path {
-  margin-top: 8px;
+.flow-steps > .flow-step .flow-step-path {
+  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(139, 148, 158, 0.28);
   color: var(--text-dim);
   font-size: 12px;
-  line-height: 1.55;
+  line-height: 1.6;
   max-width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
 }
 
-.flow-step-path code {
+.flow-steps > .flow-step .flow-step-path code {
   color: var(--yellow);
-  background: rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 999px;
+  display: inline-block;
+  max-width: 100%;
+  padding: 3px 8px;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
-.flow-step-accent-green {
+.flow-link-arrow {
+  color: var(--accent-2);
+  font-weight: 700;
+  line-height: 1;
+  transform: translateY(-0.5px);
+}
+
+.flow-steps > .flow-step.flow-step-accent-green {
   border-color: rgba(63, 185, 80, 0.22);
 }
 
-.flow-step-accent-green .flow-step-num {
+.flow-steps > .flow-step.flow-step-accent-green .flow-step-num {
   background: rgba(63, 185, 80, 0.16);
   color: var(--green-soft);
 }
 
-.flow-step-accent-orange {
+.flow-steps > .flow-step.flow-step-accent-orange {
   border-color: rgba(240, 136, 62, 0.24);
 }
 
-.flow-step-accent-orange .flow-step-num {
+.flow-steps > .flow-step.flow-step-accent-orange .flow-step-num {
   background: rgba(240, 136, 62, 0.16);
   color: var(--orange);
 }
 
-.flow-step-accent-purple {
+.flow-steps > .flow-step.flow-step-accent-purple {
   border-color: rgba(188, 140, 255, 0.22);
 }
 
-.flow-step-accent-purple .flow-step-num {
+.flow-steps > .flow-step.flow-step-accent-purple .flow-step-num {
   background: rgba(188, 140, 255, 0.16);
   color: var(--purple);
 }
@@ -819,8 +855,11 @@ td code, th code { font-size: 12.5px; }
   .flow-visual { padding: 18px 14px; }
   .flow-visual-title { display: block; }
   .flow-visual-title span { display: block; margin-top: 4px; }
-  .flow-step { grid-template-columns: 36px minmax(0, 1fr); gap: 10px; padding: 12px 12px; }
-  .flow-step:not(:last-child)::after { left: 16px; }
+  .flow-steps { gap: 24px; }
+  .flow-steps > .flow-step { grid-template-columns: 34px minmax(0, 1fr); gap: 10px; padding: 12px 12px; }
+  .flow-steps > .flow-step:not(:last-child)::before { left: 25px; top: calc(100% + 5px); height: 10px; }
+  .flow-steps > .flow-step:not(:last-child)::after { left: 20px; top: calc(100% + 13px); width: 9px; height: 9px; }
+  .flow-steps > .flow-step .flow-step-path { gap: 6px; }
 }
 
 /* ============ Hero (首页) ============ */

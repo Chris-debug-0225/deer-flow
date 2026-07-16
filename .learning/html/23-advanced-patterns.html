@@ -95,7 +95,7 @@
               <div class="flow-step-copy">
                 <strong>模型需要时再主动搜索工具详情</strong>
                 <p>等模型判断自己真的要用某类工具时，才会去调用 <code>tool_search</code> 把对应 schema 拉进当前状态。</p>
-                <div class="flow-step-path"><code>only deferred names in prompt</code> → <code>model calls tool_search</code> → <code>schema promoted into state</code></div>
+                <div class="flow-step-path"><code>only deferred names in prompt</code><span class="flow-link-arrow">→</span><code>model calls tool_search</code><span class="flow-link-arrow">→</span><code>schema promoted into state</code></div>
               </div>
             </div>
             <div class="flow-step flow-step-accent-green">
