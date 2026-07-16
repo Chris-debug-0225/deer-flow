@@ -29,7 +29,11 @@ const CHAPTERS = [
   // 第五部分：参考
   { num: '40', title: '源码导航与阅读指南', file: '40-source-code-guide.html', group: '第五部分：参考与工具', desc: '给你一张 DeerFlow 源码地图，知道先看哪里再看哪里。' },
   { num: '41', title: '常见问题与故障排除', file: '41-troubleshooting-faq.html', group: '第五部分：参考与工具', desc: '按配置、Gateway、streaming、auth、channels 分层定位问题。' },
-];
+].map((chapter, index) => ({
+  ...chapter,
+  order: index + 1,
+  displayNum: String(index + 1).padStart(2, '0'),
+}));
 
 function getCurrentPage() {
   const path = window.location.pathname;
@@ -72,12 +76,12 @@ function buildSidebar() {
       link.href = ch.file;
       
       const current = getCurrentPage();
-      if (current && current.num === ch.num) {
+      if (current && current.file === ch.file) {
         link.classList.add('active');
       }
 
       link.innerHTML = `
-        <span class="num">${ch.num}</span>
+        <span class="num">${ch.displayNum}</span>
         <span class="nav-copy">
           <span class="nav-title">${ch.title}</span>
           <span class="nav-desc">${ch.desc || ''}</span>
@@ -97,7 +101,7 @@ function buildPageNav() {
   const current = getCurrentPage();
   if (!current) return;
 
-  const currentIdx = CHAPTERS.findIndex(ch => ch.num === current.num);
+  const currentIdx = CHAPTERS.findIndex(ch => ch.file === current.file);
   const prev = currentIdx > 0 ? CHAPTERS[currentIdx - 1] : null;
   const next = currentIdx < CHAPTERS.length - 1 ? CHAPTERS[currentIdx + 1] : null;
 
@@ -126,6 +130,14 @@ function buildPageNav() {
   pageNav.appendChild(nav);
 }
 
+function syncPageSubtitle() {
+  const subtitle = document.querySelector('.page-subtitle');
+  const current = getCurrentPage();
+  if (!subtitle || !current) return;
+
+  subtitle.textContent = `DeerFlow 学习系列 - 第 ${current.displayNum} 章`;
+}
+
 function setupMenuToggle() {
   const toggle = document.querySelector('.menu-toggle');
   const sidebar = document.querySelector('.sidebar');
@@ -146,6 +158,7 @@ function setupMenuToggle() {
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
   buildSidebar();
+  syncPageSubtitle();
   buildPageNav();
   setupMenuToggle();
 });
